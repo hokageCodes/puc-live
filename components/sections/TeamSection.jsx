@@ -1,77 +1,67 @@
-"use client"
-import Image from "next/image"
+import React from 'react';
+import Image from 'next/image';
 
 const teamMembers = [
-  {
-    name: "Paul Usoro, SAN",
-    role: "Managing Partner",
-    image: "/assets/img/PP.jpg",
-  },
-  {
-    name: "Munirudeen Liadi",
-    role: "Head of Corporate Law",
-    image: "/assets/img/Alj.jpg",
-  },
-  {
-    name: "Obafolahan",
-    role: "Senior Litigation Counsel",
-    image: "/assets/img/kabi.jpg",
-  },
-  {
-    name: "Barr (Mrs). Mfon Usoro",
-    role: "Energy & Environmental Specialist",
-    image: "/assets/img/MP.jpg",
-  },
-  {
-    name: "Chinedu Anyaso",
-    role: "Capital Markets Consultant",
-    image: "/assets/img/chi.jpg",
-  },
-]
+  { name: 'Paul Usoro, SAN', image: '/assets/img/PP.jpg' },
+  { name: 'Alj', image: '/assets/img/Alj.jpg' },
+  { name: 'Kabi', image: '/assets/img/kabi.jpg' },
+  { name: 'MP', image: '/assets/img/MP.jpg' },
+  { name: 'Chi', image: '/assets/img/chi.jpg' },
+];
 
-const TeamSection = () => {
+export default function OurTeam() {
   return (
-    <section className="py-20 bg-white relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 relative z-10">
-        {/* Section Title */}
+    <section className="py-24 -mb-16 bg-[#01553d] relative overflow-hidden">
+      {/* Ambient glow blobs */}
+      <div className="absolute -top-40 -left-32 w-[300px] h-[300px] bg-white/5 rounded-full blur-[100px] z-0" />
+      <div className="absolute -bottom-40 -right-32 w-[300px] h-[300px] bg-white/10 rounded-full blur-[100px] z-0" />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-6 lg:px-8">
+        {/* Title */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black text-[#01553d] relative inline-block">
-            OUR TEAM
-            <div className="absolute top-0 left-1 -translate-x-1 -translate-y-1 text-[#01553d]/20 -z-10">
+          <div className="relative inline-block">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4 relative">
               OUR TEAM
-            </div>
-          </h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-[#01553d] to-[#01553d]/50 mx-auto mt-4" />
-          <p className="text-gray-700 max-w-2xl mx-auto mt-6 text-lg">
-            Meet the dedicated professionals behind our firm — a team of seasoned lawyers committed to delivering
-            exceptional results, trusted counsel, and innovative solutions.
+              <div className="absolute top-0 left-0 text-white/20 -translate-x-1 -translate-y-1 -z-10">
+                OUR TEAM
+              </div>
+            </h2>
+            <div className="w-20 h-1 bg-gradient-to-r from-white to-white/50 mx-auto mt-3" />
+          </div>
+          <p className="text-base md:text-lg text-white/80 mt-6 max-w-2xl mx-auto">
+            A close-knit team of brilliant minds dedicated to redefining legal excellence with precision, grace, and creativity.
           </p>
         </div>
 
-        {/* Team Grid */}
-        <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {/* Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 place-items-center">
           {teamMembers.map((member, index) => (
             <div
               key={index}
-              className="group text-center p-4 rounded-2xl border border-[#01553d]/10 bg-white hover:shadow-lg transition duration-300"
+              className="relative group overflow-hidden rounded-xl shadow-lg bg-white/5 backdrop-blur-sm hover:scale-105 transition-transform duration-300"
+              style={{ width: 160, height: 200 }}
             >
-              <div className="w-32 h-32 mx-auto rounded-full overflow-hidden mb-4">
-                <Image
-                  src={member.image}
-                  alt={member.name}
-                  width={128}
-                  height={128}
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+              <Image
+                src={member.image}
+                alt={member.name}
+                width={160}
+                height={200}
+                className="object-cover w-full h-full"
+              />
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-end opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-2">
+                <p className="text-white text-xs font-semibold">{member.name}</p>
               </div>
-              <h3 className="text-xl font-bold text-[#01553d]">{member.name}</h3>
-              <p className="text-sm text-gray-600 mt-1">{member.role}</p>
             </div>
           ))}
         </div>
+
+        {/* CTA */}
+        <div className="mt-16 flex justify-center">
+          <button className="text-sm font-semibold border border-white text-white py-3 px-6 rounded-full hover:bg-white hover:text-[#01553d] transition duration-300">
+            Join our team
+          </button>
+        </div>
       </div>
     </section>
-  )
+  );
 }
-
-export default TeamSection
