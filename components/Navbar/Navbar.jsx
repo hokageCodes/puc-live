@@ -69,7 +69,7 @@ export default function NavBar() {
             alt="Logo"
             width={100}
             height={48}
-            className="object-contain w-18 h-auto"
+            className="object-contain"
           />
         </div>
 
@@ -86,17 +86,16 @@ export default function NavBar() {
         <ul className="hidden md:flex items-center gap-6">
           {navItems.map(({ path, label, icon: Icon }) => (
             <li key={path}>
-              <Link href={path} legacyBehavior>
-                <a
-                  className={`text-lg group flex items-center gap-2 py-2 px-3 transition-all duration-200 border-b-2 ${
-                    pathname === path
-                      ? "border-green-700 text-green-700"
-                      : "border-transparent text-gray-700 hover:text-green-700 hover:border-green-700"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{label}</span>
-                </a>
+              <Link
+                href={path}
+                className={`text-lg group flex items-center gap-2 py-2 px-3 transition-all duration-200 border-b-2 ${
+                  pathname === path
+                    ? "border-green-700 text-green-700"
+                    : "border-transparent text-gray-700 hover:text-green-700 hover:border-green-700"
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span>{label}</span>
               </Link>
             </li>
           ))}
