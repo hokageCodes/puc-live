@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, lazy, Suspense } from 'react';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
-import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Lazy-loaded card
+const TeamCard = lazy(() => import('../../components/TeamCard'));
 
 const teamMembers = [
   {
@@ -64,26 +66,6 @@ export default function TeamSection() {
     return () => ctx.revert();
   }, []);
 
-  const renderCard = (member, index) => (
-    <div
-      key={index}
-      className="min-w-[250px] max-w-[300px] flex-shrink-0 flex flex-col items-center p-4 border rounded-xl bg-white"
-    >
-      <div className="w-full aspect-square relative rounded-xl overflow-hidden">
-        <Image
-          src={member.image}
-          alt={member.name}
-          fill
-          className="object-cover object-top"
-        />
-      </div>
-      <h2 className="mt-4 text-xl font-semibold text-[#01553d] text-center capitalize">
-        {member.name}
-      </h2>
-      <p className="mt-1 mb-4 text-[#01553d] text-center capitalize">{member.role}</p>
-    </div>
-  );
-
   return (
     <section ref={sectionRef} className="bg-white py-20">
       <div className="text-center mb-20">
@@ -101,43 +83,57 @@ export default function TeamSection() {
         </p>
       </div>
 
-      {/* Desktop Layout */}
+      {/* Desktop Grid */}
       <div className="hidden md:flex gap-6 px-6 mx-auto max-w-screen-xl justify-center">
-        {teamMembers.map(renderCard)}
+        {teamMembers.map((member, index) => (
+          <Suspense
+            fallback={
+              <div
+                key={index}
+                className="min-w-[250px] max-w-[300px] h-[380px] bg-gray-100 rounded-xl animate-pulse"
+              />
+            }
+            key={index}
+          >
+            <TeamCard member={member} />
+          </Suspense>
+        ))}
       </div>
 
       {/* Mobile Swiper */}
-<div className="block md:hidden px-6 relative">
-  <Swiper
-    modules={[Pagination, Autoplay]}
-    spaceBetween={16}
-    slidesPerView={1.1}
-    centeredSlides={true}
-    loop={true} // ✅ loop enabled
-    autoplay={{
-      delay: 3000,
-      disableOnInteraction: false, // 👈 keeps autoplay even after swipe
-    }}
-    pagination={{
-      clickable: true,
-      el: '.custom-swiper-pagination',
-    }}
-    className="pb-16"
-  >
-    {teamMembers.map((member, index) => (
-      <SwiperSlide key={index}>
-        {renderCard(member, index)}
-      </SwiperSlide>
-    ))}
-  </Swiper>
+      <div className="block md:hidden px-6 relative">
+        <Swiper
+          modules={[Pagination, Autoplay]}
+          spaceBetween={16}
+          slidesPerView={1.1}
+          centeredSlides
+          loop
+          autoplay={{
+            delay: 3000,
+            disableOnInteraction: false,
+          }}
+          pagination={{
+            clickable: true,
+            el: '.custom-swiper-pagination',
+          }}
+          className="pb-16"
+        >
+          {teamMembers.map((member, index) => (
+            <SwiperSlide key={index}>
+              <Suspense
+                fallback={
+                  <div className="min-w-[250px] max-w-[300px] h-[380px] bg-gray-100 rounded-xl animate-pulse" />
+                }
+              >
+                <TeamCard member={member} />
+              </Suspense>
+            </SwiperSlide>
+          ))}
+        </Swiper>
 
+        <div className="custom-swiper-pagination flex justify-center gap-2 absolute bottom-0 left-0 right-0 mt-32 z-10 [&>.swiper-pagination-bullet]:w-3 [&>.swiper-pagination-bullet]:h-3 [&>.swiper-pagination-bullet]:rounded-full [&>.swiper-pagination-bullet]:bg-[#d1d5db] [&>.swiper-pagination-bullet-active]:bg-[#01553d] [&>.swiper-pagination-bullet]:transition-all [&>.swiper-pagination-bullet]:duration-300" />
+      </div>
 
-
-  {/* Custom Pagination Dots */}
-  {/* Custom Pagination Dots */}
-<div className="custom-swiper-pagination flex justify-center gap-2 absolute bottom-0 left-0 right-0 mt-32 z-10 [&>.swiper-pagination-bullet]:w-3 [&>.swiper-pagination-bullet]:h-3 [&>.swiper-pagination-bullet]:rounded-full [&>.swiper-pagination-bullet]:bg-[#d1d5db] [&>.swiper-pagination-bullet-active]:bg-[#01553d] [&>.swiper-pagination-bullet]:transition-all [&>.swiper-pagination-bullet]:duration-300" />
-
-</div>
       {/* CTA Button */}
       <div className="mt-16 text-center">
         <a

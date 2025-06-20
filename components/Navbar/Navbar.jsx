@@ -40,8 +40,11 @@ export default function NavBar() {
     e.preventDefault();
     e.stopPropagation();
     setMenuOpen(false);
-    router.push(path);
+  
+    // Optional: delay to show exit animation
+    setTimeout(() => router.push(path), 100); 
   };
+  
 
   const handleLogoClick = (e) => {
     e.preventDefault();

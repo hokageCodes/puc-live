@@ -1,48 +1,73 @@
-"use client"
-import Image from "next/image"
+'use client';
+
+import { useEffect, useRef, useState, Suspense, lazy } from 'react';
+const PracticeAreaCard = lazy(() => import('../../components/PracticeAreaCard'));
 
 const practiceAreas = [
   {
-    title: "Adr & Advocacy",
-    description:
-      "We provide comprehensive corporate law services, ensuring your business operates within legal boundaries while maximizing growth opportunities.",
-    image: "/assets/img/adr.jpg",
+    title: 'Adr & Advocacy',
+    description: 'We provide comprehensive corporate law services...',
+    image: '/assets/img/adr.jpg',
   },
   {
-    title: "Transportation Law",
-    description:
-      "Our real estate experts handle all matters related to property transactions, disputes, and regulatory compliance with unmatched precision.",
-    image: "/assets/img/road.jpg",
+    title: 'Transportation Law',
+    description: 'Our real estate experts handle all matters...',
+    image: '/assets/img/road.jpg',
   },
   {
-    title: "Banking and Finance",
-    description:
-      "Navigating employer-employee relations can be complex. Our practice in employment law provides guidance in maintaining compliance and resolving disputes.",
-    image: "/assets/img/banking.jpg",
+    title: 'Banking and Finance',
+    description: 'Navigating employer-employee relations can be complex...',
+    image: '/assets/img/banking.jpg',
   },
   {
-    title: "Capital Market",
-    description:
-      "Protecting your intellectual property is crucial in today’s market. Our lawyers help safeguard your creations, innovations, and trademarks.",
-    image: "/assets/img/capital.jpg",
+    title: 'Capital Market',
+    description: 'Protecting your intellectual property is crucial...',
+    image: '/assets/img/capital.jpg',
   },
   {
-    title: "Communications Law",
-    description:
-      "When conflicts arise, our experienced litigators are ready to represent your interests and seek favorable outcomes.",
-    image: "/assets/img/comms.jpg",
+    title: 'Communications Law',
+    description: 'When conflicts arise, our experienced litigators...',
+    image: '/assets/img/comms.jpg',
   },
   {
-    title: "Energy and Environmental Law",
-    description:
-      "Our tax law experts help individuals and businesses navigate the complexities of tax regulations while minimizing liabilities.",
-    image: "/assets/img/energy.jpg",
+    title: 'Energy and Environmental Law',
+    description: 'Our tax law experts help individuals and businesses...',
+    image: '/assets/img/energy.jpg',
   },
 ];
 
-const PracticeAreasSection = () => {
+export default function PracticeAreasSection() {
+  const sectionRef = useRef(null);
+  const [visibleCards, setVisibleCards] = useState(
+    Array(practiceAreas.length).fill(false)
+  );
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const index = Number(entry.target.getAttribute('data-index'));
+          if (entry.isIntersecting && !visibleCards[index]) {
+            setVisibleCards((prev) =>
+              prev.map((v, i) => (i === index ? true : v))
+            );
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    const cardEls = document.querySelectorAll('[data-practice-card]');
+    cardEls.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [visibleCards]);
+
   return (
-    <section className="py-20 bg-white relative overflow-hidden">
+    <section
+      ref={sectionRef}
+      className="py-20 bg-white relative overflow-hidden"
+    >
       {/* Background animated grid */}
       <div className="absolute inset-0 opacity-[0.015] z-0 pointer-events-none">
         <div className="grid grid-cols-12 gap-2 h-full">
@@ -50,7 +75,10 @@ const PracticeAreasSection = () => {
             <div
               key={i}
               className="border border-[#01553d] animate-pulse"
-              style={{ animationDelay: `${i * 0.12}s`, animationDuration: '5s' }}
+              style={{
+                animationDelay: `${i * 0.12}s`,
+                animationDuration: '5s',
+              }}
             ></div>
           ))}
         </div>
@@ -63,13 +91,14 @@ const PracticeAreasSection = () => {
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-[#01553d] mb-4 relative">
               OUR PRACTICE AREAS
               <div className="absolute top-0 left-0 text-[#01553d]/20 -translate-x-1 -translate-y-1 -z-10">
-              OUR PRACTICE AREAS
+                OUR PRACTICE AREAS
               </div>
             </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-[#01553d] to-[#01553d]/50 mx-auto mt-4"></div>
           </div>
           <p className="text-xl text-gray-600 mt-8 max-w-2xl mx-auto leading-relaxed">
-            Pioneering legal excellence through innovation, integrity, and unwavering commitment to justice.
+            Pioneering legal excellence through innovation, integrity, and
+            unwavering commitment to justice.
           </p>
         </div>
 
@@ -78,39 +107,42 @@ const PracticeAreasSection = () => {
           {practiceAreas.map((area, index) => (
             <div
               key={index}
-              className="group rounded-3xl overflow-hidden border-2 border-[#01553d]/10 bg-white shadow-md hover:shadow-xl hover:border-[#01553d]/30 transition-all duration-500"
+              data-practice-card
+              data-index={index}
+              className={`transition-all duration-700 ease-out transform ${
+                visibleCards[index]
+                  ? 'opacity-100 translate-y-0 scale-100'
+                  : 'opacity-0 translate-y-12 scale-95'
+              }`}
             >
-              <div className="relative h-52 w-full overflow-hidden">
-                <Image
-                  src={area.image}
-                  alt={area.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+              <Suspense
+                fallback={
+                  <div className="h-64 w-full bg-gray-100 rounded-3xl animate-pulse" />
+                }
+              >
+                <PracticeAreaCard
+                  title={area.title}
+                  description={area.description}
+                  image={area.image}
                 />
-                <div className="absolute inset-0 bg-[#01553d]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              </div>
-              <div className="p-6 relative">
-                <h3 className="text-2xl font-bold text-[#01553d] mb-3">{area.title}</h3>
-                <div className="w-16 h-1 bg-[#01553d]/50 mb-4" />
-                <p className="text-gray-700 leading-relaxed text-base">{area.description}</p>
-              </div>
+              </Suspense>
             </div>
           ))}
         </div>
+
+        {/* CTA Button */}
+        <div className="mt-16 text-center">
+          <a
+            href="/practice-areas"
+            className="inline-block px-8 py-4 text-base font-medium text-white bg-[#01553d] rounded-full hover:bg-[#014634] transition"
+          >
+            See All Practice Areas
+          </a>
+        </div>
       </div>
-      {/* CTA Button */}
-      <div className="mt-16 text-center">
-        <a
-          href="/practice-areas"
-          className="inline-block px-8 py-4 text-base font-medium text-white bg-[#01553d] rounded-full hover:bg-[#014634] transition"
-        >
-          See All Practice Areas
-        </a>
-      </div>
-        {/* Bottom accent */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#01553d] to-transparent"></div>
+
+      {/* Bottom accent */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#01553d] to-transparent"></div>
     </section>
   );
-};
-
-export default PracticeAreasSection;
+}
