@@ -40,10 +40,10 @@ const AboutSection = () => {
           {/* Left Content */}
           <div className="space-y-8">
             <div>
-              <p className="text-lg text-gray-700 leading-relaxed mb-6">
+              <p className="text-center md:text-left text-lg text-gray-700 leading-relaxed mb-6">
                 At Paul Usoro & Co, we merge traditional legal expertise with cutting-edge approaches to deliver unparalleled service. Our forward-thinking methodology ensures that every client receives innovative solutions tailored to the complexities of modern legal challenges.
               </p>
-              <p className="text-lg text-gray-700 leading-relaxed">
+              <p className="text-center md:text-left text-lg text-gray-700 leading-relaxed">
                 With decades of combined experience and a reputation built on excellence, we stand at the forefront of legal practice, consistently pushing boundaries and setting new standards in the industry.
               </p>
             </div>
