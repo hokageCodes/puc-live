@@ -1,66 +1,151 @@
-import React from 'react';
+'use client';
+
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import ScrollTrigger from 'gsap/ScrollTrigger';
 import Image from 'next/image';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const teamMembers = [
-  { name: 'Paul Usoro, SAN', image: '/assets/img/PP.jpg' },
-  { name: 'Alj', image: '/assets/img/Alj.jpg' },
-  { name: 'Kabi', image: '/assets/img/kabi.jpg' },
-  { name: 'MP', image: '/assets/img/MP.jpg' },
-  { name: 'Chi', image: '/assets/img/chi.jpg' },
+  {
+    name: 'Paul Usoro, SAN',
+    role: 'Senior Partner',
+    image: '/assets/img/PP.jpg',
+  },
+  {
+    name: 'Barr(Mrs.) Mfon Usoro.',
+    role: 'Managing Partner',
+    image: '/assets/img/MP.jpg',
+  },
+  {
+    name: 'Munirudeen Liadi',
+    role: 'Partner',
+    image: '/assets/img/Alj.jpg',
+  },
+  {
+    name: 'Obafolahan Ojibara',
+    role: 'Partner',
+    image: '/assets/img/kabi.jpg',
+  },
+  {
+    name: 'Chinedu Anyaso',
+    role: 'Partner',
+    image: '/assets/img/chi.jpg',
+  },
 ];
 
-export default function OurTeam() {
+export default function TeamSection() {
+  const sectionRef = useRef(null);
+  const titleRef = useRef(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        titleRef.current,
+        { y: 100, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 1,
+          ease: 'power4.out',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 80%',
+          },
+        }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  const renderCard = (member, index) => (
+    <div
+      key={index}
+      className="min-w-[250px] max-w-[300px] flex-shrink-0 flex flex-col items-center p-4 border rounded-xl bg-white"
+    >
+      <div className="w-full aspect-square relative rounded-xl overflow-hidden">
+        <Image
+          src={member.image}
+          alt={member.name}
+          fill
+          className="object-cover object-top"
+        />
+      </div>
+      <h2 className="mt-4 text-xl font-semibold text-[#01553d] text-center capitalize">
+        {member.name}
+      </h2>
+      <p className="mt-1 mb-4 text-[#01553d] text-center capitalize">{member.role}</p>
+    </div>
+  );
+
   return (
-    <section className="py-24 -mb-16 bg-[#01553d] relative overflow-hidden">
-      {/* Ambient glow blobs */}
-      <div className="absolute -top-40 -left-32 w-[300px] h-[300px] bg-white/5 rounded-full blur-[100px] z-0" />
-      <div className="absolute -bottom-40 -right-32 w-[300px] h-[300px] bg-white/10 rounded-full blur-[100px] z-0" />
-
-      <div className="relative z-10 max-w-6xl mx-auto px-6 lg:px-8">
-        {/* Title */}
-        <div className="text-center mb-16">
-          <div className="relative inline-block">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4 relative">
-              OUR TEAM
-              <div className="absolute top-0 left-0 text-white/20 -translate-x-1 -translate-y-1 -z-10">
-                OUR TEAM
-              </div>
-            </h2>
-            <div className="w-20 h-1 bg-gradient-to-r from-white to-white/50 mx-auto mt-3" />
-          </div>
-          <p className="text-base md:text-lg text-white/80 mt-6 max-w-2xl mx-auto">
-            A close-knit team of brilliant minds dedicated to redefining legal excellence with precision, grace, and creativity.
-          </p>
-        </div>
-
-        {/* Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 place-items-center">
-          {teamMembers.map((member, index) => (
-            <div
-              key={index}
-              className="relative group overflow-hidden rounded-xl shadow-lg bg-white/5 backdrop-blur-sm hover:scale-105 transition-transform duration-300"
-              style={{ width: 160, height: 200 }}
-            >
-              <Image
-                src={member.image}
-                alt={member.name}
-                width={160}
-                height={200}
-                className="object-cover w-full h-full"
-              />
-              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-end opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-2">
-                <p className="text-white text-xs font-semibold">{member.name}</p>
-              </div>
+    <section ref={sectionRef} className="bg-white py-20">
+      <div className="text-center mb-20">
+        <div className="relative inline-block">
+          <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-[#01553d] mb-4 relative">
+            <span ref={titleRef}>THE EXECUTIVE TEAM</span>
+            <div className="absolute top-0 left-0 text-[#01553d]/20 -translate-x-1 -translate-y-1 -z-10 will-change-transform">
+              THE EXECUTIVE TEAM
             </div>
-          ))}
+          </h2>
+          <div className="w-24 h-1 bg-gradient-to-r from-[#01553d] to-[#01553d]/50 mx-auto mt-4"></div>
         </div>
+        <p className="text-xl text-gray-600 mt-8 max-w-2xl mx-auto leading-relaxed">
+          Pioneering legal excellence through innovation, integrity, and unwavering commitment to justice.
+        </p>
+      </div>
 
-        {/* CTA */}
-        <div className="mt-16 flex justify-center">
-          <button className="text-sm font-semibold border border-white text-white py-3 px-6 rounded-full hover:bg-white hover:text-[#01553d] transition duration-300">
-            Join our team
-          </button>
-        </div>
+      {/* Desktop Layout */}
+      <div className="hidden md:flex gap-6 px-6 mx-auto max-w-screen-xl justify-center">
+        {teamMembers.map(renderCard)}
+      </div>
+
+      {/* Mobile Swiper */}
+<div className="block md:hidden px-6 relative">
+  <Swiper
+    modules={[Pagination, Autoplay]}
+    spaceBetween={16}
+    slidesPerView={1.1}
+    centeredSlides={true}
+    loop={true} // ✅ loop enabled
+    autoplay={{
+      delay: 3000,
+      disableOnInteraction: false, // 👈 keeps autoplay even after swipe
+    }}
+    pagination={{
+      clickable: true,
+      el: '.custom-swiper-pagination',
+    }}
+    className="pb-16"
+  >
+    {teamMembers.map((member, index) => (
+      <SwiperSlide key={index}>
+        {renderCard(member, index)}
+      </SwiperSlide>
+    ))}
+  </Swiper>
+
+
+
+  {/* Custom Pagination Dots */}
+  {/* Custom Pagination Dots */}
+<div className="custom-swiper-pagination flex justify-center gap-2 absolute bottom-0 left-0 right-0 mt-32 z-10 [&>.swiper-pagination-bullet]:w-3 [&>.swiper-pagination-bullet]:h-3 [&>.swiper-pagination-bullet]:rounded-full [&>.swiper-pagination-bullet]:bg-[#d1d5db] [&>.swiper-pagination-bullet-active]:bg-[#01553d] [&>.swiper-pagination-bullet]:transition-all [&>.swiper-pagination-bullet]:duration-300" />
+
+</div>
+      {/* CTA Button */}
+      <div className="mt-16 text-center">
+        <a
+          href="/people"
+          className="inline-block px-8 py-4 text-base font-medium text-white bg-[#01553d] rounded-full hover:bg-[#014634] transition"
+        >
+          See Full Team
+        </a>
       </div>
     </section>
   );

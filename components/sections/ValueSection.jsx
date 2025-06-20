@@ -93,6 +93,8 @@ const ValuesSection = () => {
           ))}
         </div>
       </div>
+            {/* Bottom accent */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#01553d] to-transparent"></div>
     </section>
   )
 }

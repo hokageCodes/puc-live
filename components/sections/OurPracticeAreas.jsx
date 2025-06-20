@@ -98,6 +98,17 @@ const PracticeAreasSection = () => {
           ))}
         </div>
       </div>
+      {/* CTA Button */}
+      <div className="mt-16 text-center">
+        <a
+          href="/practice-areas"
+          className="inline-block px-8 py-4 text-base font-medium text-white bg-[#01553d] rounded-full hover:bg-[#014634] transition"
+        >
+          See All Practice Areas
+        </a>
+      </div>
+        {/* Bottom accent */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#01553d] to-transparent"></div>
     </section>
   );
 };
