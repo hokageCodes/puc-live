@@ -22,7 +22,7 @@ export default function Footer() {
         </svg>
       </div>
 
-      <div className="max-w-screen-xl mx-auto px-4 py-12 lg:py-16">
+      <div className="max-w-screen-xl mx-auto px-2 py-12 lg:py-16">
         <div className="md:flex md:justify-between md:items-start">
           {/* Logo and Brand */}
           <div className="mb-10 md:mb-0">

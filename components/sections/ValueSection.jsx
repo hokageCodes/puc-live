@@ -47,7 +47,7 @@ const ValuesSection = () => {
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/70 to-white"></div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="relative flex flex-col items-center text-center">
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-[#01553d] mb-4 relative">

@@ -1,6 +1,5 @@
 /* eslint-disable react/prop-types */
-'use client';
-
+"use client"
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -18,7 +17,9 @@ const ContactModal = ({ closeModal }) => {
 
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape') closeModal();
+      if (e.key === 'Escape') {
+        closeModal();
+      }
     };
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
@@ -36,12 +37,13 @@ const ContactModal = ({ closeModal }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // Placeholder: Replace this with your backend/API logic
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Placeholder logic (firebase removed)
+      console.log('Form submitted:', formData);
+
       alert('Your message has been submitted successfully!');
       closeModal();
     } catch (error) {
-      console.error('Submission error:', error);
+      console.error('Error submitting form data:', error);
       alert('There was an error submitting your form. Please try again.');
     } finally {
       setLoading(false);

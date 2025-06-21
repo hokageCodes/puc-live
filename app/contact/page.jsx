@@ -1,121 +1,83 @@
 /* eslint-disable react/prop-types */
-'use client';
+"use client"
+import { useState } from "react";
+import ContactModal from "@/components/ContactModal";
+import Locations from "@/components/Locations";
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+const ContactPage = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-const questions = [
-  { id: 1, label: "What's your name?", field: 'name' },
-  { id: 2, label: "What’s your legal concern, {name}?", field: 'concern' },
-  { id: 3, label: "Can we follow-up with an email?", field: 'email' },
-];
-
-const ContactModal = ({ closeModal }) => {
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState({ name: '', concern: '', email: '' });
-  const [loading, setLoading] = useState(false);
-  const modalRef = useRef(null);
-
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') closeModal();
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [closeModal]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleNextStep = () => {
-    if (step < questions.length - 1) setStep(step + 1);
-  };
-
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      // Placeholder: Replace this with your backend/API logic
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      alert('Your message has been submitted successfully!');
-      closeModal();
-    } catch (error) {
-      console.error('Submission error:', error);
-      alert('There was an error submitting your form. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBackdropClick = (e) => {
-    if (modalRef.current && !modalRef.current.contains(e.target)) {
-      closeModal();
-    }
-  };
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center pl-4 pr-4"
-      onClick={handleBackdropClick}
-    >
-      <AnimatePresence>
-        <motion.div
-          ref={modalRef}
-          className="relative bg-white p-8 rounded-md shadow-lg w-full max-w-md"
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 50 }}
-        >
-          <button
-            className="absolute top-4 right-4 text-gray-600"
-            onClick={closeModal}
-          >
-            ✕
-          </button>
+    <main className="bg-black text-white">
+      <ParallaxSection imageUrl="/assets/img/contact.webp" />
 
-          {step < questions.length ? (
-            <motion.div
-              key={step}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <label className="block text-xl font-bold mb-4 text-[#01553d]">
-                {questions[step].label.replace('{name}', formData.name || '')}
-              </label>
-              <input
-                type="text"
-                name={questions[step].field}
-                value={formData[questions[step].field]}
-                onChange={handleChange}
-                className="w-full p-2 border rounded mb-4 text-[#01553d] text-xl"
-              />
-              <button
-                onClick={step < questions.length - 1 ? handleNextStep : handleSubmit}
-                className={`bg-[#01553d] text-white text-xl px-8 py-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={loading}
-              >
-                {loading ? 'Submitting...' : step < questions.length - 1 ? 'Next' : 'Submit'}
-              </button>
-            </motion.div>
-          ) : (
-            <div className="text-center">
-              <p className="text-lg mb-4">
-                Thank you, {formData.name}. We will be in touch soon.
-              </p>
-              <button
-                onClick={closeModal}
-                className="bg-green-600 text-white px-4 py-2 rounded"
-              >
-                Close
-              </button>
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+      <TextSection>
+        <div className="mt-24">
+          <Locations />
+        </div>
+      </TextSection>
+
+      <ParallaxSection imageUrl="/assets/img/inquiry.webp" />
+
+      <TextSection>
+        <div className="flex flex-col items-center text-center">
+          <h2 className="text-5xl md:text-6xl font-bold text-center text-gray-800 mb-4">
+            Enquiries about recruitment?
+          </h2>
+          <p className="text-gray-600 mb-6 text-center">
+            We are here to help. Learn more about our recruitment process and find the right career opportunity for you.
+          </p>
+          <a
+            href="/careers"
+            className="px-6 py-3 bg-[#01553d] text-white transition duration-300 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-[#01553d] rounded"
+            aria-label="Explore Careers"
+          >
+            Explore Careers
+          </a>
+        </div>
+      </TextSection>
+
+      <ParallaxSection imageUrl="/assets/img/small.webp" />
+
+      <TextSection>
+        <div className="flex flex-col items-center text-center p-8 bg-white">
+          <h2 className="text-5xl md:text-6xl font-bold text-center text-gray-800 mb-4">
+            For further enquiries, send us a message
+          </h2>
+          <p className="text-gray-600 mb-6">
+            We are always available to assist you with any questions. Reach out and we will get back to you shortly.
+          </p>
+          <button
+            onClick={openModal}
+            className="px-6 py-3 bg-[#01553d] text-white transition duration-300 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-[#01553d] rounded"
+            aria-label="Contact Us"
+          >
+            Contact Us
+          </button>
+        </div>
+      </TextSection>
+
+      {isModalOpen && <ContactModal closeModal={closeModal} />}
+    </main>
   );
 };
 
-export default ContactModal;
+const ParallaxSection = ({ title, imageUrl }) => (
+  <section
+    className="bg-cover bg-center bg-fixed h-[50vh] md:h-[35vh] lg:h-[50vh] flex justify-center items-center"
+    style={{ backgroundImage: `url(${imageUrl})` }}
+  >
+    {title && <h2 className="text-4xl font-bold text-white">{title}</h2>}
+  </section>  
+);
+
+const TextSection = ({ children }) => (
+  <section className="px-4 py-12 bg-white text-black text-lg">
+    {children}
+  </section>
+);
+
+export default ContactPage;

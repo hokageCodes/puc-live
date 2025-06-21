@@ -15,7 +15,7 @@ import {
 
 const navItems = [
   { path: "/", label: "Home", icon: HiOutlineHome },
-  { path: "/firm", label: "Firm", icon: HiOutlineOfficeBuilding },
+  { path: "/firm", label: "The Firm", icon: HiOutlineOfficeBuilding },
   { path: "/expertise", label: "Expertise", icon: HiOutlineBriefcase },
   { path: "/people", label: "People", icon: HiOutlineUsers },
   { path: "/careers", label: "Careers", icon: HiOutlineUserGroup },
@@ -56,7 +56,7 @@ export default function NavBar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow transition-all">
       <nav
-        className={`flex items-center justify-between px-4 py-2 md:px-8 lg:px-12 transition-all duration-300 ${
+        className={`flex items-center justify-between px-2 py-2 md:px-8 lg:px-12 transition-all duration-300 ${
           scrolled ? "shadow-md bg-white/95 backdrop-blur" : ""
         }`}
       >

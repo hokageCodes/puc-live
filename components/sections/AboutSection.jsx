@@ -67,7 +67,7 @@ const AboutSection = () => {
         ></div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-20">
         {/* Section Header with Scroll Animation */}
         <div 
           ref={headerRef}
@@ -161,7 +161,7 @@ const AboutSection = () => {
             }`}>
               <a
                 href="/firm"
-                className="inline-block px-8 py-4 text-base font-medium text-white bg-[#01553d] rounded-full hover:bg-[#014634] transition-all duration-300 hover:scale-105 hover:shadow-lg transform hover:-translate-y-1"
+                className="inline-block px-8 py-4 text-base font-medium text-white bg-[#01553d] rounded-lg hover:bg-[#014634] transition-all duration-300 hover:scale-105 hover:shadow-lg transform hover:-translate-y-1"
               >
                 About The Firm
               </a>

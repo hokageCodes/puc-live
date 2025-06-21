@@ -12,3 +12,38 @@ html {
 body {
   font-family: "Arsenal", sans-serif;
 }
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .animate-title-reveal {
+    animation: reveal-title 1s ease-out forwards;
+  }
+
+  .animate-line-expand {
+    animation: expand-line 1s ease-out forwards;
+  }
+
+  @keyframes reveal-title {
+    from {
+      transform: translateY(40px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes expand-line {
+    from {
+      width: 0;
+    }
+    to {
+      width: 6rem; /* Adjust as needed */
+    }
+  }
+}

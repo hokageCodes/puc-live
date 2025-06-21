@@ -84,7 +84,7 @@ export default function TeamSection() {
       </div>
 
       {/* Desktop Grid */}
-      <div className="hidden md:flex gap-6 px-6 mx-auto max-w-screen-xl justify-center">
+      <div className="hidden md:flex gap-6 px-2 mx-auto max-w-screen-xl justify-center">
         {teamMembers.map((member, index) => (
           <Suspense
             fallback={
@@ -101,7 +101,7 @@ export default function TeamSection() {
       </div>
 
       {/* Mobile Swiper */}
-      <div className="block md:hidden px-6 relative">
+      <div className="block md:hidden px-2 relative">
         <Swiper
           modules={[Pagination, Autoplay]}
           spaceBetween={16}
@@ -138,7 +138,7 @@ export default function TeamSection() {
       <div className="mt-16 text-center">
         <a
           href="/people"
-          className="inline-block px-8 py-4 text-base font-medium text-white bg-[#01553d] rounded-full hover:bg-[#014634] transition"
+          className="inline-block px-8 py-4 text-base font-medium text-white bg-[#01553d] rounded-lg hover:bg-[#014634] transition"
         >
           See Full Team
         </a>

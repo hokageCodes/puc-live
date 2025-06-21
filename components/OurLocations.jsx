@@ -15,7 +15,7 @@ const locations = {
       name: 'Abuja, Nigeria',
       address: 'Abia House Central Business District, Abuja, Nigeria.',
       phone: '+234 (09) 623 2182',
-      imageUrl: '/assets/img/abj.webp',
+      imageUrl: '/assets/img/abuja.webp',
     },
     {
       name: 'Uyo, Nigeria',
@@ -62,7 +62,7 @@ const Locations = () => {
   }, []);
 
   return (
-    <div className="px-4 mt-[-80px]">
+    <div className="px-2 mt-[-80px] pb-24">
       <h2 className="text-4xl md:text-5xl font-bold text-left md:text-center mb-8 text-[#01553d]">
         Our Locations
       </h2>

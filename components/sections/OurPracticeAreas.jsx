@@ -84,7 +84,7 @@ export default function PracticeAreasSection() {
         </div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4">
+      <div className="relative z-10 max-w-7xl mx-auto px-2">
         {/* Section Heading */}
         <div className="text-center mb-20">
           <div className="relative inline-block">
@@ -134,7 +134,7 @@ export default function PracticeAreasSection() {
         <div className="mt-16 text-center">
           <a
             href="/practice-areas"
-            className="inline-block px-8 py-4 text-base font-medium text-white bg-[#01553d] rounded-full hover:bg-[#014634] transition"
+            className="inline-block px-8 py-4 text-base font-medium text-white bg-[#01553d] rounded-lg hover:bg-[#014634] transition"
           >
             See All Practice Areas
           </a>
