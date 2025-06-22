@@ -58,7 +58,7 @@ const ContactModal = ({ closeModal }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center pl-4 pr-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center pl-4 pr-4 -mt-24"
       onClick={handleBackdropClick}
     >
       <AnimatePresence>

@@ -14,7 +14,7 @@ const AboutUsIntro = () => {
           <h1 className="font-bold text-black">We represent</h1>
           <p>
             <span className="text-[#01553d] font-bold">a Commitment, Integrity,</span> and {" "}
-            <span className="text-[#01553d] font-bold">aSolution</span> to the{" "}
+            <span className="text-[#01553d] font-bold">a Solution</span> to the{" "}
             <span className="font-semibold text-black">
               legal needs of our clients.
             </span>

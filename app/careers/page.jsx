@@ -82,7 +82,7 @@ const CareersPage = () => {
             className="mt-6 bg-[#fff] border text-[#01553d] font-semibold py-4 px-2 
               hover:bg-transparent hover:text-white transition duration-300"
           >
-            <a href="/job-opening">See Job Openings</a>
+            <a href="/job-openings">See Job Openings</a>
           </button>
         </section>
       </div>

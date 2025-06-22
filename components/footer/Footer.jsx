@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="relative bg-[#01553d] text-white overflow-hidden">
+    <footer className="relative bg-[#01553d] text-white overflow-hidden mt-24">
       {/* Decorative blob background */}
       <div className="absolute inset-0 -z-10">
         <svg

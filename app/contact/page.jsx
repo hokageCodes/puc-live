@@ -12,7 +12,7 @@ const ContactPage = () => {
 
   return (
     <main className="bg-black text-white">
-      <ParallaxSection imageUrl="/assets/img/contact.webp" />
+      <ParallaxSection imageUrl="/assets/img/contact.jpg" />
 
       <TextSection>
         <div className="mt-24">
@@ -20,7 +20,7 @@ const ContactPage = () => {
         </div>
       </TextSection>
 
-      <ParallaxSection imageUrl="/assets/img/inquiry.webp" />
+      <ParallaxSection imageUrl="/assets/img/inquiry.jpg" />
 
       <TextSection>
         <div className="flex flex-col items-center text-center">
@@ -40,7 +40,7 @@ const ContactPage = () => {
         </div>
       </TextSection>
 
-      <ParallaxSection imageUrl="/assets/img/small.webp" />
+      <ParallaxSection imageUrl="/assets/img/contact.jpg" />
 
       <TextSection>
         <div className="flex flex-col items-center text-center p-8 bg-white">
