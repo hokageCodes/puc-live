@@ -6,7 +6,7 @@ const CareersPage = () => {
         <h1 className="text-5xl font-bold">Careers at PUC</h1>
       </section> */}
 
-      <div className="max-w-5xl mx-auto px-2 py-32 space-y-12">
+      <div className="max-w-5xl mx-auto px-2 pt-32 space-y-12">
         {/* Introduction Section */}
         <section className="text-justify">
           <h2 className="text-3xl md:text-4xl font-bold text-[#01553d] mb-4">Interested in Joining?</h2>
@@ -74,13 +74,13 @@ const CareersPage = () => {
         {/* CTA Section */}
         <section className="bg-[#01553d] text-white text-center py-12 px-2 rounded-lg">
           <h2 className="text-3xl md:text-4xl font-semibold">Let us Work Together</h2>
-          <p className="mt-4 text-md md:text-xl">
+          <p className="mt-4 text-md md:text-xl max-w-xl mx-auto text-center">
             Whether you are a fresher or an experienced professional, explore PUC for
             opportunities to grow, learn, and lead.
           </p>
           <button
             className="mt-6 bg-[#fff] border text-[#01553d] font-semibold py-4 px-2 
-              hover:bg-transparent hover:text-white transition duration-300"
+              hover:bg-transparent hover:text-white transition duration-300 rounded-lg"
           >
             <a href="/job-openings">See Job Openings</a>
           </button>
