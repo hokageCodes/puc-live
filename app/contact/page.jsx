@@ -11,11 +11,11 @@ const ContactPage = () => {
   const closeModal = () => setIsModalOpen(false);
 
   return (
-    <main className="bg-black text-white">
-      <ParallaxSection imageUrl="/assets/img/contact.jpg" />
+    <main className="text-white">
+      {/* <ParallaxSection imageUrl="/assets/img/contact.jpg" /> */}
 
       <TextSection>
-        <div className="mt-24">
+        <div className="mt-40">
           <Locations />
         </div>
       </TextSection>
@@ -43,8 +43,8 @@ const ContactPage = () => {
       <ParallaxSection imageUrl="/assets/img/contact.jpg" />
 
       <TextSection>
-        <div className="flex flex-col items-center text-center p-8 bg-white">
-          <h2 className="text-5xl md:text-6xl font-bold text-center text-gray-800 mb-4">
+        <div className="flex flex-col items-center text-center -mb-24 bg-white">
+          <h2 className="text-5xl md:text-7xl font-bold text-center text-gray-800 mb-4">
             For further enquiries, send us a message
           </h2>
           <p className="text-gray-600 mb-6">
