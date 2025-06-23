@@ -10,7 +10,6 @@ import 'swiper/css/pagination';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Lazy-loaded card
 const TeamCard = lazy(() => import('../../components/TeamCard'));
 
 const teamMembers = [
@@ -67,7 +66,7 @@ export default function TeamSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="bg-white py-20">
+    <section ref={sectionRef} className="bg-white pt-20">
       <div className="text-center mb-20">
         <div className="relative inline-block">
           <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-[#01553d] mb-4 relative">
@@ -83,20 +82,18 @@ export default function TeamSection() {
         </p>
       </div>
 
-      {/* Desktop Grid */}
-      <div className="hidden md:flex gap-6 px-2 mx-auto max-w-screen-xl justify-center">
+      {/* Desktop Flex Wrap Grid */}
+      <div className="hidden md:flex flex-wrap justify-center gap-6 px-4 mx-auto max-w-screen-xl">
         {teamMembers.map((member, index) => (
-          <Suspense
-            fallback={
-              <div
-                key={index}
-                className="min-w-[250px] max-w-[300px] h-[380px] bg-gray-100 rounded-xl animate-pulse"
-              />
-            }
-            key={index}
-          >
-            <TeamCard member={member} />
-          </Suspense>
+          <div key={index} className="w-[250px]">
+            <Suspense
+              fallback={
+                <div className="w-full h-[380px] bg-gray-100 rounded-xl animate-pulse" />
+              }
+            >
+              <TeamCard member={member} />
+            </Suspense>
+          </div>
         ))}
       </div>
 
@@ -104,9 +101,8 @@ export default function TeamSection() {
       <div className="block md:hidden px-2 relative">
         <Swiper
           modules={[Pagination, Autoplay]}
-          spaceBetween={16}
-          slidesPerView={1.1}
-          centeredSlides
+          slidesPerView={1}
+          centeredSlides={false}
           loop
           autoplay={{
             delay: 3000,
@@ -122,7 +118,7 @@ export default function TeamSection() {
             <SwiperSlide key={index}>
               <Suspense
                 fallback={
-                  <div className="min-w-[250px] max-w-[300px] h-[380px] bg-gray-100 rounded-xl animate-pulse" />
+                  <div className="w-full h-[380px] bg-gray-100 rounded-xl animate-pulse" />
                 }
               >
                 <TeamCard member={member} />
