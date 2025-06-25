@@ -11,28 +11,33 @@ export default function HeroSection() {
   return (
     <section
       ref={ref}
-      className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
+      className="relative h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.4)), url('/assets/img/hero-puc.jpg')`,
+        backgroundImage: `url('/assets/img/hero.jpg')`,
       }}
     >
-      <motion.div
-        style={{ y }}
-        className="absolute inset-0 bg-black bg-opacity-40 z-0"
-      />
-      <div className="relative z-10 px-4 mx-auto sm:px-6 lg:px-8 max-w-4xl text-center">
-        <div className="max-w-4xl mx-auto">
+      {/* Subtle dark overlay */}
+      <div className="absolute inset-0 bg-black/40"></div>
+
+      <div className="relative z-10 px-4 mx-auto sm:px-6 lg:px-8 w-full max-w-7xl text-center">
+        <div className="max-w-5xl mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-5xl font-normal text-white uppercase sm:text-5xl lg:text-6xl xl:text-9xl drop-shadow-lg"
+            className="text-5xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-normal text-white uppercase leading-tight"
+            style={{
+              textShadow: '3px 3px 8px rgba(0,0,0,0.9)',
+            }}
           >
             PAUL USORO <span className="text-white">& CO</span>
           </motion.h1>
           <motion.p
-            className="mt-6 text-lg text-gray-100 sm:text-xl max-w-2xl mx-auto drop-shadow-md"
+            className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl lg:text-2xl text-white max-w-3xl mx-auto leading-relaxed"
+            style={{
+              textShadow: '2px 2px 6px rgba(0,0,0,0.85)',
+            }}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -41,7 +46,7 @@ export default function HeroSection() {
             A leading full-service law firm, providing top-notch legal services to both local and international clients.
           </motion.p>
           <motion.div
-            className="mt-8 sm:mt-10"
+            className="mt-6 sm:mt-8 md:mt-10"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
@@ -49,7 +54,7 @@ export default function HeroSection() {
           >
             <a
               href="/practice-areas"
-              className="inline-flex items-center justify-center px-8 py-4 text-base font-normal text-white transition-all duration-200 rounded-l bg-[#01553d] hover:bg-[#013d2d] shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-normal text-white transition-all duration-200 rounded bg-[#01553d] hover:bg-[#013d2d] shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               Our Practice Areas
             </a>

@@ -1,8 +1,8 @@
 /* eslint-disable react/prop-types */
 "use client"
 import { useState } from "react";
-import ContactModal from "@/components/ContactModal";
-import Locations from "@/components/Locations";
+import ContactModal from "../../components/ContactModal";
+import Locations from "../../components/OurLocations";
 
 const ContactPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -12,7 +12,14 @@ const ContactPage = () => {
 
   return (
     <main className="text-white">
-      {/* <ParallaxSection imageUrl="/assets/img/contact.jpg" /> */}
+      {/* Hero Banner Section */}
+      <section
+        className="relative h-[40vh] md:h-[50vh] bg-cover bg-center flex items-center justify-center"
+        style={{
+          backgroundImage: "url('/assets/img/Contact1.jpg')",
+        }}
+      >
+      </section>
 
       <TextSection>
         <div className="mt-40">
@@ -20,7 +27,7 @@ const ContactPage = () => {
         </div>
       </TextSection>
 
-      <ParallaxSection imageUrl="/assets/img/inquiry.jpg" />
+      <ParallaxSection imageUrl="/assets/img/Contact2.jpg" />
 
       <TextSection>
         <div className="flex flex-col items-center text-center">
@@ -40,7 +47,7 @@ const ContactPage = () => {
         </div>
       </TextSection>
 
-      <ParallaxSection imageUrl="/assets/img/contact.jpg" />
+      <ParallaxSection imageUrl="/assets/img/contact3.jpg" />
 
       <TextSection>
         <div className="flex flex-col items-center text-center -mb-24 bg-white">
@@ -67,7 +74,7 @@ const ContactPage = () => {
 
 const ParallaxSection = ({ title, imageUrl }) => (
   <section
-    className="bg-cover bg-center bg-fixed h-[50vh] md:h-[35vh] lg:h-[50vh] flex justify-center items-center"
+    className="bg-cover bg-center bg-fixed h-[50vh] md:h-[35vh] lg:h-[70vh] flex justify-center items-center"
     style={{ backgroundImage: `url(${imageUrl})` }}
   >
     {title && <h2 className="text-4xl font-bold text-white">{title}</h2>}

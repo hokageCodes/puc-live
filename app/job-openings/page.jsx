@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useMemo, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import ApplicationModal from '@/components/ApplicationModal';
+import ApplicationModal from '../../components/ApplicationModal';
 import { Search, Filter, Grid, List, MapPin, DollarSign, Clock, ChevronRight } from 'lucide-react';
 
 const JobListingsPage = () => {

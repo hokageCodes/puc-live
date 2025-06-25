@@ -1,11 +1,11 @@
 "use client";
 import { Arsenal } from "next/font/google";
 import "./globals.css";
-import Footer from "@/components/footer/Footer";
+import Footer from "../components/footer/Footer";
 import { useState } from "react";
-import Loader from "@/components/Loader";
+import Loader from "../components/Loader";
 import { motion, AnimatePresence } from "framer-motion";
-import NavBar from "@/components/Navbar/Navbar";
+import NavBar from "../components/Navbar/Navbar";
 
 const arsenal = Arsenal({
   subsets: ["latin"],

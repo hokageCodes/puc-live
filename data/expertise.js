@@ -1,6 +1,7 @@
 const expertiseData = {
     adrAndAdvocacy: {
         title: 'ADR and Advocacy',
+        image: '/assets/img/adr.jpg',
         description: [
             "PUC is one of Nigeria’s leading Commercial Litigation and Alternative Dispute Resolution law firms. We have been at the heart of some of Nigeria’s most complex and high value commercial litigation, courtesy of our vibrant and robust Advocacy & Alternative Dispute Resolution Practice (“AADR Practice”). We have represented varied clients, ranging from financial institutions, multinational oil and gas, telecommunications, manufacturing, energy and maritime companies, to governments at all levels, before all the superior courts of records in Nigeria, and in commercial arbitration proceedings, both locally and internationally.",
 
@@ -34,6 +35,7 @@ const expertiseData = {
 
     bankingAndFinance: {
         title: 'Banking and Finance',
+        image: '/assets/img/banking.jpg',
         description: [
             "PUC routinely advise on, and act for clients in transactions and disputes relating to banking and finance law and practices, as well banking regulatory matters. Our clients recognise our expertise in adroitly navigating complex transactions, and rely on us to provide the vital legal and regulatory support needed to consummate their multifarious transactions. In recent times, we have worked with several Nigerian banks through the process of banking sector reforms and restructuring that commenced in 2005, and have continued up till date."
         ],    
@@ -62,6 +64,7 @@ const expertiseData = {
     },
     mergersAcquisition: {
         title: 'Mergers and Acquisitions',
+        image: '/assets/img/expertise/corporate.jpg',
         description: [
             "PUC has extensive skills in Corporate Restructuring, Mergers and Acquisitions, having provided services in these areas to several satisfied clients, both local and foreign, in various sectors of the Nigerian economy, including banking, telecommunications, construction, and natural resources. For our clients in these sectors, we have designed tailor-made transaction structures, negotiated, drafted and reviewed transaction documents, liaised with investment banks and export credit agencies, obtained requisite regulatory approvals and handled post-restructuring arrangements, and employment and industrial relations issues.",
             "We have continued to effectively balance our role of providing client satisfaction and delight while not losing sight of the need to comply with applicable laws and best industry practices. Corporate restructuring transactions generally require one form of regulatory approval or the other.",
@@ -92,6 +95,7 @@ const expertiseData = {
     },
     capitalMarket: {
         title: 'Capital Market Law',
+        image: '/assets/img/expertise/capital.jpg',
         description: [
             "Our Capital Market practice team possess sound capital markets experience to help major corporate bodies, federal and state governments and financial institutions access - or offer - funding in innovative ways. The firm is registered with the Securities and Exchange Commission (“SEC”) and a good number of members of the team are registered as Sponsored Individuals and/or Compliance Officers.",
             "Our experience include advising issuers, sellers, and underwriters involved in initial and secondary public offerings of securities, advising issuers on transaction involving the offering of debentures, bonds, as well as diverse financial instruments, preparing legal opinions for issuers, underwriters, and rating agencies, negotiating agreements with underwriters, amongst others.",
@@ -123,6 +127,7 @@ const expertiseData = {
     },
     communicationLaw: {
         title: 'Communications',
+        image: '/assets/img/expertise/Communications.jpg',
         description: [
             "Our expertise in Nigerian Communications Law Practice is acknowledged both locally and internationally. The brand “the foremost communications law firm” was earned from our sustained leadership role in the communications industry in Nigeria; dating from its fledging years till date. Quite early in our retainership years with the Nigerian Telecommunications Limited (“NITEL”), Nigeria’s first national telecoms carrier, we distinguished ourselves as the External Counsel with  the credentials and the capabilities to handle core telecommunications assignments, and it was in that circumstance that we represented NITEL in landmark assignments.",
             "With the reconstitution of the industry’s regulatory agency, the Nigerian Communications Commission (“NCC”) in 1999; PUC began full-scale involvement in the areas of industry policies and regulations, legislative drafting and advocacy, advisory services in licensing arrangements and documentations, telecoms equipment acquisitions and leases, collocation models and agreements, corporate restructurings including mergers and acquisitions of telecom businesses, amongst other services.",
@@ -153,6 +158,7 @@ const expertiseData = {
     },
     energyEnvironment: {
         title: 'Energy and Environment',
+        image: '/assets/img/expertise/energy.jpg',
         description: [
             "Our deep knowledge and experience in energy and environmental law and practice, and mastery of the complex regulatory landscapes in these dynamic fields explains our ease and efficiency in guiding our clients through the regulatory hurdles, supporting their transactional activities, and enabling their businesses operate effectively.",
         ],    
@@ -181,6 +187,7 @@ const expertiseData = {
     },
     labourIndustry: {
         title: 'Labour and Industrial Relations',
+        image: '/assets/img/expertise/labour.jpg',
         description: [
             "PUC has renowned expertise in Labour and Industrial Relations Law and Practice. We advise and represent clients on various aspects including human resources and labour laws compliance audit, industrial relations and labour litigation, preparation of employees policy manuals and handbooks, negotiations and preparations of contracts of services, severance agreements, collective bargaining agreements, labour management relations, negotiation of outsourcing arrangements, and representation in the Industrial Arbitration Panel, and the hierarchies of courts in Nigeria.",
             "Our lawyers possess vast knowledge and experience in labour and industrial dispute matters and, we work and partner as necessary with leading human resources, thereby providing our clients the benefit of very rich, cross-fertilised ideas and strategies."
@@ -210,6 +217,7 @@ const expertiseData = {
     },
     projectFinance: {
         title: 'Project Finance',
+        image: '/assets/img/expertise/project.jpg',
         description: [
             "PUC has a wealth of experience in managing and advising Clients on project finance, having worked on different projects as counsel to the project company or sponsors, lenders, guarantors, and other relevant financial interest groups.",
             "Our lawyers possess vast knowledge and experience in labour and industrial dispute matters and, we work and partner as necessary with leading human resources, thereby providing our clients the benefit of very rich, cross-fertilised ideas and strategiesThe projects we have worked on range across most subsectors of the Nigerian economy, and include debt and equity financing, Greenfield and Brownfield projects finance, PPP arrangements and financing, aircraft acquisition financing, infrastructure financing, ship financing, communications projects financing, power projects financing, and oil & gas projects financing. In managing our Project Finance deals, we develop customised transaction structures, and legal documentation to align with the peculiarities of each project, as well as our clients’ objectives."
@@ -239,6 +247,7 @@ const expertiseData = {
     },
     maritime: {
         title: 'Maritime',
+        image: '/assets/img/expertise/maritime.jpg',
         description: [
             "PUC is an internationally renowned as Nigeria’s leading maritime law firm, with particular expertise in ship finance, ship litigation, policy formulation as well as legislative drafting and advocacy.",
             "We are counsel of choice to multinational businesses, national governments and African sub regional institutions and agencies. The expertise of our team and our deep understanding of the legal regimes and markets epitomised by the quality of our work, some of which we highlight below, continue to endear us to our satisfied clients and earn us their recommendations.",
@@ -269,6 +278,7 @@ const expertiseData = {
     },
     aviation: {
         title: 'Aviation',
+        image: '/assets/img/expertise/aviation.jpg',
         description: [
             "PUC, has over the years, developed extensive experience and core competency in handling a wide range of aviation transactions, including aviation finance, and aviation litigation. Our clientele in this practice area include airline operators, financial institutions, aviation leasing companies and regulatory agencies within and outside Nigeria.",
             "PUC’s experience in aviation finance covers advice on structure of the finance, review, negotiation, drafting of some Nigerian law finance documents, stamping and registration, and interface with regulatory agencies on behalf of the clients. PUC pools its wealth of experience, competency and the good relationship it maintains with these agencies to ensure speedy conclusions of these transactions, and therefore meeting clients’ expectation."
@@ -298,6 +308,7 @@ const expertiseData = {
     },
     commercialPractice: {
         title: 'General Commercial Practice',
+        image: '/assets/img/expertise/Maritime2.jpg',
         description: [
             "This Practice Section encompasses all other areas of legal services offered by the Firm in addition to our core competence Practice Areas namely: Advocacy and Alternative Dispute Resolution, Banking and Finance, Communications, Project Finance, Maritime, Aviation, Corporate Restructurings and Mergers & Acquisitions, Energy and Environment, Capital Market, Labour and Industrial Relations.",
             "PUC routinely provides its clients with general commercial advisory and transactional services. Our services span the spectrum of a company`s life from start-up to the development, institutionalisation and strengthening of its corporate and commercial structures. We handle incorporation and registration of companies, partnerships, joint ventures and incorporated trustees. We provide businesses real-time support on corporate and commercial law issues, including negotiation, drafting and review of documentation ranging from loan agreements, mortgages, leases, franchise, joint venture, agency and brokerage agreements."
@@ -319,6 +330,7 @@ const expertiseData = {
     },
     transportationLaw: {
         title: 'Transportation Law',
+        image: '/assets/img/road.jpg',
         description: [
             "The transport industry is significant in the emergence and sustenance of an efficient economy and market growth. This realisation is driving the multi-billion dollar public and private-sector led investments in the transport sector in Nigeria, across Africa and other emerging markets.",
             "With the planned investment of US$2.9 trillion in infrastructure development in Nigeria in the next 30 years, a large chunk of which is dedicated to the transport sector and projected regional transport networks including the Trans-African Highway, the transport sector in Africa is set to witness tremendous developments. With the pressure of development and the underpinning policy, legal and regulatory frameworks, comes fresh legal issues and challenges. Taking advantage of the new opportunities offered by these developments would require a deep knowledge of the applicable legal regimes, a clear understanding of the market, deft handling of the regulatory structures and issues, and certainly, innovative legal solutions. This is what we offer our clients in the transport sector.",

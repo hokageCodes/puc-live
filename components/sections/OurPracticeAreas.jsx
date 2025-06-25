@@ -22,17 +22,17 @@ const practiceAreas = [
   {
     title: 'Capital Market',
     description: 'Protecting your intellectual property is crucial...',
-    image: '/assets/img/capital.jpg',
+    image: '/assets/img/expertise/capital.jpg',
   },
   {
     title: 'Communications Law',
     description: 'When conflicts arise, our experienced litigators...',
-    image: '/assets/img/comms.jpg',
+    image: '/assets/img/expertise/Communications.jpg',
   },
   {
     title: 'Energy and Environmental Law',
     description: 'Our tax law experts help individuals and businesses...',
-    image: '/assets/img/energy.jpg',
+    image: '/assets/img/expertise/energy.jpg',
   },
 ];
 

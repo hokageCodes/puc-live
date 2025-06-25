@@ -1,12 +1,19 @@
+'use client';
+
 const CareersPage = () => {
   return (
     <div className="min-h-screen font-sans">
-      {/* Hero Section */}
-      {/* <section className="bg-[#01553d] text-white text-center py-32 px-6">
-        <h1 className="text-5xl font-bold">Careers at PUC</h1>
-      </section> */}
+      {/* Hero Banner Section */}
+      <section
+        className="relative h-[40vh] md:h-[50vh] bg-cover bg-center flex items-center justify-center"
+        style={{
+          backgroundImage: "url('/assets/img/careers1.jpg')",
+        }}
+      >
+      </section>
 
-      <div className="max-w-5xl mx-auto px-2 pt-32 space-y-12">
+      {/* Main Content */}
+      <div className="max-w-5xl mx-auto px-2 pt-16 md:pt-16 space-y-12">
         {/* Introduction Section */}
         <section className="text-justify">
           <h2 className="text-3xl md:text-4xl font-bold text-[#01553d] mb-4">Interested in Joining?</h2>
@@ -79,7 +86,7 @@ const CareersPage = () => {
             opportunities to grow, learn, and lead.
           </p>
           <button
-            className="mt-6 bg-[#fff] border text-[#01553d] font-semibold py-4 px-2 
+            className="mt-6 bg-[#fff] border text-[#01553d] font-semibold py-4 px-6 
               hover:bg-transparent hover:text-white transition duration-300 rounded-lg"
           >
             <a href="/job-openings">See Job Openings</a>
