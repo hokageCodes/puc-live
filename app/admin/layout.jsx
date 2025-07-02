@@ -1,7 +1,7 @@
 'use client';
+import Header from '../../components/admin/Header';
+import Sidebar from '../../components/admin/Sidebar';
 import { useState, useEffect } from 'react';
-import Sidebar from 'apps/puc-final-2025/components/admin/Sidebar';
-import Header from 'apps/puc-final-2025/components/admin/Header';
 
 export default function AdminLayoutWrapper({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
