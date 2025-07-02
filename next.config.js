@@ -1,11 +1,8 @@
-const path = require("path");
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack(config) {
-    config.resolve.alias["@db"] = path.resolve(__dirname, "../../packages/db/index");
-    return config;
-  },
+    env: {
+        JWT_SECRET: process.env.JWT_SECRET,
+      },
 };
 
 module.exports = nextConfig;
