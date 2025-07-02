@@ -2,7 +2,7 @@
 import { LogOut, User, Menu, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { adminApi } from 'apps/puc-final-2025/utils/api';
+import { adminApi } from '../../utils/api';
 
 export default function Header({ onToggleSidebar, sidebarOpen }) {
   const router = useRouter();
