@@ -10,7 +10,7 @@ const practiceAreas = [
     image: '/assets/img/adr.jpg',
   },
   {
-    title: 'Transportation Law',
+    title: 'Transport Law',
     description: 'Our real estate experts handle all matters...',
     image: '/assets/img/road.jpg',
   },
@@ -20,9 +20,9 @@ const practiceAreas = [
     image: '/assets/img/banking.jpg',
   },
   {
-    title: 'Capital Market',
+    title: 'Capital Markets',
     description: 'Protecting your intellectual property is crucial...',
-    image: '/assets/img/expertise/capital.jpg',
+    image: '/assets/img/Capital.jpg',
   },
   {
     title: 'Communications Law',

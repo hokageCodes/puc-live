@@ -45,13 +45,13 @@ const AboutUsIntro = () => {
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-[#01553d] mb-2">Our Vision</h2>
             <p className="text-lg leading-relaxed text-black">
-              Our vision is to be the foremost legal firm in Africa, with international affiliations.
+              Our vision is to be the foremost legal firm in Africa.
             </p>
           </div>
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-[#01553d] mb-2">Our Mission</h2>
             <p className="text-lg leading-relaxed text-black">
-              We strive to be judged by clients as unparalleled in service delivery, and to provide a conducive environment for the best and brightest minds in pursuit of excellence and career fulfilment.
+              To contribute to societal growth through unparalleled legal services
             </p>
           </div>
         </div>
@@ -60,7 +60,7 @@ const AboutUsIntro = () => {
         <div className="relative h-screen overflow-hidden">
           {/* Background Image Layer */}
           <div
-            className="absolute inset-0 bg-[url('/assets/img/value-banner.png')] bg-cover bg-center"
+            className="absolute inset-0 bg-[url('/assets/img/Contact3.jpg')] bg-cover bg-center"
             style={{ backgroundAttachment: 'fixed', zIndex: 1 }}
           ></div>
 

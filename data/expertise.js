@@ -94,8 +94,8 @@ const expertiseData = {
         ]
     },
     capitalMarket: {
-        title: 'Capital Market Law',
-        image: '/assets/img/expertise/capital.jpg',
+        title: 'Capital Markets',
+        image: '/assets/img/Capital.jpg',
         description: [
             "Our Capital Market practice team possess sound capital markets experience to help major corporate bodies, federal and state governments and financial institutions access - or offer - funding in innovative ways. The firm is registered with the Securities and Exchange Commission (“SEC”) and a good number of members of the team are registered as Sponsored Individuals and/or Compliance Officers.",
             "Our experience include advising issuers, sellers, and underwriters involved in initial and secondary public offerings of securities, advising issuers on transaction involving the offering of debentures, bonds, as well as diverse financial instruments, preparing legal opinions for issuers, underwriters, and rating agencies, negotiating agreements with underwriters, amongst others.",
@@ -187,7 +187,7 @@ const expertiseData = {
     },
     labourIndustry: {
         title: 'Labour and Industrial Relations',
-        image: '/assets/img/expertise/labour.jpg',
+        image: '/assets/img/expertise/Labour.jpg',
         description: [
             "PUC has renowned expertise in Labour and Industrial Relations Law and Practice. We advise and represent clients on various aspects including human resources and labour laws compliance audit, industrial relations and labour litigation, preparation of employees policy manuals and handbooks, negotiations and preparations of contracts of services, severance agreements, collective bargaining agreements, labour management relations, negotiation of outsourcing arrangements, and representation in the Industrial Arbitration Panel, and the hierarchies of courts in Nigeria.",
             "Our lawyers possess vast knowledge and experience in labour and industrial dispute matters and, we work and partner as necessary with leading human resources, thereby providing our clients the benefit of very rich, cross-fertilised ideas and strategies."
@@ -247,7 +247,7 @@ const expertiseData = {
     },
     maritime: {
         title: 'Maritime',
-        image: '/assets/img/expertise/maritime.jpg',
+        image: '/assets/img/expertise/Maritime.jpg',
         description: [
             "PUC is an internationally renowned as Nigeria’s leading maritime law firm, with particular expertise in ship finance, ship litigation, policy formulation as well as legislative drafting and advocacy.",
             "We are counsel of choice to multinational businesses, national governments and African sub regional institutions and agencies. The expertise of our team and our deep understanding of the legal regimes and markets epitomised by the quality of our work, some of which we highlight below, continue to endear us to our satisfied clients and earn us their recommendations.",
@@ -278,7 +278,7 @@ const expertiseData = {
     },
     aviation: {
         title: 'Aviation',
-        image: '/assets/img/expertise/aviation.jpg',
+        image: '/assets/img/expertise/Aviation.jpg',
         description: [
             "PUC, has over the years, developed extensive experience and core competency in handling a wide range of aviation transactions, including aviation finance, and aviation litigation. Our clientele in this practice area include airline operators, financial institutions, aviation leasing companies and regulatory agencies within and outside Nigeria.",
             "PUC’s experience in aviation finance covers advice on structure of the finance, review, negotiation, drafting of some Nigerian law finance documents, stamping and registration, and interface with regulatory agencies on behalf of the clients. PUC pools its wealth of experience, competency and the good relationship it maintains with these agencies to ensure speedy conclusions of these transactions, and therefore meeting clients’ expectation."
@@ -329,7 +329,7 @@ const expertiseData = {
         ]
     },
     transportationLaw: {
-        title: 'Transportation Law',
+        title: 'Transport Law',
         image: '/assets/img/road.jpg',
         description: [
             "The transport industry is significant in the emergence and sustenance of an efficient economy and market growth. This realisation is driving the multi-billion dollar public and private-sector led investments in the transport sector in Nigeria, across Africa and other emerging markets.",

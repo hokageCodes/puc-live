@@ -58,6 +58,9 @@ export default function Footer() {
                   <Link href="#" className="hover:underline">LinkedIn</Link>
                 </li>
                 <li>
+                  <Link href="#" className="hover:underline">Instagram</Link>
+                </li>
+                <li>
                   <Link href="#" className="hover:underline">X (Twitter)</Link>
                 </li>
               </ul>
