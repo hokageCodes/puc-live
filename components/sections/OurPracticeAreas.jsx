@@ -22,7 +22,7 @@ const practiceAreas = [
   {
     title: 'Capital Markets',
     description: 'Protecting your intellectual property is crucial...',
-    image: '/assets/img/Capital.jpg',
+    image: '/assets/img/expertise/Capital.jpg',
   },
   {
     title: 'Communications Law',

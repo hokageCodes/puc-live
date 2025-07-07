@@ -95,7 +95,7 @@ const expertiseData = {
     },
     capitalMarket: {
         title: 'Capital Markets',
-        image: '/assets/img/Capital.jpg',
+        image: '/assets/img/expertise/Capital.jpg',
         description: [
             "Our Capital Market practice team possess sound capital markets experience to help major corporate bodies, federal and state governments and financial institutions access - or offer - funding in innovative ways. The firm is registered with the Securities and Exchange Commission (“SEC”) and a good number of members of the team are registered as Sponsored Individuals and/or Compliance Officers.",
             "Our experience include advising issuers, sellers, and underwriters involved in initial and secondary public offerings of securities, advising issuers on transaction involving the offering of debentures, bonds, as well as diverse financial instruments, preparing legal opinions for issuers, underwriters, and rating agencies, negotiating agreements with underwriters, amongst others.",
