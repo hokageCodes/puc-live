@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
-import { getImageUrl } from 'apps/puc-final-2025/lib/getImageUrl';
+// import { getImageUrl } from 'apps/puc-final-2025/lib/getImageUrl';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 

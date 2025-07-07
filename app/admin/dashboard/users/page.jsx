@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AddUserModal from 'apps/puc-final-2025/components/admin/users/AddUserModal';
-import { getImageUrl } from 'apps/puc-final-2025/lib/getImageUrl';
+import AddUserModal from '../../../../components/admin/users/AddUserModal';
+import { getImageUrl } from '../../../../lib/getImageUrl';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
