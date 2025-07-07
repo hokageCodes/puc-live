@@ -9,7 +9,7 @@ export default function AdminDashboardOverview() {
   const [practiceAreas, setPracticeAreas] = useState([]);
 
   useEffect(() => {
-    const backend = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const backend = "https://puc-backend-t8pl.onrender.com/";
 
     const fetchAll = async () => {
       const [staffRes, deptRes, teamRes, paRes] = await Promise.all([

@@ -16,7 +16,7 @@ export default function TeamSection() {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/staff`);
+        const res = await fetch('https://puc-backend-t8pl.onrender.com/api/staff');
         const data = await res.json();
         setStaff(data);
       } catch (err) {

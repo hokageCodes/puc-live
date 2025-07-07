@@ -23,7 +23,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const base = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const base = "https://puc-backend-t8pl.onrender.com/";
 
       const [staffRes, deptRes, teamRes, paRes] = await Promise.all([
         fetch(`${base}/api/staff`),
