@@ -133,7 +133,7 @@ export default function PracticeAreasSection() {
         {/* CTA Button */}
         <div className="mt-16 text-center">
           <a
-            href="/practice-areas"
+            href="/expertise"
             className="inline-block px-8 py-4 text-base font-medium text-white bg-[#01553d] rounded-lg hover:bg-[#014634] transition"
           >
             See All Practice Areas

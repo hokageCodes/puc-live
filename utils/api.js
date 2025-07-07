@@ -203,3 +203,14 @@ export class ApiError extends Error {
   
     return { handleError };
   }
+
+
+  // Staff-specific API calls
+export const staffApi = {
+    getAll: () => api.get('/api/staff'),
+    getById: (id) => api.get(`/api/staff/${id}`),
+    create: (data) => api.post('/api/staff', data),
+    update: (id, data) => api.put(`/api/staff/${id}`, data),
+    delete: (id) => api.delete(`/api/staff/${id}`),
+  };
+  

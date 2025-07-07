@@ -1,54 +1,37 @@
 'use client';
 
-import { useEffect, useRef, lazy, Suspense } from 'react';
+import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Pagination, Autoplay } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/pagination';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const TeamCard = lazy(() => import('../../components/TeamCard'));
-
-const teamMembers = [
-  {
-    name: 'Paul Usoro, SAN',
-    role: 'Senior Partner',
-    image: '/assets/img/PP.jpg',
-  },
-  {
-    name: 'Barr(Mrs.) Mfon Usoro.',
-    role: 'Managing Partner',
-    image: '/assets/img/MP.jpg',
-  },
-  {
-    name: 'Munirudeen Liadi',
-    role: 'Partner',
-    image: '/assets/img/Alj.jpg',
-  },
-  {
-    name: 'Obafolahan Ojibara',
-    role: 'Partner',
-    image: '/assets/img/kabi.jpg',
-  },
-  {
-    name: 'Chinedu Anyaso',
-    role: 'Partner',
-    image: '/assets/img/chi.jpg',
-  },
-];
+const TeamCard = lazy(() => import('../TeamCard'));
 
 export default function TeamSection() {
   const sectionRef = useRef(null);
   const titleRef = useRef(null);
+  const [staff, setStaff] = useState([]);
+
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/staff`);
+        const data = await res.json();
+        setStaff(data);
+      } catch (err) {
+        console.error('❌ Error fetching staff:', err);
+      }
+    };
+
+    fetchStaff();
+  }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo(
         titleRef.current,
-        { y: 100, opacity: 0 },
+        { y: 80, opacity: 0 },
         {
           y: 0,
           opacity: 1,
@@ -65,80 +48,86 @@ export default function TeamSection() {
     return () => ctx.revert();
   }, []);
 
+  const seniorPartner = staff.find(
+    (m) => m.position?.trim().toLowerCase() === 'senior partner'
+  );
+
+  const managingPartner = staff.find(
+    (m) => m.position?.trim().toLowerCase() === 'managing partner'
+  );
+
+  const partners = staff.filter(
+    (m) =>
+      m.position?.trim().toLowerCase() === 'partner' &&
+      m._id !== seniorPartner?._id &&
+      m._id !== managingPartner?._id
+  );
+
   return (
-    <section ref={sectionRef} className="bg-white pt-20">
-      <div className="text-center mb-20">
-        <div className="relative inline-block">
-          <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-[#01553d] mb-4 relative">
-            <span ref={titleRef}>THE EXECUTIVE TEAM</span>
-            <div className="absolute top-0 left-0 text-[#01553d]/20 -translate-x-1 -translate-y-1 -z-10 will-change-transform">
-              THE EXECUTIVE TEAM
-            </div>
+    <section ref={sectionRef} className="relative py-24 px-4 overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none" />
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="text-center mb-16">
+          <h2
+            ref={titleRef}
+            className="text-4xl md:text-6xl font-extrabold tracking-tight text-[#014634]"
+          >
+            Leadership & Executive Team
           </h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-[#01553d] to-[#01553d]/50 mx-auto mt-4"></div>
+          <p className="mt-4 text-gray-700 text-lg max-w-2xl mx-auto">
+            At the helm of our legal excellence are brilliant minds with unmatched experience and vision.
+          </p>
         </div>
-        <p className="text-xl text-gray-600 mt-8 max-w-2xl mx-auto leading-relaxed">
-          Pioneering legal excellence through innovation, integrity, and unwavering commitment to justice.
-        </p>
-      </div>
 
-      {/* Desktop Flex Wrap Grid */}
-      <div className="hidden md:flex flex-wrap justify-center gap-6 px-4 mx-auto max-w-screen-xl">
-        {teamMembers.map((member, index) => (
-          <div key={index} className="w-[250px]">
-            <Suspense
-              fallback={
-                <div className="w-full h-[380px] bg-gray-100 rounded-xl animate-pulse" />
-              }
-            >
-              <TeamCard member={member} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 md:grid-cols-3 lg:grid-cols-4">
+          {seniorPartner && (
+            <Suspense fallback={<LoadingCard />}>
+              <TeamCard member={seniorPartner} badge="Senior Partner" />
             </Suspense>
-          </div>
-        ))}
-      </div>
+          )}
 
-      {/* Mobile Swiper */}
-      <div className="block md:hidden px-2 relative">
-        <Swiper
-          modules={[Pagination, Autoplay]}
-          slidesPerView={1}
-          centeredSlides={false}
-          loop
-          autoplay={{
-            delay: 3000,
-            disableOnInteraction: false,
-          }}
-          pagination={{
-            clickable: true,
-            el: '.custom-swiper-pagination',
-          }}
-          className="pb-16"
-        >
-          {teamMembers.map((member, index) => (
-            <SwiperSlide key={index}>
-              <Suspense
-                fallback={
-                  <div className="w-full h-[380px] bg-gray-100 rounded-xl animate-pulse" />
-                }
-              >
-                <TeamCard member={member} />
-              </Suspense>
-            </SwiperSlide>
+          {managingPartner && (
+            <Suspense fallback={<LoadingCard />}>
+              <TeamCard member={managingPartner} badge="Managing Partner" />
+            </Suspense>
+          )}
+
+          {partners.map((member) => (
+            <Suspense key={member._id} fallback={<LoadingCard />}>
+              <TeamCard member={member} badge="Partner" />
+            </Suspense>
           ))}
-        </Swiper>
 
-        <div className="custom-swiper-pagination flex justify-center gap-2 absolute bottom-0 left-0 right-0 mt-32 z-10 [&>.swiper-pagination-bullet]:w-3 [&>.swiper-pagination-bullet]:h-3 [&>.swiper-pagination-bullet]:rounded-full [&>.swiper-pagination-bullet]:bg-[#d1d5db] [&>.swiper-pagination-bullet-active]:bg-[#01553d] [&>.swiper-pagination-bullet]:transition-all [&>.swiper-pagination-bullet]:duration-300" />
-      </div>
+          {/* Fallback if no filtered results */}
+          {!seniorPartner && !managingPartner && partners.length === 0 && staff.length > 0 && (
+            <>
+              <div className="col-span-full text-center text-gray-500 mb-4">
+                No filtered results found. Showing all staff:
+              </div>
+              {staff.map((member) => (
+                <Suspense key={member._id} fallback={<LoadingCard />}>
+                  <TeamCard member={member} badge={member.position || 'Staff'} />
+                </Suspense>
+              ))}
+            </>
+          )}
+        </div>
 
-      {/* CTA Button */}
-      <div className="mt-16 text-center">
-        <a
-          href="/people"
-          className="inline-block px-8 py-4 text-base font-medium text-white bg-[#01553d] rounded-lg hover:bg-[#014634] transition"
-        >
-          See Full Team
-        </a>
+        <div className="mt-20 text-center">
+          <a
+            href="/people"
+            className="inline-block px-8 py-3 rounded-full text-white bg-[#014634] hover:bg-[#013d31] transition"
+          >
+            See Full Team
+          </a>
+        </div>
       </div>
     </section>
+  );
+}
+
+function LoadingCard() {
+  return (
+    <div className="w-full h-[380px] bg-gray-200 rounded-xl animate-pulse" />
   );
 }

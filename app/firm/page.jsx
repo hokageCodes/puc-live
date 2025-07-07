@@ -56,19 +56,24 @@ const AboutUsIntro = () => {
           </div>
         </div>
 
-        {/* Tagline */}
- {/* Tagline Parallax Section */}
-<div className="relative h-[300px] overflow-hidden my-16">
-  <div
-    className="absolute inset-0 bg-[url('/assets/img/law-background.jpg')] bg-cover bg-center transform scale-110"
-    style={{ backgroundAttachment: 'fixed' }}
-  ></div>
-  <div className="relative z-10 flex items-center justify-center h-full bg-primary px-4">
-    <h2 className="text-white text-center text-2xl md:text-4xl lg:text-5xl font-bold max-w-3xl">
-      A law firm built on trust, expertise, and results.
-    </h2>
-  </div>
-</div>
+        {/* Tagline Parallax Section */}
+        <div className="relative h-screen overflow-hidden">
+          {/* Background Image Layer */}
+          <div
+            className="absolute inset-0 bg-[url('/assets/img/value-banner.png')] bg-cover bg-center"
+            style={{ backgroundAttachment: 'fixed', zIndex: 1 }}
+          ></div>
+
+          {/* Overlay with dark tint (optional) */}
+          <div className="absolute inset-0 bg-black/40 z-10"></div>
+
+          {/* Text Content */}
+          <div className="relative z-20 flex items-center justify-center h-full px-4">
+            <h2 className="text-white text-center text-3xl md:text-5xl lg:text-7xl font-bold max-w-4xl">
+              A law firm built on trust, expertise, and results.
+            </h2>
+          </div>
+        </div>
 
 
         {/* Timeline Section */}

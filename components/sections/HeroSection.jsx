@@ -53,7 +53,7 @@ export default function HeroSection() {
             viewport={{ once: true }}
           >
             <a
-              href="/practice-areas"
+              href="/expertise"
               className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-normal text-white transition-all duration-200 rounded bg-[#01553d] hover:bg-[#013d2d] shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               Our Practice Areas

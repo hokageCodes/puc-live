@@ -1,21 +1,31 @@
-// components/admin/AdminLayoutWrapper.jsx
 'use client';
+
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
 export default function AdminLayoutWrapper({ children }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [authenticated, setAuthenticated] = useState(null); // null means unknown
+  const [authenticated, setAuthenticated] = useState(null); // null = loading
+
+  const isLoginPage = pathname === '/admin/login';
 
   useEffect(() => {
+    // Skip auth check if on login page
+    if (isLoginPage) {
+      setAuthenticated(false);
+      return;
+    }
+
     const checkAuth = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/me`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin`, {
           credentials: 'include',
         });
+        
         if (res.ok) {
           setAuthenticated(true);
         } else {
@@ -29,14 +39,22 @@ export default function AdminLayoutWrapper({ children }) {
     };
 
     checkAuth();
-  }, []);
+  }, [isLoginPage, router]);
 
-  if (authenticated === null) {
+  // Optional: Small loading screen when checking auth
+  if (!isLoginPage && authenticated === null) {
     return <div className="p-4 text-slate-600 text-sm">Checking session...</div>;
   }
 
-  if (!authenticated) return null; // Avoid hydration flash
+  // ✅ If on login page, render children directly (no sidebar/header)
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
+  // Prevent flash if user is not authenticated
+  if (!authenticated) return null;
+
+  // ✅ If authenticated and not login page, render admin layout
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <div className="flex h-screen overflow-hidden">

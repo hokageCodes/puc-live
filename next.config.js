@@ -1,8 +1,15 @@
-/** @type {import('next').NextConfig} */
+// next.config.js
 const nextConfig = {
-    env: {
-        JWT_SECRET: process.env.JWT_SECRET,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '5000',
+        pathname: '/uploads/**',
       },
+    ],
+  },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
