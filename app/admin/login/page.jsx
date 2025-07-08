@@ -1,5 +1,3 @@
-// app/admin/login/page.js
-'use client';
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -20,10 +18,11 @@ export default function AdminLoginPage() {
     setLoading(true);
     
     console.log('Submitting login form:', form);
-    console.log('Backend URL:', "https://puc-backend-t8pl.onrender.com/");
+    console.log('Backend URL:', "https://puc-backend-t8pl.onrender.com");
   
     try {
-      const backendUrl = "https://puc-backend-t8pl.onrender.com/" || 'http://localhost:5000';
+      const backendUrl = "https://puc-backend-t8pl.onrender.com";
+      // Fixed: Use template literal properly
       const res = await fetch(`${backendUrl}/api/admin/login`, {
         method: 'POST',
         credentials: 'include',
@@ -36,21 +35,38 @@ export default function AdminLoginPage() {
       
       if (!res.ok) {
         const data = await res.json();
+        console.log('Login error response:', data);
         setError(data.message || 'Login failed');
         return;
       }
 
       const data = await res.json();
-      console.log('Login response data:', data);
+      console.log('Login success response:', data);
+      console.log('Admin data:', data.admin);
+      console.log('Is admin?', data.admin?.isAdmin);
       
-      // Check if cookies are set
-      console.log('All cookies:', document.cookie);
+      // Verify the cookie was set properly
+      console.log('All cookies after login:', document.cookie);
       
-      // Wait a moment for cookie to be set, then redirect
-      setTimeout(() => {
-        console.log('Redirecting to dashboard...');
-        router.push('/admin/dashboard');
-      }, 100);
+      // More detailed validation
+      if (!data.admin) {
+        console.error('No admin object in response');
+        setError('Login successful but no admin data received');
+        return;
+      }
+      
+      if (!data.admin.isAdmin) {
+        console.error('Admin flag is false or missing:', data.admin.isAdmin);
+        setError('Login successful but user is not an admin');
+        return;
+      }
+      
+      // Store admin info in localStorage as backup (optional)
+      localStorage.setItem('adminData', JSON.stringify(data.admin));
+      
+      // Redirect to dashboard
+      console.log('Redirecting to dashboard...');
+      router.push('/admin/dashboard');
       
     } catch (err) {
       console.error('Login error:', err);
@@ -121,7 +137,7 @@ export default function AdminLoginPage() {
         
         {/* Debug info (remove in production) */}
         <div className="mt-4 text-xs text-slate-500">
-          <p>Backend URL: {process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'}</p>
+          <p>Backend URL: {process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com'}</p>
         </div>
       </div>
     </div>

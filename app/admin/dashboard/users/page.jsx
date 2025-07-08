@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import AddUserModal from '../../../../components/admin/users/AddUserModal';
 import { getImageUrl } from '../../../../lib/getImageUrl';
+import Link from 'next/link';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
@@ -17,35 +18,36 @@ export default function AdminUsersPage() {
   const [practiceAreaFilter, setPracticeAreaFilter] = useState('');
 
   const [showModal, setShowModal] = useState(false);
+  const [editingStaff, setEditingStaff] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
+  const base = "https://puc-backend-t8pl.onrender.com";
+
+  const fetchData = async () => {
+    const [staffRes, deptRes, teamRes, paRes] = await Promise.all([
+      fetch(`${base}/api/staff`),
+      fetch(`${base}/api/departments`),
+      fetch(`${base}/api/teams`),
+      fetch(`${base}/api/practice-areas`),
+    ]);
+
+    const [staff, departments, teams, practiceAreas] = await Promise.all([
+      staffRes.json(),
+      deptRes.json(),
+      teamRes.json(),
+      paRes.json(),
+    ]);
+
+    setUsers(staff);
+    setFiltered(staff);
+    setDepartments(departments);
+    setTeams(teams);
+    setPracticeAreas(practiceAreas);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      const base = "https://puc-backend-t8pl.onrender.com/";
-
-      const [staffRes, deptRes, teamRes, paRes] = await Promise.all([
-        fetch(`${base}/api/staff`),
-        fetch(`${base}/api/departments`),
-        fetch(`${base}/api/teams`),
-        fetch(`${base}/api/practice-areas`),
-      ]);
-
-      const [staff, departments, teams, practiceAreas] = await Promise.all([
-        staffRes.json(),
-        deptRes.json(),
-        teamRes.json(),
-        paRes.json(),
-      ]);
-
-      setUsers(staff);
-      setFiltered(staff);
-      setDepartments(departments);
-      setTeams(teams);
-      setPracticeAreas(practiceAreas);
-    };
-
     fetchData();
   }, []);
 
@@ -79,6 +81,27 @@ export default function AdminUsersPage() {
     setCurrentPage(1);
   }, [searchTerm, departmentFilter, teamFilter, practiceAreaFilter, users]);
 
+  const handleEdit = (user) => {
+    setEditingStaff(user);
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    const confirmed = confirm('Are you sure you want to delete this staff?');
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`${base}/api/staff/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setUsers((prev) => prev.filter((u) => u._id !== id));
+      } else {
+        alert('Failed to delete staff.');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+    }
+  };
+
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
   const currentUsers = filtered.slice(indexOfFirst, indexOfLast);
@@ -89,7 +112,10 @@ export default function AdminUsersPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-slate-800">All Staff</h1>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            setEditingStaff(null);
+            setShowModal(true);
+          }}
           className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition"
         >
           + Add Staff
@@ -131,7 +157,7 @@ export default function AdminUsersPage() {
           <div key={user._id} className="bg-white rounded-lg shadow p-4">
             <div className="flex items-center space-x-4 mb-2">
               <img
-                src={getImageUrl(user.profilePhoto)} // ✅ Use helper
+                src={getImageUrl(user.profilePhoto)}
                 alt={user.firstName}
                 className="w-12 h-12 rounded-full object-cover"
               />
@@ -142,6 +168,27 @@ export default function AdminUsersPage() {
             </div>
             <p className="text-sm text-slate-600">{user.position || 'No position'}</p>
             <p className="text-xs text-slate-400">{user.department?.name || 'No department'}</p>
+
+            <div className="mt-4 flex justify-between text-sm">
+              <button
+                onClick={() => handleEdit(user)}
+                className="text-blue-600 hover:underline"
+              >
+                Edit
+              </button>
+              <Link
+                href={`/admin/staff/${user._id}`}
+                className="text-slate-700 hover:underline"
+              >
+                View
+              </Link>
+              <button
+                onClick={() => handleDelete(user._id)}
+                className="text-red-600 hover:underline"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         )) : (
           <p className="text-slate-500 text-sm col-span-full">No users match your filter.</p>
@@ -171,8 +218,19 @@ export default function AdminUsersPage() {
         </div>
       )}
 
+      {/* Add/Edit Modal */}
       {showModal && (
-        <AddUserModal onClose={() => setShowModal(false)} />
+        <AddUserModal
+          onClose={() => {
+            setShowModal(false);
+            setEditingStaff(null);
+            fetchData(); // re-fetch to refresh state
+          }}
+          editingStaff={editingStaff}
+          departments={departments}
+          teams={teams}
+          practiceAreas={practiceAreas}
+        />
       )}
     </div>
   );

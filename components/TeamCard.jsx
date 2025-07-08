@@ -40,12 +40,13 @@ export default function TeamMemberCard({ member, position, index }) {
     >
       <div className="relative">
         <div className="w-full h-84 overflow-hidden">
-          <img
-            src={imgSrc}
-            alt={`${member.firstName} ${member.lastName}`}
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-          />
+        <img
+          src={`https://puc-backend-t8pl.onrender.com${member.profilePhoto}`}
+          alt={member.name}
+          className="w-full h-[300px] object-cover rounded-xl"
+          loading='lazy'
+        />
+
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">

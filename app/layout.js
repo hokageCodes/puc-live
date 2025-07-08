@@ -1,5 +1,4 @@
 "use client"
-import { Arsenal } from "next/font/google";
 import "./globals.css";
 import Footer from "../components/footer/Footer";
 import NavBar from "../components/Navbar/Navbar";
@@ -8,11 +7,6 @@ import Loader from "../components/Loader";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 
-const arsenal = Arsenal({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
-
 export default function RootLayout({ children }) {
   const [finished, setFinished] = useState(false);
   const pathname = usePathname();
@@ -20,7 +14,7 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en" className="h-full">
-      <body className={`${arsenal.className} antialiased min-h-screen flex flex-col`}>
+      <body>
         <AnimatePresence mode="wait">
           {!finished && !isAdminRoute && (
             <motion.div

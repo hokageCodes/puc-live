@@ -1,114 +1,179 @@
+// app/admin/dashboard/page.js
 'use client';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { useEffect, useState } from 'react';
-
-export default function AdminDashboardOverview() {
-  const [staff, setStaff] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [teams, setTeams] = useState([]);
-  const [practiceAreas, setPracticeAreas] = useState([]);
+export default function AdminDashboard() {
+  const router = useRouter();
+  const [admin, setAdmin] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const backend = "https://puc-backend-t8pl.onrender.com/";
-
-    const fetchAll = async () => {
-      const [staffRes, deptRes, teamRes, paRes] = await Promise.all([
-        fetch(`${backend}/api/staff`),
-        fetch(`${backend}/api/departments`),
-        fetch(`${backend}/api/teams`),
-        fetch(`${backend}/api/practice-areas`),
-      ]);
-
-      const [staffData, deptData, teamData, paData] = await Promise.all([
-        staffRes.json(),
-        deptRes.json(),
-        teamRes.json(),
-        paRes.json(),
-      ]);
-
-      setStaff(staffData);
-      setDepartments(deptData);
-      setTeams(teamData);
-      setPracticeAreas(paData);
-    };
-
-    fetchAll();
+    checkAuth();
   }, []);
 
-  // Fake activity feed for now (you’ll swap this with real logs later)
-  const activityFeed = staff.slice().reverse().slice(0, 5).map((user) => ({
-    id: user._id,
-    type: 'Staff',
-    message: `Added ${user.firstName} ${user.lastName}`,
-    avatar: user.profilePhoto
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}${user.profilePhoto}`
-      : '/default-avatar.png',
-    timestamp: new Date(user.createdAt || user._id?.toString().slice(0, 8) * 1000).toLocaleDateString(), // fallback logic
-  }));
+  const checkAuth = async () => {
+    try {
+      const backendUrl = "https://puc-backend-t8pl.onrender.com";
+      const res = await fetch(`${backendUrl}/api/admin/me`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      console.log('Auth check response status:', res.status);
+      
+      if (!res.ok) {
+        console.log('Auth check failed, redirecting to login');
+        router.push('/admin/login');
+        return;
+      }
+
+      const data = await res.json();
+      console.log('Auth check success:', data);
+      
+      if (data.admin && data.admin.isAdmin) {
+        setAdmin(data.admin);
+      } else {
+        console.log('User is not admin, redirecting to login');
+        router.push('/admin/login');
+      }
+    } catch (err) {
+      console.error('Auth check error:', err);
+      setError('Authentication check failed');
+      router.push('/admin/login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const backendUrl = "https://puc-backend-t8pl.onrender.com";
+      const res = await fetch(`${backendUrl}/api/admin/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (res.ok) {
+        // Clear any stored admin data
+        localStorage.removeItem('adminData');
+        console.log('Logout successful, redirecting to login');
+        router.push('/admin/login');
+      } else {
+        console.error('Logout failed');
+      }
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-lg">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!admin) {
+    return null; // Will redirect to login
+  }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-4 sm:p-6">
-      {/* Sidebar */}
-      <aside className="w-full lg:w-1/3 space-y-6">
-        {/* Quick Stats */}
-        <div className="bg-white rounded-lg shadow p-4 space-y-4">
-          <h2 className="font-semibold text-slate-700 text-lg">Quick Stats</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center">
-              <p className="text-xs text-slate-500">Staff</p>
-              <p className="text-xl font-bold">{staff.length}</p>
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <h1 className="text-2xl font-bold text-slate-800">Admin Dashboard</h1>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-slate-600">
+                Welcome, {admin.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Logout
+              </button>
             </div>
-            <div className="text-center">
-              <p className="text-xs text-slate-500">Departments</p>
-              <p className="text-xl font-bold">{departments.length}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-slate-500">Teams</p>
-              <p className="text-xl font-bold">{teams.length}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-slate-500">Practice Areas</p>
-              <p className="text-xl font-bold">{practiceAreas.length}</p>
-            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Stats Cards */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">Total Staff</h3>
+            <p className="text-3xl font-bold text-emerald-600">--</p>
+            <p className="text-sm text-slate-600">Active employees</p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">Departments</h3>
+            <p className="text-3xl font-bold text-blue-600">--</p>
+            <p className="text-sm text-slate-600">Total departments</p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">Teams</h3>
+            <p className="text-3xl font-bold text-purple-600">--</p>
+            <p className="text-sm text-slate-600">Active teams</p>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold text-slate-800 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button className="bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-lg text-center transition-colors">
+              <div className="text-lg font-semibold">Add Staff</div>
+              <div className="text-sm opacity-90">Create new employee</div>
+            </button>
+            
+            <button className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-center transition-colors">
+              <div className="text-lg font-semibold">Manage Departments</div>
+              <div className="text-sm opacity-90">View & edit departments</div>
+            </button>
+            
+            <button className="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg text-center transition-colors">
+              <div className="text-lg font-semibold">Team Management</div>
+              <div className="text-sm opacity-90">Organize teams</div>
+            </button>
+            
+            <button className="bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-lg text-center transition-colors">
+              <div className="text-lg font-semibold">Practice Areas</div>
+              <div className="text-sm opacity-90">Manage practice areas</div>
+            </button>
           </div>
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="font-semibold text-slate-700 text-lg mb-4">Recent Activity</h2>
-          {activityFeed.length === 0 ? (
-            <p className="text-slate-500 text-sm">No activity yet.</p>
-          ) : (
-            <ul className="space-y-3">
-              {activityFeed.map((item) => (
-                <li key={item.id} className="flex items-center space-x-3">
-                  <img
-                    src={item.avatar}
-                    alt=""
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{item.message}</p>
-                    <p className="text-xs text-slate-400">
-                      {item.type} · {item.timestamp}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </aside>
-
-      {/* Main Area */}
-      <main className="w-full lg:w-2/3 bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-slate-800 mb-4">Welcome, Admin 👋</h1>
-        <p className="text-slate-600 mb-6">
-          This is your control panel. As more modules (onboarding, leave, tasks) go live, they’ll show up here.
-        </p>
-
-        <div className="bg-slate-50 p-4 rounded text-slate-500 text-sm">
-          🚧 Modules under construction. More updates coming soon.
+        <div className="mt-8 bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-slate-200">
+            <h2 className="text-xl font-semibold text-slate-800">Recent Activity</h2>
+          </div>
+          <div className="p-6">
+            <p className="text-slate-600">No recent activity to display.</p>
+          </div>
         </div>
       </main>
     </div>

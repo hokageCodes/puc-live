@@ -4,19 +4,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Optima';
+  src: url('/assets/fonts/Optima.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  font-family: 'Optima', sans-serif;
+}
+
+
 html {
   scroll-behavior: smooth;
 }
-
-
-body {
-  font-family: "Arsenal", sans-serif;
-}
-
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer utilities {
   .animate-title-reveal {
@@ -51,4 +54,6 @@ body {
 .input {
   @apply w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500;
 }
+
+
 
