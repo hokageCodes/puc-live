@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { getImageUrl } from '../lib/getImageUrl';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 
@@ -9,7 +8,13 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function TeamMemberCard({ member, position, index }) {
   const cardRef = useRef(null);
-  const imgSrc = getImageUrl(member.profilePhoto);
+
+  const baseUrl = 'https://puc-backend-t8pl.onrender.com';
+  const hasPhoto = member.profilePhoto && member.profilePhoto !== '';
+
+  const imageUrl = hasPhoto
+    ? `${baseUrl}/${member.profilePhoto.replace(/^\/?uploads\//, 'uploads/')}`
+    : null;
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -39,14 +44,17 @@ export default function TeamMemberCard({ member, position, index }) {
       className="group bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
     >
       <div className="relative">
-        <div className="w-full h-84 overflow-hidden">
-        <img
-          src={`https://puc-backend-t8pl.onrender.com${member.profilePhoto}`}
-          alt={member.name}
-          className="w-full h-[300px] object-cover rounded-xl"
-          loading='lazy'
-        />
-
+        <div className="w-full h-[500px] overflow-hidden rounded-xl bg-gray-100 flex items-center justify-center">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={`${member.firstName} ${member.lastName}`}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <span className="text-gray-500 text-sm">No Photo Available</span>
+          )}
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
@@ -64,7 +72,7 @@ export default function TeamMemberCard({ member, position, index }) {
                   {member.email}
                 </a>
               )}
-              {member.phoneNumber && (
+              {/* {member.phoneNumber && (
                 <a
                   href={`tel:${member.phoneNumber}`}
                   className="flex items-center text-sm hover:text-blue-300 transition-colors"
@@ -74,7 +82,7 @@ export default function TeamMemberCard({ member, position, index }) {
                   </svg>
                   {member.phoneNumber}
                 </a>
-              )}
+              )} */}
             </div>
           </div>
         </div>
