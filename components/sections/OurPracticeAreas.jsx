@@ -5,7 +5,7 @@ const PracticeAreaCard = lazy(() => import('../../components/PracticeAreaCard'))
 
 const practiceAreas = [
   {
-    title: 'Adr & Advocacy',
+    title: 'ADR & Advocacy',
     description: 'We provide comprehensive corporate law services...',
     image: '/assets/img/adr.jpg',
   },
@@ -88,7 +88,7 @@ export default function PracticeAreasSection() {
         {/* Section Heading */}
         <div className="text-center mb-20">
           <div className="relative inline-block">
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-[#01553d] mb-4 relative">
+            <h2 className="text-5xl md:text-6xl lg:text-7xl text-[#01553d] mb-4 relative">
               OUR PRACTICE AREAS
               <div className="absolute top-0 left-0 text-[#01553d]/20 -translate-x-1 -translate-y-1 -z-10">
                 OUR PRACTICE AREAS

@@ -78,7 +78,7 @@ const AboutSection = () => {
           }`}
         >
           <div className="relative inline-block">
-            <h2 className={`text-5xl md:text-6xl lg:text-7xl font-black text-[#01553d] mb-4 relative transition-all duration-1200 ease-out ${
+            <h2 className={`text-5xl md:text-6xl lg:text-7xl text-[#01553d] mb-4 relative transition-all duration-1200 ease-out ${
               isVisible.header ? 'animate-title-reveal' : ''
             }`}>
               ABOUT US

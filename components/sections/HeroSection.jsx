@@ -19,14 +19,14 @@ export default function HeroSection() {
       {/* Subtle dark overlay */}
       <div className="absolute inset-0 bg-black/40"></div>
 
-      <div className="relative z-10 px-4 mx-auto sm:px-6 lg:px-8 w-full max-w-7xl text-center">
-        <div className="max-w-5xl mx-auto">
+      <div className="relative z-10 px-4 mx-auto sm:px-6 lg:px-8 w-full max-w-9xl text-center">
+        <div className="max-w-7xl mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-5xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-normal text-white uppercase leading-tight"
+            className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-normal text-white uppercase leading-tight"
             style={{
               textShadow: '3px 3px 8px rgba(0,0,0,0.9)',
             }}

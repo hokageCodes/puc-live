@@ -125,13 +125,13 @@ export default function PeopleTeamPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <section ref={sectionRef} className="relative py-24 px-4 overflow-hidden">
+      <section ref={sectionRef} className="relative py-32 px-4 overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Title */}
           <div className="text-center mb-16">
             <h1
               ref={titleRef}
-              className="text-4xl md:text-6xl font-extrabold tracking-tight text-[#014634] mb-6"
+              className="text-4xl md:text-6xl tracking-tight text-[#014634] mb-6"
             >
               Our People
             </h1>
@@ -148,7 +148,7 @@ export default function PeopleTeamPage() {
               <button
                 key={group}
                 onClick={() => setActiveGroup(group)}
-                className={`px-5 py-2 rounded-full border text-sm transition font-medium ${
+                className={`px-5 py-2 rounded-full border text-sm transition ${
                   activeGroup === group
                     ? 'bg-[#014634] text-white border-[#014634]'
                     : 'text-[#014634] border-[#014634] hover:bg-[#014634]/10'
@@ -169,7 +169,7 @@ export default function PeopleTeamPage() {
               return (
                 <div key={groupName} className="position-section">
                   <div className="text-center mb-10">
-                    <h2 className="text-3xl md:text-4xl font-bold text-[#014634] mb-2">
+                    <h2 className="text-3xl md:text-4xl text-[#014634] mb-2">
                       {groupName}
                     </h2>
                     <div className="w-24 h-1 bg-[#014634] mx-auto"></div>
@@ -193,7 +193,7 @@ export default function PeopleTeamPage() {
 
           {/* CTA */}
           <div className="mt-24 text-center bg-white rounded-2xl shadow-lg p-12">
-            <h2 className="text-3xl font-bold text-[#014634] mb-4">
+            <h2 className="text-3xl text-[#014634] mb-4">
               Ready to Work with Us?
             </h2>
             <p className="text-gray-600 mb-8 max-w-2xl mx-auto">

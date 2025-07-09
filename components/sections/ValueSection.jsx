@@ -50,7 +50,7 @@ const ValuesSection = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="relative flex flex-col items-center text-center">
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-[#01553d] mb-4 relative">
+            <h2 className="text-5xl md:text-6xl lg:text-7xl text-[#01553d] mb-4 relative">
                 OUR VALUES
                 <div className="absolute top-0 left-0 text-[#01553d]/20 -translate-x-1 -translate-y-1 -z-10">
                 OUR VALUES

@@ -12,7 +12,7 @@ const AboutUsIntro = () => {
       <div className="max-w-7xl px-2 pb-8 pt-[100px] mx-auto text-black lg:pt-[130px]">
 
         {/* Page Heading */}
-        <div className="text-[35px] md:text-[36px] lg:text-[44px] xl:text-[60px] leading-[45px] md:leading-[52px] lg:leading-[67px] font-bold text-black">
+        <div className="text-[35px] md:text-[36px] lg:text-[44px] xl:text-[60px] leading-[45px] md:leading-[52px] lg:leading-[67px] text-black">
           <h1 className="text-primary">About Paul Usoro & Co.</h1>
         </div>
 

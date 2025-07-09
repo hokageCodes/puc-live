@@ -67,17 +67,15 @@ export default function TeamSection() {
     <section ref={sectionRef} className="relative py-24 px-4 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none" />
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="text-center mb-16">
-          <h2
-            ref={titleRef}
-            className="text-4xl md:text-6xl font-extrabold tracking-tight text-[#014634]"
-          >
-            Leadership & Executive Team
-          </h2>
-          <p className="mt-4 text-gray-700 text-lg max-w-2xl mx-auto">
-            At the helm of our legal excellence are brilliant minds with unmatched experience and vision.
-          </p>
-        </div>
+          <div className="relative inline-block text-center">
+            <h2 className="text-5xl md:text-6xl lg:text-7xl text-[#01553d] mb-4 relative">
+              LEADERSHIP & EXECUTIVE TEAM
+              <div className="absolute top-0 left-0 text-[#01553d]/20 -translate-x-1 -translate-y-1 -z-10">
+              LEADERSHIP & EXECUTIVE TEAM
+              </div>
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-[#01553d] to-[#01553d]/50 mx-auto mt-4"></div>
+          </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 md:grid-cols-3 lg:grid-cols-4">
           {seniorPartner && (

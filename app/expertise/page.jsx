@@ -59,7 +59,7 @@ export default function OurExpertise() {
 
     {/* Foreground Text */}
     <h2
-      className={`relative text-5xl md:text-6xl lg:text-7xl font-black text-[#01553d] tracking-tight transition-all duration-1000 ease-out z-10 ${
+      className={`relative text-5xl md:text-6xl lg:text-7xl text-[#01553d] tracking-tight transition-all duration-1000 ease-out z-10 ${
         isInView ? 'animate-title-reveal' : ''
       }`}
     >
