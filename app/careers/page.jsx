@@ -2,12 +2,12 @@
 
 const CareersPage = () => {
   return (
-    <div className="min-h-screen font-sans">
+    <div className="min-h-screen">
       {/* Hero Banner Section */}
       <section
         className="relative h-[40vh] md:h-[50vh] bg-cover bg-center flex items-center justify-center"
         style={{
-          backgroundImage: "url('/assets/img/careers1.jpg')",
+          backgroundImage: "url('/assets/img/Careers1.jpg')",
         }}
       >
       </section>
@@ -16,7 +16,7 @@ const CareersPage = () => {
       <div className="max-w-5xl mx-auto px-2 pt-16 md:pt-16 space-y-12">
         {/* Introduction Section */}
         <section className="text-justify">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#01553d] mb-4">Interested in Joining?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-[#01553d] mb-4 -mt-6">Interested in Joining?</h2>
           <p className="text-gray-800 mb-4 text-lg">
             At PUC, we recruit and retain legal professionals with strong academic
             backgrounds, the ability to solve complex issues, and provide sound
@@ -31,7 +31,7 @@ const CareersPage = () => {
             organizing in-house training sessions and sponsoring professional courses.
           </p>
           <p className="text-gray-800 text-lg">
-            We invite qualified applicants to join us by applying to the Human
+            We invite qualified applicants to join us by sending their application to the Human
             Resource Manager at{" "}
             <a href="mailto:careers@paulusoro.com" className="text-[#01553d] underline font-bold">
               careers@paulusoro.com
