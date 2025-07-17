@@ -1,93 +1,124 @@
-import "./globals.css";
-import NavBar from "../components/Navbar/Navbar";
-import { Analytics } from "@vercel/analytics/next";
-import Footer from "../components/footer/Footer";
-
-// ✅ Viewport metadata moved here
-export const viewport = {
-  width: "device-width",
-  initialScale: 1,
-};
+import './globals.css';
+import Footer from '../components/footer/Footer';
+import Head from 'next/head';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import NavBar from '../components/Navbar/Navbar';
 
 export const metadata = {
-  title: 'Paul Usoro & Co | Leading Commercial Law Firm in Nigeria',
+  title: 'Paul Usoro & Co | Top Commercial Law Firm in Nigeria',
   description:
-    'Paul Usoro & Co (PUC) is a top-tier full-service law firm in Nigeria, renowned for excellence in the Legal Domain',
+    'Paul Usoro & Co is Nigeria’s premier law firm known for excellence in the legal space.',
+  authors: [{ name: 'Hokage Creative Labs' }],
   keywords: [
-    'Paul Usoro and Co',
-    'PUC law firm',
-    'top law firms in Nigeria',
-    'commercial law Nigeria',
-    'dispute resolution Nigeria',
-    'telecommunications law',
-    'banking and finance law',
-    'media law Nigeria',
-    'arbitration lawyers Nigeria',
-    'litigation experts Lagos',
-    'legal services Nigeria',
-    'energy and natural resources law',
-    'infrastructure law Nigeria',
-    'transport law',
-    'project finance lawyers',
-    'intellectual property Nigeria',
-    'technology law firm Nigeria',
-    'regulatory compliance Nigeria',
-    'corporate governance Nigeria',
+    'Paul Usoro & Co',
+    'PUC Law Firm',
+    'Commercial Law Nigeria',
+    'Litigation Experts Lagos',
+    'Legal Advisory Nigeria',
+    'Top Law Firms in Nigeria',
+    'Dispute Resolution Nigeria',
+    'Regulatory Compliance Legal Services',
+    'Intellectual Property Law Nigeria',
+    'Corporate Law Advisory',
+    'Arbitration Services Nigeria',
+    'Banking Law Nigeria',
+    'Oil and Gas Legal Services',
+    'Telecom Legal Experts Nigeria',
+    'Election Petition Lawyers',
+    'Tech Legal Services',
+    'Real Estate Law Nigeria',
+    'Legal Consultants Nigeria',
     'Paul Usoro SAN',
-    'leading lawyers Nigeria',
-    'associate lawyers PUC',
-    'PUC legal team',
-    'legal consultancy Lagos',
-    'Nigerian bar association',
-    'top legal firm Lagos',
-    'maritime law Nigeria',
-    'tax advisory law firm',
-    'employment and labour law Nigeria',
-    'PUC partners and associates',
-    'professional legal services',
-    'law firm with integrity Nigeria',
+    'Professional Legal Services',
+    'PUC Legal Team',
+    'Law firm with legacy',
+    'Business Law Nigeria',
+    'Legal representation in Lagos',
+    'Nigeria’s foremost litigation firm',
+    'Paul Usoro Chambers',
+    'PUC Legal Practice',
+    'Client-focused legal strategy',
+    'PUC dispute resolution specialists',
   ],
   openGraph: {
-    title: 'Paul Usoro & Co | Leading Law Firm in Nigeria',
+    title: 'Paul Usoro & Co | Top Commercial Law Firm in Nigeria',
     description:
-      'Paul Usoro & Co (PUC) is a top-tier full-service law firm in Nigeria, renowned for excellence in the Legal Domain',
+      'Paul Usoro & Co is Nigeria’s premier law firm offering legal advisory and litigation services to top clients across all sectors.',
     url: 'https://paulusoro.com',
-    type: 'website',
+    siteName: 'Paul Usoro & Co',
     images: [
       {
         url: 'https://paulusoro.com/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Paul Usoro & Co Team',
+        alt: 'Paul Usoro & Co',
       },
     ],
+    type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Paul Usoro & Co | Expert Legal Services',
-    description:
-      'Meet the expert team at Paul Usoro & Co, Nigeria’s leading full-service law firm.',
-    site: '@paulusorolaw',
-    creator: '@paulusorolaw',
+    site: '@paulusoroco',
+    creator: '@paulusoroco',
     images: ['https://paulusoro.com/og-image.jpg'],
   },
   metadataBase: new URL('https://paulusoro.com'),
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+  alternates: {
+    canonical: 'https://paulusoro.com',
   },
-  robots: 'index, follow',
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
-export default function RootLayout({
-  children,
-}) {
+export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en">
+      <Head>
+        <link rel="canonical" href="https://www.paulusoro.com" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+
+        <script type="application/ld+json">
+          {`
+            {
+              "@context": "https://schema.org",
+              "@type": "LegalService",
+              "name": "Paul Usoro & Co",
+              "url": "https://www.paulusoro.com",
+              "logo": "https://www.paulusoro.com/assets/logo.png",
+              "image": "https://www.paulusoro.com/og-image.jpg",
+              "telephone": "+2348012345678",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Lagos",
+                "addressCountry": "NG"
+              },
+              "areaServed": {
+                "@type": "Country",
+                "name": "Nigeria"
+              },
+              "description": "Nigeria’s leading litigation and corporate law firm providing top-tier legal services to clients across banking, oil & gas, telecoms, and more."
+            }
+          `}
+        </script>
+
+        <link
+          rel="preload"
+          href="/assets/fonts/optima.woff2"
+          as="font"
+          type="font/otf"
+          crossOrigin="anonymous"
+        />
+      </Head>
       <body>
         <NavBar />
-        <main className="flex-1">{children}</main>
+        {children}
         <Footer />
+        <SpeedInsights />
         <Analytics />
       </body>
     </html>
