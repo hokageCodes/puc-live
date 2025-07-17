@@ -220,7 +220,7 @@
 // export default JobListingsPage;
 
 
-import ComingSoon from 'apps/puc-final-2025/components/ComingSsoon'
+import ComingSoon from '../../components/ComingSsoon'
 import React from 'react'
 
 export default function page() {
