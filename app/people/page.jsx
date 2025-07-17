@@ -124,7 +124,7 @@ export default function PeopleTeamPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <section ref={sectionRef} className="relative py-32 px-4 overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Title */}

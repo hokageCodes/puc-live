@@ -21,7 +21,7 @@ export default function ApplicationModal({ jobTitle, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     // TODO: Send to backend or email API
-    console.log('Submitting:', formData);
+    // console.log('Submitting:', formData);
     onClose(); // Close modal on submit for now
   };
 

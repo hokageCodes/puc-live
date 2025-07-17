@@ -86,8 +86,12 @@ export default function TeamMemberCard({ member, position, index }) {
           <h3 className="text-2xl font-bold text-slate-800 mb-2">
             {member.firstName} {member.lastName}
           </h3>
-          <p className="text-emerald-700 font-medium mb-2">{position}</p>
+          <p className="text-emerald-700 font-medium mb-4">{position}</p>
+
+          {/* See Profile Button */}
+          <button className="text-sm text-[#014634] underline">See Profile</button>
         </div>
+
       </div>
     </Link>
   );

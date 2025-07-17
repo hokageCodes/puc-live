@@ -42,7 +42,7 @@ function formatBioText(bio) {
 
 export default async function StaffDetailPage({ params }) {
   const staff = await getStaffDetail(params.id);
-  console.log('✅ Raw staff data:', staff);
+  // console.log('✅ Raw staff data:', staff);
 
 
   // Ensure we gracefully handle practiceAreas being an array of objects or empty

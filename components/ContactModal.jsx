@@ -38,7 +38,7 @@ const ContactModal = ({ closeModal }) => {
     setLoading(true);
     try {
       // Placeholder logic (firebase removed)
-      console.log('Form submitted:', formData);
+      // console.log('Form submitted:', formData);
 
       alert('Your message has been submitted successfully!');
       closeModal();

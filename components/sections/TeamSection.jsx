@@ -18,7 +18,7 @@ export default function TeamSection() {
       try {
         const res = await fetch('https://puc-backend-t8pl.onrender.com/api/staff');
         const data = await res.json();
-        console.log('Fetched staff data:', data); // Debug log
+        // console.log('Fetched staff data:', data);
         setStaff(data);
       } catch (err) {
         console.error('❌ Error fetching staff:', err);

@@ -180,7 +180,7 @@ const AboutSection = () => {
             <div className="relative w-full h-[500px] lg:h-[600px] group">
               <div className="relative w-full h-full rounded-2xl overflow-hidden border-2 border-[#01553d]/20 group-hover:border-[#01553d]/40 transition-all duration-500 hover:shadow-2xl hover:shadow-[#01553d]/10">
                 <Image
-                  src="/assets/img/Careers1.jpg"
+                  src="/assets/img/Careers1.webp"
                   alt="Paul Usoro & Co Law Office"
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-110"

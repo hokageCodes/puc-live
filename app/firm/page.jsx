@@ -33,7 +33,7 @@ const AboutUsIntro = () => {
         <div className="mb-8">
           <React.Suspense fallback={<Skeleton height={500} width="100%" />}>
             <img
-              src="/assets/img/firm.jpg"
+              src="/assets/img/firm.webp"
               alt="About Us"
               className="object-cover w-full h-[500px] rounded-lg"
             />
@@ -41,26 +41,28 @@ const AboutUsIntro = () => {
         </div>
 
         {/* Vision and Mission Section */}
-        <div className="mt-10 space-y-10 text-left">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-[#01553d] mb-2">Our Vision</h2>
-            <p className="text-lg leading-relaxed text-black">
-              Our vision is to be the foremost legal firm in Africa.
-            </p>
-          </div>
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-[#01553d] mb-2">Our Mission</h2>
-            <p className="text-lg leading-relaxed text-black">
-              To contribute to societal growth through unparalleled legal services
-            </p>
-          </div>
-        </div>
+        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+  <div className="bg-white shadow-md rounded-xl p-6">
+    <h2 className="text-2xl md:text-3xl font-bold text-[#01553d] mb-2">Our Vision</h2>
+    <p className="text-lg leading-relaxed text-black">
+      Our vision is to be the foremost legal firm in Africa.
+    </p>
+  </div>
+
+  <div className="bg-white shadow-md rounded-xl p-6">
+    <h2 className="text-2xl md:text-3xl font-bold text-[#01553d] mb-2">Our Mission</h2>
+    <p className="text-lg leading-relaxed text-black">
+      To contribute to societal growth through unparalleled legal services.
+    </p>
+  </div>
+</div>
+
 
         {/* Tagline Parallax Section */}
         <div className="relative h-screen overflow-hidden">
           {/* Background Image Layer */}
           <div
-            className="absolute inset-0 bg-[url('/assets/img/Contact3.jpg')] bg-cover bg-center"
+            className="absolute inset-0 bg-[url('/assets/img/Contact3.webp')] bg-cover bg-center"
             style={{ backgroundAttachment: 'fixed', zIndex: 1 }}
           ></div>
 

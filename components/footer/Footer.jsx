@@ -28,7 +28,7 @@ export default function Footer() {
           <div className="mb-10 md:mb-0">
             <Link href="/" className="flex items-center">
               <Image
-                src="/assets/img/puc-logo.png"
+                src="/assets/img/puc-logo.webp"
                 alt="Logo"
                 width={72}
                 height={32}
@@ -55,14 +55,14 @@ export default function Footer() {
               <h2 className="mb-4 font-semibold uppercase text-white">Follow us</h2>
               <ul className="space-y-2 text-white/80">
                 <li>
-                  <Link href="#" className="hover:underline">LinkedIn</Link>
+                  <Link href="https://linkedin.com/company/paul-usoro-&-co" className="hover:underline">LinkedIn</Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:underline">Instagram</Link>
+                  <Link href="https://instagram.com/paulusoroandco?igsh=MTJrcGswZNn2cHB2bg==" className="hover:underline">Instagram</Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link href="#" className="hover:underline">X (Twitter)</Link>
-                </li>
+                </li> */}
               </ul>
             </div>
             {/* <div>

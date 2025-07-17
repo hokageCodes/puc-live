@@ -13,7 +13,7 @@ export default function HeroSection() {
       ref={ref}
       className="relative h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: `url('/assets/img/he.jpg')`,
+        backgroundImage: `url('/assets/img/he.webp')`,
       }}
     >
       {/* Subtle dark overlay */}

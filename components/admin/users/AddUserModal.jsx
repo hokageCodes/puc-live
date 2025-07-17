@@ -25,7 +25,7 @@ export default function AddUserModal({ onClose }) {
       });
 
       const data = await res.json();
-      console.log('✅ Uploaded:', data);
+      // console.log('✅ Uploaded:', data);
       alert('Staff member created!');
       onClose();
     } catch (err) {

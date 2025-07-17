@@ -7,7 +7,7 @@ const CareersPage = () => {
       <section
         className="relative h-[40vh] md:h-[50vh] bg-cover bg-center flex items-center justify-center"
         style={{
-          backgroundImage: "url('/assets/img/Careers1.jpg')",
+          backgroundImage: "url('/assets/img/Careers1.webp')",
         }}
       >
       </section>

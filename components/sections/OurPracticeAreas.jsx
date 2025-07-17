@@ -7,32 +7,32 @@ const practiceAreas = [
   {
     title: 'ADR & Advocacy',
     description: 'We provide comprehensive corporate law services...',
-    image: '/assets/img/adr.jpg',
+    image: '/assets/img/adr.webp',
   },
   {
     title: 'Transport Law',
     description: 'Our real estate experts handle all matters...',
-    image: '/assets/img/road.jpg',
+    image: '/assets/img/road.webp',
   },
   {
     title: 'Banking and Finance',
     description: 'Navigating employer-employee relations can be complex...',
-    image: '/assets/img/banking.jpg',
+    image: '/assets/img/banking.webp',
   },
   {
     title: 'Capital Markets',
     description: 'Protecting your intellectual property is crucial...',
-    image: '/assets/img/expertise/Capital.jpg',
+    image: '/assets/img/expertise/Capital.webp',
   },
   {
     title: 'Communications Law',
     description: 'When conflicts arise, our experienced litigators...',
-    image: '/assets/img/expertise/Communications.jpg',
+    image: '/assets/img/expertise/Communications.webp',
   },
   {
     title: 'Energy and Environmental Law',
     description: 'Our tax law experts help individuals and businesses...',
-    image: '/assets/img/expertise/energy.jpg',
+    image: '/assets/img/expertise/energy.webp',
   },
 ];
 

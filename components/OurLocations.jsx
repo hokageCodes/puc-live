@@ -21,7 +21,7 @@ const locations = {
       name: 'Uyo, Nigeria',
       address: '1st Floor, Left Wing, APICO House, Abak Road, P. O. Box 2212, Uyo, Akwa Ibom State, Nigeria.',
       phone: '+234 85 203690',
-      imageUrl: '/assets/img/uyo.jpg',
+      imageUrl: '/assets/img/uyo.webp',
     },
   ],
 };

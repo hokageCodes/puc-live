@@ -1,54 +1,94 @@
-"use client"
 import "./globals.css";
-import Footer from "../components/footer/Footer";
 import NavBar from "../components/Navbar/Navbar";
-import { useState } from "react";
-import Loader from "../components/Loader";
-import { motion, AnimatePresence } from "framer-motion";
-import { usePathname } from "next/navigation";
+import { Analytics } from "@vercel/analytics/next";
+import Footer from "../components/footer/Footer";
 
-export default function RootLayout({ children }) {
-  const [finished, setFinished] = useState(false);
-  const pathname = usePathname();
-  const isAdminRoute = pathname?.startsWith('/admin');
+// ✅ Viewport metadata moved here
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
+export const metadata = {
+  title: 'Paul Usoro & Co | Leading Commercial Law Firm in Nigeria',
+  description:
+    'Paul Usoro & Co (PUC) is a top-tier full-service law firm in Nigeria, renowned for excellence in the Legal Domain',
+  keywords: [
+    'Paul Usoro and Co',
+    'PUC law firm',
+    'top law firms in Nigeria',
+    'commercial law Nigeria',
+    'dispute resolution Nigeria',
+    'telecommunications law',
+    'banking and finance law',
+    'media law Nigeria',
+    'arbitration lawyers Nigeria',
+    'litigation experts Lagos',
+    'legal services Nigeria',
+    'energy and natural resources law',
+    'infrastructure law Nigeria',
+    'transport law',
+    'project finance lawyers',
+    'intellectual property Nigeria',
+    'technology law firm Nigeria',
+    'regulatory compliance Nigeria',
+    'corporate governance Nigeria',
+    'Paul Usoro SAN',
+    'leading lawyers Nigeria',
+    'associate lawyers PUC',
+    'PUC legal team',
+    'legal consultancy Lagos',
+    'Nigerian bar association',
+    'top legal firm Lagos',
+    'maritime law Nigeria',
+    'tax advisory law firm',
+    'employment and labour law Nigeria',
+    'PUC partners and associates',
+    'professional legal services',
+    'law firm with integrity Nigeria',
+  ],
+  openGraph: {
+    title: 'Paul Usoro & Co | Trusted Legal Advisors in Nigeria',
+    description:
+      'Explore the team behind Paul Usoro & Co, Nigeria’s foremost commercial law firm. Meet our experienced associates and partners.',
+    url: 'https://paulusoro.com',
+    type: 'website',
+    images: [
+      {
+        url: 'https://paulusoro.com/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Paul Usoro & Co Team',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Paul Usoro & Co | Expert Legal Services',
+    description:
+      'Meet the expert team at Paul Usoro & Co, Nigeria’s leading full-service law firm.',
+    site: '@paulusorolaw',
+    creator: '@paulusorolaw',
+    images: ['https://paulusoro.com/og-image.jpg'],
+  },
+  metadataBase: new URL('https://paulusoro.com'),
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  robots: 'index, follow',
+};
+
+export default function RootLayout({
+  children,
+}) {
   return (
     <html lang="en" className="h-full">
       <body>
-        <AnimatePresence mode="wait">
-          {!finished && !isAdminRoute && (
-            <motion.div
-              key="loader"
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.6 }}
-              className="fixed inset-0 z-[9999] flex items-center justify-center bg-white"
-            >
-              <Loader onComplete={() => setFinished(true)} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {isAdminRoute ? (
-          // Admin routes - no NavBar/Footer, no loader
-          children
-        ) : (
-          // Public routes - with NavBar/Footer and loader
-          finished && (
-            <motion.div
-              key="content"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6 }}
-              className="flex flex-col flex-1"
-            >
-              <NavBar />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </motion.div>
-          )
-        )}
+        <NavBar />
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <Analytics />
       </body>
     </html>
   );

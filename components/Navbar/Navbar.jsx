@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
@@ -11,7 +12,7 @@ import {
   HiOutlineUsers,
   HiOutlineUserGroup,
   HiOutlineMail,
-  HiOutlineNewspaper  
+  HiOutlineNewspaper,
 } from "react-icons/hi";
 
 const navItems = [
@@ -31,9 +32,7 @@ export default function NavBar() {
   const router = useRouter();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -42,11 +41,8 @@ export default function NavBar() {
     e.preventDefault();
     e.stopPropagation();
     setMenuOpen(false);
-  
-    // Optional: delay to show exit animation
-    setTimeout(() => router.push(path), 100); 
+    setTimeout(() => router.push(path), 100);
   };
-  
 
   const handleLogoClick = (e) => {
     e.preventDefault();
@@ -70,11 +66,13 @@ export default function NavBar() {
           className="cursor-pointer focus:outline-none"
         >
           <Image
-            src="/assets/img/puc-logo.png"
-            alt="Logo"
+            src="/assets/img/puc-logo.webp"
+            alt="Paul Usoro & Co Logo"
             width={100}
-            height={48}
+            height={100} // keep width & height equal
+            style={{ width: "auto", height: "auto" }} // ✅ fix: maintain aspect ratio
             className="object-contain"
+            priority // ✅ fix: LCP optimization
           />
         </div>
 

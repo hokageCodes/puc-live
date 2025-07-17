@@ -17,8 +17,8 @@ export default function AdminLoginPage() {
     setError('');
     setLoading(true);
     
-    console.log('Submitting login form:', form);
-    console.log('Backend URL:', "https://puc-backend-t8pl.onrender.com");
+    // console.log('Submitting login form:', form);
+    // console.log('Backend URL:', "https://puc-backend-t8pl.onrender.com");
   
     try {
       const backendUrl = "https://puc-backend-t8pl.onrender.com";
@@ -30,23 +30,23 @@ export default function AdminLoginPage() {
         body: JSON.stringify(form),
       });
   
-      console.log('Response status:', res.status);
-      console.log('Response headers:', [...res.headers.entries()]);
+      // console.log('Response status:', res.status);
+      // console.log('Response headers:', [...res.headers.entries()]);
       
       if (!res.ok) {
         const data = await res.json();
-        console.log('Login error response:', data);
+        // console.log('Login error response:', data);
         setError(data.message || 'Login failed');
         return;
       }
 
       const data = await res.json();
-      console.log('Login success response:', data);
-      console.log('Admin data:', data.admin);
-      console.log('Is admin?', data.admin?.isAdmin);
+      // console.log('Login success response:', data);
+      // console.log('Admin data:', data.admin);
+      // console.log('Is admin?', data.admin?.isAdmin);
       
       // Verify the cookie was set properly
-      console.log('All cookies after login:', document.cookie);
+      // console.log('All cookies after login:', document.cookie);
       
       // More detailed validation
       if (!data.admin) {
@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
       localStorage.setItem('adminData', JSON.stringify(data.admin));
       
       // Redirect to dashboard
-      console.log('Redirecting to dashboard...');
+      // console.log('Redirecting to dashboard...');
       router.push('/admin/dashboard');
       
     } catch (err) {
