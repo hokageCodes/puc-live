@@ -48,7 +48,7 @@ export const metadata = {
     siteName: 'Paul Usoro & Co',
     images: [
       {
-        url: 'https://paulusoro.com/og-image.jpg',
+        url: 'https://paulusoro.com/assets/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Paul Usoro & Co',
@@ -60,7 +60,7 @@ export const metadata = {
     card: 'summary_large_image',
     site: '@paulusoroco',
     creator: '@paulusoroco',
-    images: ['https://paulusoro.com/og-image.jpg'],
+    images: ['https://paulusoro.com/assets/og-image.jpg'],
   },
   metadataBase: new URL('https://paulusoro.com'),
   alternates: {
@@ -89,7 +89,7 @@ export default function RootLayout({ children }) {
               "name": "Paul Usoro & Co",
               "url": "https://www.paulusoro.com",
               "logo": "https://www.paulusoro.com/assets/logo.png",
-              "image": "https://www.paulusoro.com/og-image.jpg",
+              "image": "https://www.paulusoro.com/assets/og-image.jpg",
               "telephone": "+2348012345678",
               "address": {
                 "@type": "PostalAddress",
