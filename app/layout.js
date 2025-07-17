@@ -48,9 +48,9 @@ export const metadata = {
     'law firm with integrity Nigeria',
   ],
   openGraph: {
-    title: 'Paul Usoro & Co | Trusted Legal Advisors in Nigeria',
+    title: 'Paul Usoro & Co | Leading Law Firm in Nigeria',
     description:
-      'Explore the team behind Paul Usoro & Co, Nigeria’s foremost commercial law firm. Meet our experienced associates and partners.',
+      'Paul Usoro & Co (PUC) is a top-tier full-service law firm in Nigeria, renowned for excellence in the Legal Domain',
     url: 'https://paulusoro.com',
     type: 'website',
     images: [
