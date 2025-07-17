@@ -2,7 +2,6 @@ import './globals.css';
 import Footer from '../components/footer/Footer';
 import Head from 'next/head';
 import { Analytics } from '@vercel/analytics/next';
-import { SpeedInsights } from '@vercel/speed-insights/next';
 import NavBar from '../components/Navbar/Navbar';
 
 export const metadata = {
@@ -118,7 +117,6 @@ export default function RootLayout({ children }) {
         <NavBar />
         {children}
         <Footer />
-        <SpeedInsights />
         <Analytics />
       </body>
     </html>
