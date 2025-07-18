@@ -33,6 +33,7 @@ export default function Footer() {
                 width={72}
                 height={32}
                 className="me-3"
+                priority
               />
               <span className="text-2xl font-semibold whitespace-nowrap">Paul Usoro & Co</span>
             </Link>

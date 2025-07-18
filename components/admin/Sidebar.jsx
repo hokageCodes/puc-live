@@ -13,6 +13,7 @@ import {
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Staff', href: '/admin/dashboard/users', icon: Users },
+  { name: 'Blog', href: '/admin/dashboard/blog', icon: FileText },
   { name: 'Reports', href: '/admin/dashboard/reports', icon: FileText },
   { name: 'Analytics', href: '/admin/dashboard/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/admin/dashboard/settings', icon: Settings },

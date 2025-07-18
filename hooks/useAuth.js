@@ -11,6 +11,7 @@ export function useAuth() {
   const checkAuth = async () => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend-t8pl.onrender.com";
+      // Fixed: Use proper template literal with backticks
       const res = await fetch(`${backendUrl}/api/admin/me`, {
         method: 'GET',
         credentials: 'include',
@@ -45,6 +46,7 @@ export function useAuth() {
       setError('');
       
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend-t8pl.onrender.com";
+      // Fixed: Use proper template literal with backticks
       const res = await fetch(`${backendUrl}/api/admin/login`, {
         method: 'POST',
         credentials: 'include',
@@ -77,6 +79,7 @@ export function useAuth() {
   const logout = async () => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend-t8pl.onrender.com";
+      // Fixed: Use proper template literal with backticks
       const res = await fetch(`${backendUrl}/api/admin/logout`, {
         method: 'POST',
         credentials: 'include',

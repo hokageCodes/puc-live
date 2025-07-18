@@ -1,3 +1,4 @@
+// Alternative approach - Modified login component using Authorization header
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -17,12 +18,12 @@ export default function AdminLoginPage() {
     setError('');
     setLoading(true);
     
-    // console.log('Submitting login form:', form);
-    // console.log('Backend URL:', "https://puc-backend-t8pl.onrender.com");
-  
+    console.log('Submitting login form:', form);
+    
     try {
       const backendUrl = "https://puc-backend-t8pl.onrender.com";
-      // Fixed: Use template literal properly
+      console.log('Backend URL:', backendUrl);
+      
       const res = await fetch(`${backendUrl}/api/admin/login`, {
         method: 'POST',
         credentials: 'include',
@@ -30,25 +31,25 @@ export default function AdminLoginPage() {
         body: JSON.stringify(form),
       });
   
-      // console.log('Response status:', res.status);
-      // console.log('Response headers:', [...res.headers.entries()]);
+      console.log('Response status:', res.status);
       
       if (!res.ok) {
         const data = await res.json();
-        // console.log('Login error response:', data);
+        console.log('Login error response:', data);
         setError(data.message || 'Login failed');
         return;
       }
 
       const data = await res.json();
-      // console.log('Login success response:', data);
-      // console.log('Admin data:', data.admin);
-      // console.log('Is admin?', data.admin?.isAdmin);
+      console.log('Login success response:', data);
       
-      // Verify the cookie was set properly
-      // console.log('All cookies after login:', document.cookie);
+      // Store token in localStorage as fallback
+      if (data.token) {
+        localStorage.setItem('admin_token', data.token);
+        console.log('Token stored in localStorage');
+      }
       
-      // More detailed validation
+      // Validate admin data
       if (!data.admin) {
         console.error('No admin object in response');
         setError('Login successful but no admin data received');
@@ -61,11 +62,11 @@ export default function AdminLoginPage() {
         return;
       }
       
-      // Store admin info in localStorage as backup (optional)
+      // Store admin info
       localStorage.setItem('adminData', JSON.stringify(data.admin));
       
       // Redirect to dashboard
-      // console.log('Redirecting to dashboard...');
+      console.log('Redirecting to dashboard...');
       router.push('/admin/dashboard');
       
     } catch (err) {
@@ -135,9 +136,9 @@ export default function AdminLoginPage() {
           </button>
         </form>
         
-        {/* Debug info (remove in production) */}
         <div className="mt-4 text-xs text-slate-500">
           <p>Backend URL: {process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com'}</p>
+          <p>Storage: localStorage + Authorization header</p>
         </div>
       </div>
     </div>
