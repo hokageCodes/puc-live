@@ -26,10 +26,15 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
 
   useEffect(() => {
     if (selectedDepartment && teams) {
-      const filtered = teams.filter(t => t.department?.toString() === selectedDepartment);
+      const filtered = teams.filter(t => {
+        // Handle both populated and unpopulated department fields
+        const deptId = t.department?._id || t.department;
+        return deptId?.toString() === selectedDepartment;
+      });
       setFilteredTeams(filtered);
     } else {
       setFilteredTeams([]);
+      setSelectedTeam(''); // Clear team selection when department changes
     }
   }, [selectedDepartment, teams]);
 
@@ -86,6 +91,19 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
   };
 
   const nextStep = () => {
+    // Validate current step before proceeding
+    if (currentStep === 1) {
+      if (!fullName.trim() || !email.trim() || !phoneNumber.trim() || !position.trim()) {
+        alert('Please fill in all required fields in Step 1');
+        return;
+      }
+    } else if (currentStep === 2) {
+      if (!selectedDepartment) {
+        alert('Please select a department');
+        return;
+      }
+    }
+    
     if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
   };
 
@@ -234,8 +252,9 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
               className="w-4 h-4"
             />
             <label htmlFor="isOnProbation" className="text-sm text-slate-700">
-              On Probation (Not on website yet, can't access leave system)
+              On Probation (Not displayed on public website yet)
             </label>
+            <span className="text-xs text-slate-500 mt-1">Note: Can still access leave system</span>
           </div>
 
           <input
