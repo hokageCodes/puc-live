@@ -281,8 +281,6 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
               </label>
             </div>
           </div>
-        </div>
-
           </div>
         )}
         </div>
