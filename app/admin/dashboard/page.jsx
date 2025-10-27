@@ -279,6 +279,33 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+            {/* Leave Management Section */}
+            <div className="bg-white rounded-lg shadow mb-8">
+              <div className="px-6 py-4 border-b border-slate-200">
+                <h2 className="text-xl font-semibold text-slate-800">Leave Management System</h2>
+                <p className="text-sm text-slate-600 mt-1">Manage staff leaves and approvals</p>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Link href="/leave/dashboard">
+                    <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-lg text-left transition-colors shadow hover:shadow-lg">
+                      <div className="text-lg mb-1">📅</div>
+                      <div className="font-semibold">Leave Dashboard</div>
+                      <div className="text-sm opacity-90">View leave requests & approvals</div>
+                    </button>
+                  </Link>
+                  
+                  <Link href="/leave/settings">
+                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-left transition-colors shadow hover:shadow-lg">
+                      <div className="text-lg mb-1">⚙️</div>
+                      <div className="font-semibold">Leave Settings</div>
+                      <div className="text-sm opacity-90">Manage leave types & balances</div>
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
             {/* Recent Blog Posts */}
             <div className="bg-white rounded-lg shadow">
               <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
