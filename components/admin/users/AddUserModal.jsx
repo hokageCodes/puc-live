@@ -78,9 +78,10 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
       
       if (res.ok) {
         alert('Staff member created successfully!');
-        onClose();
+        window.location.reload(); // Refresh the page to show new staff
       } else {
-        alert(data.message || 'Failed to create staff');
+        console.error('Failed to create staff:', data);
+        alert(data.error || data.message || 'Failed to create staff. Check console for details.');
       }
     } catch (err) {
       console.error('❌ Upload error:', err);
