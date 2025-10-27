@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 export default function AddUserModal({ onClose, departments, teams, practiceAreas }) {
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 3;
+  const totalSteps = 2; // Simplified: Basic Info + Department
   
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -92,15 +92,10 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
   };
 
   const nextStep = () => {
-    // Validate current step before proceeding
+    // Validate current step before proceeding - website only needs basic info
     if (currentStep === 1) {
-      if (!fullName.trim() || !email.trim() || !phoneNumber.trim() || !position.trim()) {
+      if (!fullName.trim() || !email.trim() || !phoneNumber.trim() || !position.trim() || !selectedFile) {
         alert('Please fill in all required fields in Step 1');
-        return;
-      }
-    } else if (currentStep === 2) {
-      if (!selectedDepartment) {
-        alert('Please select a department');
         return;
       }
     }
@@ -112,7 +107,7 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const stepNames = ['Basic Info', 'Department & Role', 'Leave Management'];
+  const stepNames = ['Basic Info', 'Department & Bio'];
 
   return (
     <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4 overflow-auto">
@@ -146,8 +141,7 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
           </div>
           <div className="flex justify-between text-xs text-slate-600 px-2">
             <span className={currentStep === 1 ? 'font-semibold text-emerald-700' : ''}>Personal Info</span>
-            <span className={currentStep === 2 ? 'font-semibold text-emerald-700' : ''}>Department</span>
-            <span className={currentStep === 3 ? 'font-semibold text-emerald-700' : ''}>Leave Settings</span>
+            <span className={currentStep === 2 ? 'font-semibold text-emerald-700' : ''}>Department & Bio</span>
           </div>
         </div>
 
@@ -206,10 +200,10 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
           </div>
         )}
 
-        {/* Step 2: Department & Team */}
+        {/* Step 2: Department & Bio */}
         {currentStep === 2 && (
           <div>
-            <h3 className="font-semibold text-slate-700 mb-3">Department & Assignment</h3>
+            <h3 className="font-semibold text-slate-700 mb-3">Department & Bio</h3>
           <select
             className="input"
             value={selectedDepartment}
@@ -236,15 +230,14 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
               </option>
             ))}
           </select>
-          </div>
-        )}
-
-        {/* Step 3: Leave Management */}
-        {currentStep === 3 && (
-          <div>
-            <h3 className="font-semibold text-slate-700 mb-3">Leave Management Settings</h3>
-          
-          <div className="flex items-center gap-2 mb-3">
+          <textarea
+            placeholder="Bio (for website)"
+            className="input"
+            rows="4"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+          />
+          <div className="flex items-center gap-2">
             <input
               type="checkbox"
               id="isOnProbation"
@@ -253,53 +246,8 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
               className="w-4 h-4"
             />
             <label htmlFor="isOnProbation" className="text-sm text-slate-700">
-              On Probation (Not displayed on public website yet)
+              On Probation (Not displayed on public website)
             </label>
-            <span className="text-xs text-slate-500 mt-1">Note: Can still access leave system</span>
-          </div>
-
-          <input
-            type="text"
-            placeholder="Employee ID"
-            className="input"
-            value={employeeId}
-            onChange={(e) => setEmployeeId(e.target.value)}
-          />
-          
-          <input
-            type="date"
-            placeholder="Hire Date"
-            className="input"
-            value={hireDate}
-            onChange={(e) => setHireDate(e.target.value)}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isTeamLead"
-                checked={isTeamLead}
-                onChange={(e) => setIsTeamLead(e.target.checked)}
-                className="w-4 h-4"
-              />
-              <label htmlFor="isTeamLead" className="text-sm text-slate-700">
-                Team Lead
-              </label>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isLineManager"
-                checked={isLineManager}
-                onChange={(e) => setIsLineManager(e.target.checked)}
-                className="w-4 h-4"
-              />
-              <label htmlFor="isLineManager" className="text-sm text-slate-700">
-                Line Manager
-              </label>
-            </div>
           </div>
           </div>
         )}

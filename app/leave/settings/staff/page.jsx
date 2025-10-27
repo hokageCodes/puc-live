@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Filter, UserPlus, Edit, Trash2, User } from 'lucide-react';
+import Link from 'next/link';
 
 export default function StaffManagementPage() {
   const [staff, setStaff] = useState([]);
@@ -248,33 +249,34 @@ export default function StaffManagementPage() {
         </div>
       </div>
 
-      {/* Staff Add/Edit Modal would go here */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-slate-800 mb-4">
-              {editingStaff ? 'Edit Staff Member' : 'Add Staff Member'}
-            </h3>
-            <p className="text-sm text-slate-600 mb-4">
-              Full staff management functionality with leave settings is available in the Admin Dashboard → Staff Management.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition"
-              >
-                Close
-              </button>
-              <a
-                href="/admin/dashboard/users"
-                className="px-4 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition"
-              >
-                Open Admin Panel
-              </a>
-            </div>
-          </div>
+      {/* Quick Actions */}
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-lg border border-slate-200">
+          <h3 className="font-semibold text-slate-700 mb-2">Total Staff</h3>
+          <p className="text-3xl font-bold text-emerald-700">{staff.length}</p>
         </div>
-      )}
+        <div className="bg-white p-4 rounded-lg border border-slate-200">
+          <h3 className="font-semibold text-slate-700 mb-2">On Probation</h3>
+          <p className="text-3xl font-bold text-orange-700">
+            {staff.filter(s => s.isOnProbation).length}
+          </p>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-slate-200">
+          <h3 className="font-semibold text-slate-700 mb-2">Confirmed</h3>
+          <p className="text-3xl font-bold text-green-700">
+            {staff.filter(s => !s.isOnProbation).length}
+          </p>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
+        <p className="font-semibold mb-1">ℹ️ Leave Management Staff</p>
+        <p>This section manages all staff with full leave management capabilities including roles, reporting structure, and leave settings.</p>
+        <p className="mt-2">
+          <strong>For website display only:</strong> Use <Link href="/admin/dashboard/users" className="underline font-semibold">Admin Dashboard → Staff (Website)</Link>
+        </p>
+      </div>
     </div>
   );
 }
