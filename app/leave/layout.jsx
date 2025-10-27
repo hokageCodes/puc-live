@@ -25,18 +25,14 @@ export default function LeaveLayout({ children }) {
     }
 
     const checkAuth = () => {
-      // Check for admin auth
+      // Check for admin auth FIRST - admins can access everything
       const adminData = localStorage.getItem('adminData');
-      const staffData = localStorage.getItem('staffData');
-      const staffToken = localStorage.getItem('staff_token');
       
-      // Allow admins to access admin functions (settings pages)
-      const isSettingsPage = pathname?.includes('/settings');
-      
-      if (adminData && isSettingsPage) {
+      if (adminData) {
         try {
           const admin = JSON.parse(adminData);
           if (admin && admin.isAdmin) {
+            console.log('✅ Admin authenticated, allowing access');
             setAuthenticated(true);
             return;
           }
@@ -45,11 +41,15 @@ export default function LeaveLayout({ children }) {
         }
       }
       
-      // For staff pages, check staff authentication
+      // If not admin, check for staff auth
+      const staffData = localStorage.getItem('staffData');
+      const staffToken = localStorage.getItem('staff_token');
+      
       if (staffData && staffToken) {
         try {
           const staff = JSON.parse(staffData);
           if (staff && staff.email) {
+            console.log('✅ Staff authenticated, allowing access');
             setAuthenticated(true);
             return;
           }
@@ -58,16 +58,17 @@ export default function LeaveLayout({ children }) {
         }
       }
       
-      // If settings page but not admin, redirect to admin login
-      if (isSettingsPage) {
-        setAuthenticated(false);
-        router.replace('/admin/login');
-        return;
-      }
-      
-      // Otherwise redirect to staff login
+      // If neither admin nor staff authenticated, redirect appropriately
+      console.log('❌ Not authenticated, redirecting...');
       setAuthenticated(false);
-      router.replace('/leave/login');
+      
+      // Redirect to admin login for settings pages
+      const isSettingsPage = pathname?.includes('/settings');
+      if (isSettingsPage) {
+        router.replace('/admin/login');
+      } else {
+        router.replace('/leave/login');
+      }
     };
 
     checkAuth();
