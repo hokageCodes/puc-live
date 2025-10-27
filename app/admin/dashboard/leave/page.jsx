@@ -75,41 +75,34 @@ export default function LeaveManagementPage() {
           <h1 className="text-2xl font-bold text-slate-800">Leave Management</h1>
           <p className="text-sm text-slate-600 mt-1">Manage staff, roles, approvals, and leave settings</p>
         </div>
-        <Link href="/leave/settings">
-          <button className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
-            <Settings className="w-5 h-5 mr-2" />
-            Leave Settings
-          </button>
-        </Link>
+        <a href="/admin/dashboard/leave/settings" className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
+          <Settings className="w-5 h-5 mr-2" />
+          Leave Settings
+        </a>
       </div>
 
       {/* Info Alert */}
-      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-        <p className="font-semibold mb-1">ℹ️ Leave Management System</p>
-        <p>This section manages all staff with full leave management capabilities including roles, reporting structure, and leave approvals.</p>
+      <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
+        <p className="font-semibold mb-1">⚠️ Admin Leave Management</p>
+        <p>This is the ADMIN side for managing leave. Staff members should login at <code className="bg-yellow-100 px-1 rounded">/leave/login</code> to submit their own requests.</p>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Link href="/leave/dashboard" className="bg-white p-6 rounded-lg border border-slate-200 hover:shadow-md transition">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Link href="/admin/dashboard/leave/applications" className="bg-white p-6 rounded-lg border border-slate-200 hover:shadow-md transition">
           <Calendar className="w-8 h-8 text-emerald-700 mb-2" />
-          <h3 className="font-semibold text-slate-700">Leave Dashboard</h3>
-          <p className="text-sm text-slate-600">View all requests</p>
+          <h3 className="font-semibold text-slate-700">All Applications</h3>
+          <p className="text-sm text-slate-600">View & manage all requests</p>
         </Link>
-        <Link href="/leave/approvals" className="bg-white p-6 rounded-lg border border-slate-200 hover:shadow-md transition">
+        <Link href="/admin/dashboard/leave/approvals" className="bg-white p-6 rounded-lg border border-slate-200 hover:shadow-md transition">
           <User className="w-8 h-8 text-blue-700 mb-2" />
-          <h3 className="font-semibold text-slate-700">Approvals</h3>
-          <p className="text-sm text-slate-600">Pending approvals</p>
+          <h3 className="font-semibold text-slate-700">Pending Approvals</h3>
+          <p className="text-sm text-slate-600">Review & approve/reject</p>
         </Link>
-        <Link href="/leave/reports" className="bg-white p-6 rounded-lg border border-slate-200 hover:shadow-md transition">
+        <Link href="/admin/dashboard/leave/reports" className="bg-white p-6 rounded-lg border border-slate-200 hover:shadow-md transition">
           <FileText className="w-8 h-8 text-purple-700 mb-2" />
           <h3 className="font-semibold text-slate-700">Reports</h3>
           <p className="text-sm text-slate-600">Generate reports</p>
-        </Link>
-        <Link href="/leave/settings" className="bg-white p-6 rounded-lg border border-slate-200 hover:shadow-md transition">
-          <Settings className="w-8 h-8 text-orange-700 mb-2" />
-          <h3 className="font-semibold text-slate-700">Settings</h3>
-          <p className="text-sm text-slate-600">Configure system</p>
         </Link>
       </div>
 
