@@ -41,13 +41,10 @@ export default function AdminLoginPage() {
       }
 
       const data = await res.json();
-      console.log('Login success response:', data);
-      
-      // Store token in localStorage as fallback
-      if (data.token) {
-        localStorage.setItem('admin_token', data.token);
-        console.log('Token stored in localStorage');
-      }
+      console.log('Login success response:', JSON.stringify(data, null, 2));
+      console.log('Full response keys:', Object.keys(data));
+      console.log('Has admin?:', !!data.admin);
+      console.log('Has token?:', !!data.token);
       
       // Validate admin data
       if (!data.admin) {
@@ -62,12 +59,24 @@ export default function AdminLoginPage() {
         return;
       }
       
-      // Store admin info
+      // Store admin info in localStorage
       localStorage.setItem('adminData', JSON.stringify(data.admin));
       
+      // Try to get token from response or cookies
+      const token = data.token || null;
+      if (token) {
+        localStorage.setItem('admin_token', token);
+        console.log('✅ Token stored in localStorage');
+      } else {
+        console.log('⚠️ No token in response, will rely on cookies');
+      }
+      
       // Redirect to dashboard
-      console.log('Redirecting to dashboard...');
-      router.push('/admin/dashboard');
+      console.log('✅ Login successful, redirecting to dashboard...');
+      console.log('Admin data:', data.admin);
+      
+      // Direct redirect without delay
+      window.location.href = '/admin/dashboard';
       
     } catch (err) {
       console.error('Login error:', err);

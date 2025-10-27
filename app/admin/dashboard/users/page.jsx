@@ -108,7 +108,7 @@ export default function AdminUsersPage() {
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="w-full">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-slate-800">All Staff</h1>
         <button

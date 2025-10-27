@@ -20,8 +20,9 @@ export default async function middleware(req) {
   console.log('Token from cookie:', token ? 'Found' : 'Not found');
   
   if (!token) {
-    console.log('No token found, redirecting to login');
-    return NextResponse.redirect(new URL('/admin/login', req.url));
+    console.log('No token in cookie, allowing through - will be checked by AdminLayoutWrapper');
+    // Don't redirect here - let AdminLayoutWrapper handle it
+    return NextResponse.next();
   }
 
   // Check if JWT_SECRET is available

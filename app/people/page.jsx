@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 // import { getImageUrl } from 'apps/puc-final-2025/lib/getImageUrl';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
+import { staffApi } from '../../utils/api';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,6 +16,7 @@ export default function PeopleTeamPage() {
   const titleRef = useRef(null);
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeGroup, setActiveGroup] = useState('All');
 
   const positionGroups = {
@@ -28,11 +30,12 @@ export default function PeopleTeamPage() {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const res = await fetch('https://puc-backend-t8pl.onrender.com/api/staff');
-        const data = await res.json();
+        const data = await staffApi.getAll();
         setStaff(data);
+        setError(null);
       } catch (err) {
         console.error('❌ Error fetching staff:', err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -118,6 +121,24 @@ export default function PeopleTeamPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#014634] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading our team...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 text-lg mb-4">
+            Unable to load team members. Please try again later.
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-6 py-2 bg-[#01553d] text-white rounded-lg hover:bg-[#014634] transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
+import { staffApi } from '../../utils/api';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,16 +13,28 @@ export default function TeamSection() {
   const sectionRef = useRef(null);
   const titleRef = useRef(null);
   const [staff, setStaff] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const res = await fetch('https://puc-backend-t8pl.onrender.com/api/staff');
-        const data = await res.json();
-        // console.log('Fetched staff data:', data);
+        setLoading(true);
+        console.log('🔍 Fetching staff data...');
+        const data = await staffApi.getAll();
+        console.log('✅ Fetched staff data:', data);
         setStaff(data);
+        setError(null);
       } catch (err) {
         console.error('❌ Error fetching staff:', err);
+        console.error('❌ Error details:', {
+          message: err.message,
+          name: err.name,
+          stack: err.stack
+        });
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -89,8 +102,30 @@ export default function TeamSection() {
           <div className="w-24 h-1 bg-gradient-to-r from-[#01553d] to-[#01553d]/50 mx-auto mt-4"></div>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mt-8 text-center">
+            <p className="text-red-600 text-lg mb-4">
+              Unable to load team members. Please try again later.
+            </p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-6 py-2 bg-[#01553d] text-white rounded-lg hover:bg-[#014634] transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && !error && (
+          <div className="mt-16 text-center">
+            <div className="text-gray-500 text-lg">Loading team members...</div>
+          </div>
+        )}
+
         {/* Top Three - Centered Grid */}
-        {topThree.length > 0 && (
+        {!loading && !error && topThree.length > 0 && (
           <div className="flex justify-center mt-16 mb-12">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl">
               {topThree.map((member, index) => {
@@ -118,7 +153,7 @@ export default function TeamSection() {
         )}
 
         {/* Bottom Two - Centered */}
-        {bottomTwo.length > 0 && (
+        {!loading && !error && bottomTwo.length > 0 && (
           <div className="flex justify-center">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl">
               {bottomTwo.map((member) => {
@@ -140,7 +175,7 @@ export default function TeamSection() {
         )}
 
         {/* Fallback if no filtered results */}
-        {leadershipTeam.length === 0 && staff.length > 0 && (
+        {!loading && !error && leadershipTeam.length === 0 && staff.length > 0 && (
           <div className="mt-16">
             <div className="text-center text-gray-500 mb-8">
               No filtered results found. Showing all staff:
@@ -155,14 +190,16 @@ export default function TeamSection() {
           </div>
         )}
 
-        <div className="mt-20 text-center">
-          <a
-            href="/people"
-            className="inline-block px-8 py-3 rounded-full text-white bg-[#014634] hover:bg-[#013d31] transition-colors duration-300 transform hover:scale-105"
-          >
-            See Full Team
-          </a>
-        </div>
+        {!loading && !error && (
+          <div className="mt-20 text-center">
+            <a
+              href="/people"
+              className="inline-block px-8 py-3 rounded-full text-white bg-[#014634] hover:bg-[#013d31] transition-colors duration-300 transform hover:scale-105"
+            >
+              See Full Team
+            </a>
+          </div>
+        )}
       </div>
     </section>
   );

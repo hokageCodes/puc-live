@@ -14,11 +14,12 @@
 
 body {
   font-family: 'Optima', sans-serif;
+  overflow-x: hidden;
 }
-
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 @layer utilities {

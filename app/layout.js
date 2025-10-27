@@ -3,6 +3,7 @@ import Footer from '../components/footer/Footer';
 import Head from 'next/head';
 import { Analytics } from '@vercel/analytics/next';
 import NavBar from '../components/Navbar/Navbar';
+import AdminWrapper from '../components/AdminWrapper';
 
 export const metadata = {
   title: 'Paul Usoro & Co | Top Commercial Law Firm in Nigeria',
@@ -100,7 +101,7 @@ export default function RootLayout({ children }) {
                 "@type": "Country",
                 "name": "Nigeria"
               },
-              "description": "Nigeria’s leading litigation and corporate law firm providing top-tier legal services to clients across banking, oil & gas, telecoms, and more."
+              "description": "Nigeria's leading litigation and corporate law firm providing top-tier legal services to clients across banking, oil & gas, telecoms, and more."
             }
           `}
         </script>
@@ -114,9 +115,7 @@ export default function RootLayout({ children }) {
         />
       </Head>
       <body>
-        <NavBar />
-        {children}
-        <Footer />
+        <AdminWrapper children={children} />
         <Analytics />
       </body>
     </html>
