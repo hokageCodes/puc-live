@@ -184,8 +184,6 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
             onChange={(e) => setSelectedFile(e.target.files[0])}
             required
           />
-        </div>
-
           </div>
         )}
 
@@ -219,8 +217,6 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
               </option>
             ))}
           </select>
-        </div>
-
           </div>
         )}
 
