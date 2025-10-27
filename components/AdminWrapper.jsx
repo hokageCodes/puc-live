@@ -7,8 +7,10 @@ import Footer from './footer/Footer';
 export default function AdminWrapper({ children }) {
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith('/admin');
+  const isLeaveRoute = pathname?.startsWith('/leave');
 
-  if (isAdminRoute) {
+  // Exclude admin and leave routes from public nav/footer
+  if (isAdminRoute || isLeaveRoute) {
     return <>{children}</>;
   }
 
