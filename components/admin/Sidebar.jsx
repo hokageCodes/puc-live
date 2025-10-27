@@ -12,8 +12,7 @@ import {
 
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'Staff (Website)', href: '/admin/dashboard/users', icon: Users },
-  { name: 'Leave Management', href: '/admin/dashboard/leave', icon: Users },
+  { name: 'All Staff', href: '/admin/dashboard/staff', icon: Users },
   { name: 'Blog', href: '/admin/dashboard/blog', icon: FileText },
   { name: 'Settings', href: '/admin/dashboard/settings', icon: Settings },
 ];
