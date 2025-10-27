@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react';
 
 export default function AddUserModal({ onClose, departments, teams, practiceAreas }) {
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 3;
+  
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -82,17 +85,59 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
     }
   };
 
+  const nextStep = () => {
+    if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
+  };
+
+  const stepNames = ['Basic Info', 'Department & Role', 'Leave Management'];
+
   return (
     <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4 overflow-auto">
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-lg w-full max-w-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+        className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
       >
-        <h2 className="text-xl font-bold text-slate-800">Add Staff Member</h2>
+        {/* Header with Step Indicator */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-slate-800 mb-4">Add Staff Member</h2>
+          {/* Step Progress Bar */}
+          <div className="flex items-center justify-between mb-2">
+            {stepNames.map((name, index) => (
+              <div key={index} className="flex items-center flex-1">
+                <div className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
+                    index + 1 <= currentStep 
+                      ? 'bg-emerald-600 text-white' 
+                      : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    {index + 1}
+                  </div>
+                  {index < totalSteps - 1 && (
+                    <div className={`h-1 w-full mx-2 ${
+                      index + 1 < currentStep ? 'bg-emerald-600' : 'bg-slate-200'
+                    }`} />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between text-xs text-slate-600 px-2">
+            <span className={currentStep === 1 ? 'font-semibold text-emerald-700' : ''}>Personal Info</span>
+            <span className={currentStep === 2 ? 'font-semibold text-emerald-700' : ''}>Department</span>
+            <span className={currentStep === 3 ? 'font-semibold text-emerald-700' : ''}>Leave Settings</span>
+          </div>
+        </div>
 
-        {/* Basic Information */}
-        <div className="border-t pt-4">
-          <h3 className="font-semibold text-slate-700 mb-3">Basic Information</h3>
+        <div className="space-y-4">
+
+        {/* Step 1: Basic Information */}
+        {currentStep === 1 && (
+          <div>
+            <h3 className="font-semibold text-slate-700 mb-3">Personal Information</h3>
           <input
             type="text"
             placeholder="Full Name (First Last)"
@@ -141,9 +186,13 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
           />
         </div>
 
-        {/* Department/Team */}
-        <div className="border-t pt-4">
-          <h3 className="font-semibold text-slate-700 mb-3">Department & Team</h3>
+          </div>
+        )}
+
+        {/* Step 2: Department & Team */}
+        {currentStep === 2 && (
+          <div>
+            <h3 className="font-semibold text-slate-700 mb-3">Department & Assignment</h3>
           <select
             className="input"
             value={selectedDepartment}
@@ -172,9 +221,13 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
           </select>
         </div>
 
-        {/* Leave Management */}
-        <div className="border-t pt-4">
-          <h3 className="font-semibold text-slate-700 mb-3">Leave Management</h3>
+          </div>
+        )}
+
+        {/* Step 3: Leave Management */}
+        {currentStep === 3 && (
+          <div>
+            <h3 className="font-semibold text-slate-700 mb-3">Leave Management Settings</h3>
           
           <div className="flex items-center gap-2 mb-3">
             <input
@@ -234,21 +287,49 @@ export default function AddUserModal({ onClose, departments, teams, practiceArea
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
+          </div>
+        )}
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between gap-2 pt-6 mt-6 border-t">
           <button
             type="button"
-            className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
+            className="bg-gray-200 px-6 py-2 rounded hover:bg-gray-300"
             onClick={onClose}
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 disabled:opacity-50"
-          >
-            {loading ? 'Creating...' : 'Create Staff'}
-          </button>
+          
+          <div className="flex gap-2">
+            {currentStep > 1 && (
+              <button
+                type="button"
+                onClick={prevStep}
+                className="bg-slate-200 px-6 py-2 rounded hover:bg-slate-300"
+              >
+                ← Previous
+              </button>
+            )}
+            
+            {currentStep < totalSteps ? (
+              <button
+                type="button"
+                onClick={nextStep}
+                className="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700"
+              >
+                Next →
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {loading ? 'Creating...' : '✓ Create Staff'}
+              </button>
+            )}
+          </div>
         </div>
       </form>
     </div>
