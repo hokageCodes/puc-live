@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Settings, Users, Calendar } from 'lucide-react';
 import leaveApi from '../../../utils/leaveApi';
+import Link from 'next/link';
 
 export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState('leave-types');
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -77,6 +79,32 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-7xl mx-auto">
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b border-slate-200">
+        <button
+          onClick={() => setActiveTab('leave-types')}
+          className={`flex items-center gap-2 px-6 py-3 font-medium transition ${
+            activeTab === 'leave-types'
+              ? 'text-emerald-700 border-b-2 border-emerald-700'
+              : 'text-slate-600 hover:text-emerald-700'
+          }`}
+        >
+          <Calendar className="w-5 h-5" />
+          Leave Types
+        </button>
+        <Link
+          href="/leave/settings/staff"
+          className={`flex items-center gap-2 px-6 py-3 font-medium transition ${
+            activeTab === 'staff'
+              ? 'text-emerald-700 border-b-2 border-emerald-700'
+              : 'text-slate-600 hover:text-emerald-700'
+          }`}
+        >
+          <Users className="w-5 h-5" />
+          Staff Management
+        </Link>
+      </div>
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-emerald-700">Leave Management Settings</h1>
         <button

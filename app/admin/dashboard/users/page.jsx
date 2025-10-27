@@ -21,6 +21,7 @@ export default function AdminUsersPage() {
   const [editingStaff, setEditingStaff] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [showOnlyOnWebsite, setShowOnlyOnWebsite] = useState(true);
   const itemsPerPage = 12;
 
   const base = "https://puc-backend-t8pl.onrender.com";
@@ -54,6 +55,11 @@ export default function AdminUsersPage() {
   useEffect(() => {
     let filteredList = [...users];
 
+    // Filter by website display status
+    if (showOnlyOnWebsite) {
+      filteredList = filteredList.filter((user) => !user.isOnProbation);
+    }
+
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       filteredList = filteredList.filter((user) =>
@@ -79,7 +85,7 @@ export default function AdminUsersPage() {
 
     setFiltered(filteredList);
     setCurrentPage(1);
-  }, [searchTerm, departmentFilter, teamFilter, practiceAreaFilter, users]);
+  }, [searchTerm, departmentFilter, teamFilter, practiceAreaFilter, users, showOnlyOnWebsite]);
 
   const handleEdit = (user) => {
     setEditingStaff(user);
@@ -110,7 +116,10 @@ export default function AdminUsersPage() {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">All Staff</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Website Staff Management</h1>
+          <p className="text-sm text-slate-600 mt-1">Manage staff displayed on the public website</p>
+        </div>
         <button
           onClick={() => {
             setEditingStaff(null);
@@ -118,8 +127,30 @@ export default function AdminUsersPage() {
           }}
           className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition"
         >
-          + Add Staff
+          + Add to Website
         </button>
+      </div>
+
+      {/* Info Banner */}
+      <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+        <p className="font-semibold mb-1">ℹ️ Website Staff Management</p>
+        <p>Only staff who have completed their 6-month probation period appear on the public website.</p>
+        <p className="mt-2">
+          <strong>Full staff management with leave settings:</strong> Go to <Link href="/leave/settings" className="underline font-semibold">Leave Management → Settings</Link>
+        </p>
+      </div>
+
+      {/* Quick Filter */}
+      <div className="mb-4">
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={showOnlyOnWebsite}
+            onChange={(e) => setShowOnlyOnWebsite(e.target.checked)}
+            className="w-4 h-4"
+          />
+          <span>Show only staff on website (passed probation)</span>
+        </label>
       </div>
 
       {/* Filters */}
@@ -169,6 +200,14 @@ export default function AdminUsersPage() {
             <p className="text-sm text-slate-600">{user.position || 'No position'}</p>
             <p className="text-xs text-slate-400">{user.department?.name || 'No department'}</p>
 
+            <div className="mt-2">
+              {user.isOnProbation && (
+                <span className="inline-block px-2 py-1 text-xs font-semibold bg-orange-100 text-orange-700 rounded mb-2">
+                  On Probation
+                </span>
+              )}
+            </div>
+
             <div className="mt-4 flex justify-between text-sm">
               <button
                 onClick={() => handleEdit(user)}
@@ -186,7 +225,7 @@ export default function AdminUsersPage() {
                 onClick={() => handleDelete(user._id)}
                 className="text-red-600 hover:underline"
               >
-                Delete
+                Remove
               </button>
             </div>
           </div>
