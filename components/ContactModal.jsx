@@ -2,6 +2,7 @@
 "use client"
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 
 const questions = [
   { id: 1, label: "What's your name?", field: 'name' },
@@ -40,11 +41,11 @@ const ContactModal = ({ closeModal }) => {
       // Placeholder logic (firebase removed)
       // console.log('Form submitted:', formData);
 
-      alert('Your message has been submitted successfully!');
+      toast.success('Your message has been submitted successfully!');
       closeModal();
     } catch (error) {
       console.error('Error submitting form data:', error);
-      alert('There was an error submitting your form. Please try again.');
+      toast.error('There was an error submitting your form. Please try again.');
     } finally {
       setLoading(false);
     }

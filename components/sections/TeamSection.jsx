@@ -20,10 +20,9 @@ export default function TeamSection() {
     const fetchStaff = async () => {
       try {
         setLoading(true);
-        console.log('🔍 Fetching staff data...');
         const data = await staffApi.getAll();
-        console.log('✅ Fetched staff data:', data);
-        setStaff(data);
+        const visibleStaff = Array.isArray(data) ? data.filter((m) => m.isVisible !== false) : [];
+        setStaff(visibleStaff);
         setError(null);
       } catch (err) {
         console.error('❌ Error fetching staff:', err);
@@ -127,7 +126,7 @@ export default function TeamSection() {
         {/* Top Three - Centered Grid */}
         {!loading && !error && topThree.length > 0 && (
           <div className="flex justify-center mt-16 mb-12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-12 max-w-6xl">
               {topThree.map((member, index) => {
                 let badge = member.position || 'Staff';
                 if (member === seniorPartner) badge = 'Senior Partner';
@@ -143,7 +142,7 @@ export default function TeamSection() {
                                ${topThree.length === 1 ? 'mx-auto max-w-sm' : ''}`}
                   >
                     <Suspense fallback={<LoadingCard />}>
-                      <TeamCard member={member} badge={badge} />
+                      <TeamCard member={member} badge={badge} index={index} position={member.position} />
                     </Suspense>
                   </div>
                 );
@@ -155,8 +154,8 @@ export default function TeamSection() {
         {/* Bottom Two - Centered */}
         {!loading && !error && bottomTwo.length > 0 && (
           <div className="flex justify-center">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl">
-              {bottomTwo.map((member) => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 max-w-4xl">
+              {bottomTwo.map((member, index) => {
                 let badge = member.position || 'Staff';
                 if (member === seniorPartner) badge = 'Senior Partner';
                 else if (member === managingPartner) badge = 'Managing Partner';
@@ -165,7 +164,7 @@ export default function TeamSection() {
                 return (
                   <div key={member._id} className="col-span-1">
                     <Suspense fallback={<LoadingCard />}>
-                      <TeamCard member={member} badge={badge} />
+                      <TeamCard member={member} badge={badge} index={index} position={member.position} />
                     </Suspense>
                   </div>
                 );
@@ -180,10 +179,10 @@ export default function TeamSection() {
             <div className="text-center text-gray-500 mb-8">
               No filtered results found. Showing all staff:
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-              {staff.map((member) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-12">
+              {staff.map((member, index) => (
                 <Suspense key={member._id} fallback={<LoadingCard />}>
-                  <TeamCard member={member} badge={member.position || 'Staff'} />
+                  <TeamCard member={member} badge={member.position || 'Staff'} index={index} position={member.position} />
                 </Suspense>
               ))}
             </div>
@@ -207,6 +206,6 @@ export default function TeamSection() {
 
 function LoadingCard() {
   return (
-    <div className="w-full h-[380px] bg-gray-200 rounded-xl animate-pulse" />
+    <div className="w-full max-w-[360px] mx-auto h-[420px] bg-gray-200 rounded-2xl animate-pulse" />
   );
 }

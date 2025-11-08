@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import AddUserModal from '../../../../components/admin/users/AddUserModal';
 import { getImageUrl } from '../../../../lib/getImageUrl';
 import Link from 'next/link';
+import { toast } from 'react-toastify';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
@@ -21,31 +22,40 @@ export default function AdminUsersPage() {
   const [editingStaff, setEditingStaff] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [showOnlyOnWebsite, setShowOnlyOnWebsite] = useState(true);
   const itemsPerPage = 12;
 
-  const base = "https://puc-backend-t8pl.onrender.com";
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
   const fetchData = async () => {
-    const [staffRes, deptRes, teamRes, paRes] = await Promise.all([
-      fetch(`${base}/api/staff`),
-      fetch(`${base}/api/departments`),
-      fetch(`${base}/api/teams`),
-      fetch(`${base}/api/practice-areas`),
-    ]);
+    try {
+      const responses = await Promise.all([
+        fetch(`${base}/api/staff`, { credentials: 'include' }),
+        fetch(`${base}/api/departments`, { credentials: 'include' }),
+        fetch(`${base}/api/teams`, { credentials: 'include' }),
+        fetch(`${base}/api/practice-areas`, { credentials: 'include' }),
+      ]);
 
-    const [staff, departments, teams, practiceAreas] = await Promise.all([
-      staffRes.json(),
-      deptRes.json(),
-      teamRes.json(),
-      paRes.json(),
-    ]);
+      responses.forEach((res) => {
+        if (!res.ok) {
+          throw new Error('Unable to load staff records.');
+        }
+      });
 
-    setUsers(staff);
-    setFiltered(staff);
-    setDepartments(departments);
-    setTeams(teams);
-    setPracticeAreas(practiceAreas);
+      const [staff, departments, teams, practiceAreas] = await Promise.all(
+        responses.map((res) => res.json())
+      );
+
+      const visibleStaff = Array.isArray(staff) ? staff.filter((member) => member.isVisible !== false) : [];
+
+      setUsers(visibleStaff);
+      setFiltered(visibleStaff);
+      setDepartments(departments);
+      setTeams(teams);
+      setPracticeAreas(practiceAreas);
+    } catch (error) {
+      console.error('Failed to fetch staff records:', error);
+      toast.error(error.message || 'Failed to fetch staff records.');
+    }
   };
 
   useEffect(() => {
@@ -54,11 +64,6 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     let filteredList = [...users];
-
-    // Filter by website display status
-    if (showOnlyOnWebsite) {
-      filteredList = filteredList.filter((user) => !user.isOnProbation);
-    }
 
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
@@ -85,7 +90,7 @@ export default function AdminUsersPage() {
 
     setFiltered(filteredList);
     setCurrentPage(1);
-  }, [searchTerm, departmentFilter, teamFilter, practiceAreaFilter, users, showOnlyOnWebsite]);
+  }, [searchTerm, departmentFilter, teamFilter, practiceAreaFilter, users]);
 
   const handleEdit = (user) => {
     setEditingStaff(user);
@@ -97,14 +102,17 @@ export default function AdminUsersPage() {
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`${base}/api/staff/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${base}/api/staff/${id}`, { method: 'DELETE', credentials: 'include' });
       if (res.ok) {
         setUsers((prev) => prev.filter((u) => u._id !== id));
+        toast.success('Staff member deleted successfully.');
       } else {
-        alert('Failed to delete staff.');
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || 'Failed to delete staff.');
       }
     } catch (err) {
       console.error('Delete error:', err);
+      toast.error(err.message || 'Failed to delete staff.');
     }
   };
 
@@ -134,23 +142,7 @@ export default function AdminUsersPage() {
       {/* Info Banner */}
       <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
         <p className="font-semibold mb-1">ℹ️ Website Staff Management</p>
-        <p>Only staff who have completed their 6-month probation period appear on the public website.</p>
-        <p className="mt-2">
-          <strong>Full staff management with leave settings:</strong> Go to <Link href="/leave/settings" className="underline font-semibold">Leave Management → Settings</Link>
-        </p>
-      </div>
-
-      {/* Quick Filter */}
-      <div className="mb-4">
-        <label className="flex items-center gap-2 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={showOnlyOnWebsite}
-            onChange={(e) => setShowOnlyOnWebsite(e.target.checked)}
-            className="w-4 h-4"
-          />
-          <span>Show only staff on website (passed probation)</span>
-        </label>
+        <p>Curate which team members appear on the public website.</p>
       </div>
 
       {/* Filters */}
@@ -199,14 +191,6 @@ export default function AdminUsersPage() {
             </div>
             <p className="text-sm text-slate-600">{user.position || 'No position'}</p>
             <p className="text-xs text-slate-400">{user.department?.name || 'No department'}</p>
-
-            <div className="mt-2">
-              {user.isOnProbation && (
-                <span className="inline-block px-2 py-1 text-xs font-semibold bg-orange-100 text-orange-700 rounded mb-2">
-                  On Probation
-                </span>
-              )}
-            </div>
 
             <div className="mt-4 flex justify-between text-sm">
               <button

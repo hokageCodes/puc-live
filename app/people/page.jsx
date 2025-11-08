@@ -31,7 +31,8 @@ export default function PeopleTeamPage() {
     const fetchStaff = async () => {
       try {
         const data = await staffApi.getAll();
-        setStaff(data);
+        const visibleStaff = Array.isArray(data) ? data.filter((member) => member.isVisible !== false) : [];
+        setStaff(visibleStaff);
         setError(null);
       } catch (err) {
         console.error('❌ Error fetching staff:', err);
@@ -196,7 +197,7 @@ export default function PeopleTeamPage() {
                     <div className="w-24 h-1 bg-[#014634] mx-auto"></div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-12">
                     {members.map((member, index) => (
                       <Suspense key={member._id} fallback={<LoadingCard />}>
                         <TeamMemberCard
@@ -244,6 +245,6 @@ export default function PeopleTeamPage() {
 
 function LoadingCard() {
   return (
-    <div className="w-full h-[400px] bg-gray-200 rounded-xl animate-pulse" />
+    <div className="w-full max-w-[360px] mx-auto h-[420px] bg-gray-200 rounded-2xl animate-pulse" />
   );
 }

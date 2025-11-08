@@ -41,7 +41,7 @@ export async function apiRequest(endpoint, options = {}) {
 
   // Fixed: Use proper template literal with backticks
   const url = `${apiConfig.baseUrl}${endpoint}`;
-  console.log('🔗 API Request:', { url, method, baseUrl: apiConfig.baseUrl, endpoint });
+      console.log('🔗 API Request:', { url, method, baseUrl: apiConfig.baseUrl, endpoint });
   const controller = new AbortController();
   
   // Set up timeout
@@ -68,10 +68,8 @@ export async function apiRequest(endpoint, options = {}) {
   // Retry logic
   for (let attempt = 0; attempt <= retryAttempts; attempt++) {
     try {
-      console.log(`🔄 Fetch attempt ${attempt + 1}: ${url}`);
       const response = await fetch(url, requestOptions);
       clearTimeout(timeoutId);
-      console.log(`📥 Response: ${response.status} ${response.statusText}`);
 
       // Handle HTTP errors
       if (!response.ok) {

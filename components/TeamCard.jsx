@@ -4,18 +4,14 @@ import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import Link from 'next/link';
+import { getImageUrl } from '../lib/getImageUrl';
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function TeamMemberCard({ member, position, index }) {
+export default function TeamMemberCard({ member, position, index, badge }) {
   const cardRef = useRef(null);
 
-  const baseUrl = 'https://puc-backend-t8pl.onrender.com';
-  const hasPhoto = member.profilePhoto && member.profilePhoto !== '';
-
-  const imageUrl = hasPhoto
-    ? `${baseUrl}/${member.profilePhoto.replace(/^\/?uploads\//, 'uploads/')}`
-    : null;
+  const imageUrl = member.profilePhoto ? getImageUrl(member.profilePhoto) : null;
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -43,15 +39,15 @@ export default function TeamMemberCard({ member, position, index }) {
     <Link href={`/people/${member._id}`} className="block">
       <div
         ref={cardRef}
-        className="group bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
+        className="group bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl max-w-[360px] md:max-w-[380px] mx-auto"
       >
         <div className="relative">
-          <div className="w-full h-[500px] overflow-hidden rounded-xl bg-gray-100 flex items-center justify-center">
+          <div className="w-full overflow-hidden bg-gray-100 flex items-center justify-center aspect-[3/4]">
             {imageUrl ? (
               <img
                 src={imageUrl}
                 alt={`${member.firstName} ${member.lastName}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-center"
                 loading="lazy"
               />
             ) : (
@@ -86,7 +82,9 @@ export default function TeamMemberCard({ member, position, index }) {
           <h3 className="text-2xl font-bold text-slate-800 mb-2">
             {member.firstName} {member.lastName}
           </h3>
-          <p className="text-emerald-700 font-medium mb-4">{position}</p>
+          <p className="text-emerald-700 font-medium mb-4">
+            {badge || position}
+          </p>
 
           {/* See Profile Button */}
           <button className="text-sm text-[#014634] underline">See Profile</button>

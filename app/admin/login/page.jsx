@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
     console.log('Submitting login form:', form);
     
     try {
-      const backendUrl = "https://puc-backend-t8pl.onrender.com";
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
       console.log('Backend URL:', backendUrl);
       
       const res = await fetch(`${backendUrl}/api/admin/login`, {

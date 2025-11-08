@@ -1,59 +1,95 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { toast } from 'react-toastify';
+import { ArrowLeft, Sparkles, Image as ImageIcon, Link2, RefreshCcw } from 'lucide-react';
 
-// Dynamic import to avoid SSR issues with text editor
-const SimpleEditor = dynamic(() => import('../../../../../components/admin/blog/SimpleEditor'), { 
+const SimpleEditor = dynamic(() => import('../../../../../components/admin/blog/SimpleEditor'), {
   ssr: false,
-  loading: () => <div className="h-64 border rounded p-4">Loading editor...</div>
+  loading: () => <div className="h-64 rounded-2xl border border-dashed border-slate-200 bg-white p-6" />,
 });
+
+const inputClasses =
+  'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition';
+const textareaClasses = `${inputClasses} min-h-[140px] resize-none`;
+const sectionClasses = 'admin-surface rounded-2xl border border-slate-200 p-6 shadow-sm shadow-slate-100';
+const asideSectionClasses = 'admin-surface rounded-2xl border border-slate-200 p-6 shadow-sm shadow-slate-100';
+const labelClasses = 'text-xs font-semibold uppercase tracking-wide text-slate-500';
+
+const defaultForm = {
+  title: '',
+  slug: '',
+  excerpt: '',
+  coverImage: '',
+  tags: '',
+  content: '',
+  status: 'draft',
+  scheduledAt: '',
+  featured: false,
+};
+
+const generateSlug = (text) =>
+  text
+    .toLowerCase()
+    .trim()
+    .replace(/[^  -]/g, '')
+    .replace(/[\W_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 
 export default function CreateBlogPage() {
   const router = useRouter();
+  const [formData, setFormData] = useState(defaultForm);
+  const [slugTouched, setSlugTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
-    title: '',
-    slug: '',
-    excerpt: '',
-    coverImage: '',
-    tags: '',
-    content: '',
-    status: 'draft',
-    scheduledAt: '',
-    featured: false
-  });
+
+  const tagList = useMemo(
+    () =>
+      formData.tags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+    [formData.tags]
+  );
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
-  };
-
-  const handleContentChange = (content) => {
-    setFormData(prev => ({ ...prev, content }));
-  };
-
-  const generateSlug = (text) => {
-    return text
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
   };
 
   const handleTitleChange = (e) => {
     const title = e.target.value;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       title,
-      slug: generateSlug(title)
+      slug: slugTouched ? prev.slug : generateSlug(title),
     }));
+  };
+
+  const handleSlugChange = (e) => {
+    setSlugTouched(true);
+    setFormData((prev) => ({
+      ...prev,
+      slug: generateSlug(e.target.value),
+    }));
+  };
+
+  const resetSlug = () => {
+    setSlugTouched(false);
+    setFormData((prev) => ({
+      ...prev,
+      slug: generateSlug(prev.title || ''),
+    }));
+  };
+
+  const handleContentChange = (content) => {
+    setFormData((prev) => ({ ...prev, content }));
   };
 
   const handleSubmit = async (e) => {
@@ -62,198 +98,278 @@ export default function CreateBlogPage() {
     setError('');
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend-t8pl.onrender.com";
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
       const token = localStorage.getItem('admin_token');
-      
+
       const res = await fetch(`${backendUrl}/api/blogs`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: token ? `Bearer ${token}` : undefined,
         },
         body: JSON.stringify({
           ...formData,
-          tags: formData.tags.split(',').map(t => t.trim()).filter(t => t)
+          tags: tagList,
         }),
       });
 
-      if (res.ok) {
-        router.push('/admin/dashboard/blog');
-      } else {
-        const data = await res.json();
-        setError(data.message || 'Failed to create blog post');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || 'Failed to create blog post');
       }
+
+      toast.success('Blog post created successfully.');
+      router.push('/admin/dashboard/blog');
     } catch (err) {
       console.error('Error creating blog:', err);
-      setError('Failed to create blog post');
+      const message = err.message || 'Failed to create blog post';
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
+  const previewUrl = formData.coverImage?.trim();
+  const isScheduled = formData.status === 'scheduled';
+
   return (
-    <div className="w-full">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => router.back()}
-          className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
-        >
-          ← Back
-        </button>
-        <h1 className="text-3xl font-bold text-slate-800">Create New Blog Post</h1>
-      </div>
+    <div className="admin-page space-y-8">
+      <header className="admin-surface flex flex-col gap-4 rounded-2xl border border-slate-200 p-6 shadow-sm shadow-slate-100 lg:flex-row lg:items-center lg:justify-between">
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:border-slate-300 hover:bg-slate-50"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to blog list
+          </button>
+          <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">Create new blog post</h1>
+          <p className="max-w-2xl text-sm text-slate-600">
+            Craft a polished article for the public site. Provide a strong cover image, a descriptive slug, and rich content to boost engagement.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setFormData(defaultForm)}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <RefreshCcw className="h-4 w-4" />
+            Clear form
+          </button>
+          <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
+            <Sparkles className="h-4 w-4" />
+            Draft mode
+          </span>
+        </div>
+      </header>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+        <div className="admin-surface rounded-2xl border border-rose-200 p-4 text-sm text-rose-700">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-6 space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Title *
-          </label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleTitleChange}
-            required
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-          />
+      <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-[2fr_1fr]">
+        <div className="space-y-6">
+          <section className={sectionClasses}>
+            <div className="flex flex-col gap-5">
+              <div className="space-y-2">
+                <label className={labelClasses}>Title *</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleTitleChange}
+                  required
+                  className={inputClasses}
+                  placeholder="Paulusoro & Co. wins landmark arbitration..."
+                />
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-[2fr_auto] md:items-end">
+                <div className="space-y-2">
+                  <label className={labelClasses}>URL slug *</label>
+                  <input
+                    type="text"
+                    name="slug"
+                    value={formData.slug}
+                    onChange={handleSlugChange}
+                    required
+                    className={inputClasses}
+                    placeholder="paulusoro-wins-arbitration"
+                  />
+                  <p className="flex items-center gap-2 text-xs text-slate-500">
+                    <Link2 className="h-3.5 w-3.5" />
+                    `/blog/{formData.slug || 'your-slug'}`
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={resetSlug}
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+                >
+                  Auto-generate
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <label className={labelClasses}>Excerpt</label>
+                <textarea
+                  name="excerpt"
+                  value={formData.excerpt}
+                  onChange={handleChange}
+                  className={textareaClasses}
+                  placeholder="Short summary that appears on listings and previews."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className={labelClasses}>Tags (comma-separated)</label>
+                <input
+                  type="text"
+                  name="tags"
+                  value={formData.tags}
+                  onChange={handleChange}
+                  className={inputClasses}
+                  placeholder="litigation, arbitration, dispute resolution"
+                />
+                {tagList.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {tagList.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className={sectionClasses}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">Article body</h2>
+                <p className="text-sm text-slate-500">Use headings, quotes, and links to keep the story engaging.</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <SimpleEditor value={formData.content} onChange={handleContentChange} />
+            </div>
+          </section>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            URL Slug *
-          </label>
-          <input
-            type="text"
-            name="slug"
-            value={formData.slug}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Excerpt
-          </label>
-          <textarea
-            name="excerpt"
-            value={formData.excerpt}
-            onChange={handleChange}
-            rows="3"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            placeholder="Brief summary of the post..."
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Cover Image URL *
-          </label>
-          <input
-            type="url"
-            name="coverImage"
-            value={formData.coverImage}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            placeholder="https://..."
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Tags (comma-separated)
-          </label>
-          <input
-            type="text"
-            name="tags"
-            value={formData.tags}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            placeholder="tech, web development, design"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
-            Content * (Rich HTML supported)
-          </label>
-          <SimpleEditor
-            value={formData.content}
-            onChange={handleContentChange}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Status *
-            </label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="scheduled">Scheduled</option>
-            </select>
-          </div>
-
-          {formData.status === 'scheduled' && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Schedule Date
-              </label>
+        <aside className="space-y-6">
+          <section className={asideSectionClasses}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">Cover image *</h3>
+                <p className="text-xs text-slate-500">Provide an absolute URL. Recommended 1600×900px.</p>
+              </div>
+            </div>
+            <div className="mt-4 space-y-3">
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                {previewUrl ? (
+                  <img src={previewUrl} alt="Cover preview" className="h-40 w-full object-cover" />
+                ) : (
+                  <div className="flex h-40 w-full items-center justify-center gap-2 text-sm text-slate-400">
+                    <ImageIcon className="h-5 w-5" /> No cover image yet
+                  </div>
+                )}
+              </div>
               <input
-                type="datetime-local"
-                name="scheduledAt"
-                value={formData.scheduledAt}
+                type="url"
+                name="coverImage"
+                value={formData.coverImage}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                required
+                className={inputClasses}
+                placeholder="https://assets.paulusoro.com/blog/cover.jpg"
               />
             </div>
-          )}
-        </div>
+          </section>
 
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            name="featured"
-            checked={formData.featured}
-            onChange={handleChange}
-            className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
-          />
-          <label className="ml-2 text-sm font-medium text-slate-700">
-            Mark as Featured Post
-          </label>
-        </div>
+          <section className={asideSectionClasses}>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className={labelClasses}>Publishing status *</label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className={inputClasses}
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="scheduled">Scheduled</option>
+                </select>
+              </div>
 
-        <div className="flex gap-4 pt-4">
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
-          >
-            {loading ? 'Creating...' : 'Create Post'}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
-          >
-            Cancel
-          </button>
-        </div>
+              {isScheduled && (
+                <div className="space-y-2">
+                  <label className={labelClasses}>Schedule date</label>
+                  <input
+                    type="datetime-local"
+                    name="scheduledAt"
+                    value={formData.scheduledAt}
+                    onChange={handleChange}
+                    className={inputClasses}
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-slate-700">Feature this post</p>
+                  <p className="text-xs text-slate-500">Pinned to the top of the public blog.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData((prev) => ({ ...prev, featured: !prev.featured }))}
+                  className={`relative h-6 w-12 rounded-full transition ${
+                    formData.featured ? 'bg-emerald-500' : 'bg-slate-300'
+                  }`}
+                  aria-pressed={formData.featured}
+                >
+                  <span
+                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${
+                      formData.featured ? 'right-0.5' : 'left-0.5'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </section>
+        </aside>
+
+        <footer className="admin-surface lg:col-span-2 flex flex-col gap-3 rounded-2xl border border-slate-200 p-6 shadow-sm shadow-slate-100 md:flex-row md:items-center md:justify-between">
+          <p className="text-xs text-slate-400">
+            Tip: publish immediately or keep as a draft while you gather approvals.
+          </p>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="inline-flex items-center justify-center rounded-full border border-slate-200 px-6 py-2 text-sm font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-7 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? 'Creating…' : 'Create post'}
+            </button>
+          </div>
+        </footer>
       </form>
     </div>
   );

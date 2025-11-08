@@ -103,63 +103,63 @@ export default function BlogPage() {
         </div>
       )}
 
-      {/* Regular Posts - Alternating Layout */}
-      <div className="max-w-7xl mx-auto px-4 pb-20 overflow-hidden">
-        {regularPosts.map((post, index) => {
-          const isLeft = index % 2 === 0;
-          
-          return (
-            <div key={post._id} className="mb-12 md:mb-16 w-full">
-              <Link href={`/blog/${post.slug}`} className="block w-full">
-                <div className={`flex flex-col ${isLeft ? 'md:flex-row' : 'md:flex-row-reverse'} gap-6 md:gap-8 bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 border border-slate-100 w-full`}>
-                {/* Image */}
-                <div className="w-full md:w-1/2 aspect-video md:aspect-square overflow-hidden bg-slate-100 flex-shrink-0">
-                  <img
-                    src={post.coverImage}
-                    alt={post.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                
-                {/* Content */}
-                <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col justify-center flex-shrink-0">
-                  <span className="text-sm text-slate-500 mb-3">
-                    {new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </span>
-                  <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-emerald-700 mb-3 md:mb-4 hover:text-emerald-600 transition-colors leading-tight">
-                    {post.title}
-                  </h2>
-                  {post.excerpt && (
-                    <p className="text-sm md:text-base text-slate-600 mb-4 md:mb-6 leading-relaxed line-clamp-3">
-                      {post.excerpt}
-                    </p>
-                  )}
-                  {post.tags && post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4 md:mb-6">
-                      {post.tags.slice(0, 3).map((tag, tagIndex) => (
-                        <span
-                          key={tagIndex}
-                          className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs md:text-sm font-medium rounded-full border border-emerald-200"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex items-center text-emerald-600 font-semibold group">
-                    Read More 
-                    <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+      {/* Regular Posts */}
+      <div className="max-w-7xl mx-auto px-4 pb-20">
+        {regularPosts.length > 0 ? (
+          <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+            {regularPosts.map((post) => (
+              <Link key={post._id} href={`/blog/${post.slug}`} className="group block h-full">
+                <article className="h-full bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-300">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+                    <img
+                      src={post.coverImage}
+                      alt={post.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
                   </div>
-                </div>
-              </div>
+                  <div className="flex flex-col flex-1 px-5 py-6 md:px-6 md:py-7">
+                    <span className="text-xs uppercase tracking-wide text-slate-400 mb-3">
+                      {new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </span>
+                    <h2 className="text-lg md:text-xl font-semibold text-emerald-700 leading-snug mb-3 group-hover:text-emerald-600 transition-colors">
+                      {post.title}
+                    </h2>
+                    {post.excerpt && (
+                      <p className="text-sm text-slate-600 leading-relaxed line-clamp-3 mb-4">
+                        {post.excerpt}
+                      </p>
+                    )}
+                    {post.tags?.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-auto mb-4">
+                        {post.tags.slice(0, 3).map((tag, tagIndex) => (
+                          <span
+                            key={tagIndex}
+                            className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full border border-emerald-200"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex items-center text-emerald-600 font-semibold mt-auto">
+                      Read More
+                      <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                    </div>
+                  </div>
+                </article>
               </Link>
-            </div>
-          );
-        })}
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 text-slate-500 text-sm">
+            No additional articles at the moment.
+          </div>
+        )}
       </div>
 
       {blogs.length === 0 && (

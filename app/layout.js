@@ -4,6 +4,7 @@ import Head from 'next/head';
 import { Analytics } from '@vercel/analytics/next';
 import NavBar from '../components/Navbar/Navbar';
 import AdminWrapper from '../components/AdminWrapper';
+import ToastProvider from '../components/ToastProvider';
 
 export const metadata = {
   title: 'Paul Usoro & Co | Top Commercial Law Firm in Nigeria',
@@ -115,6 +116,7 @@ export default function RootLayout({ children }) {
         />
       </Head>
       <body>
+        <ToastProvider />
         <AdminWrapper children={children} />
         <Analytics />
       </body>

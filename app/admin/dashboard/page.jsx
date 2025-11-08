@@ -1,363 +1,343 @@
 // app/admin/dashboard/page.js
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import {
+  Users,
+  FileText,
+  CheckCircle2,
+  Clock,
+  Sparkles,
+  ArrowUpRight,
+  Eye,
+  PenSquare,
+  Settings,
+} from 'lucide-react';
+
+const cardBase = 'admin-surface rounded-2xl border border-slate-200 p-6 shadow-sm shadow-slate-100';
+const smallText = 'text-xs font-semibold uppercase tracking-wide admin-text-muted';
+const metricValue = 'text-3xl font-semibold admin-text';
 
 export default function AdminDashboard() {
-  const router = useRouter();
-  const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [stats, setStats] = useState({
     totalStaff: 0,
     totalBlogs: 0,
     publishedBlogs: 0,
     draftBlogs: 0,
-    totalDepartments: 0,
-    totalTeams: 0,
-    recentBlogs: []
+    recentBlogs: [],
+    featuredBlogs: [],
+    newestStaff: [],
   });
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    checkAuth();
-    fetchStats();
+  const adminName = useMemo(() => {
+    if (typeof window === 'undefined') return 'Admin';
+    try {
+      const stored = JSON.parse(window.localStorage.getItem('adminData'));
+      if (stored?.email) {
+        return stored.email.split('@')[0];
+      }
+    } catch (err) {
+      console.warn('Failed to parse stored admin info:', err);
+    }
+    return 'Admin';
   }, []);
 
-  const fetchStats = async () => {
+  const loadStats = async (showToast = false) => {
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend-t8pl.onrender.com";
-      const token = localStorage.getItem('admin_token');
-      
-      // Fetch all data in parallel
+      setIsRefreshing(showToast);
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const token = typeof window !== 'undefined' ? window.localStorage.getItem('admin_token') : null;
+
       const [staffRes, blogsRes] = await Promise.all([
         fetch(`${backendUrl}/api/staff`, { credentials: 'include' }),
-        fetch(`${backendUrl}/api/blogs/admin/all`, { 
+        fetch(`${backendUrl}/api/blogs/admin/all`, {
           credentials: 'include',
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }),
       ]);
 
-      let staffCount = 0;
-      let totalBlogs = 0;
-      let publishedBlogs = 0;
-      let draftBlogs = 0;
-      let recentBlogs = [];
-
-      if (staffRes.ok) {
-        const staff = await staffRes.json();
-        staffCount = staff.length;
+      if (!staffRes.ok && !blogsRes.ok) {
+        throw new Error('Unable to load dashboard data.');
       }
 
-      if (blogsRes.ok) {
-        const blogs = await blogsRes.json();
-        totalBlogs = blogs.length;
-        publishedBlogs = blogs.filter(b => b.status === 'published').length;
-        draftBlogs = blogs.filter(b => b.status === 'draft').length;
-        
-        // Get 5 most recent blogs
-        recentBlogs = blogs
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .slice(0, 5);
-      }
+      const [staffData = [], blogData = []] = await Promise.all([
+        staffRes.ok ? staffRes.json() : Promise.resolve([]),
+        blogsRes.ok ? blogsRes.json() : Promise.resolve([]),
+      ]);
+
+      const sortedBlogs = [...blogData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const recentBlogs = sortedBlogs.slice(0, 4);
+      const featuredBlogs = sortedBlogs.filter((blog) => blog.featured).slice(0, 3);
+
+      const newestStaff = [...staffData]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 4);
 
       setStats({
-        totalStaff: staffCount,
-        totalBlogs,
-        publishedBlogs,
-        draftBlogs,
-        totalDepartments: 0, // You can add API for this later
-        totalTeams: 0, // You can add API for this later
-        recentBlogs
+        totalStaff: staffData.length,
+        totalBlogs: blogData.length,
+        publishedBlogs: blogData.filter((blog) => blog.status === 'published').length,
+        draftBlogs: blogData.filter((blog) => blog.status === 'draft').length,
+        recentBlogs,
+        featuredBlogs,
+        newestStaff,
       });
+      setError('');
     } catch (err) {
-      console.error('Failed to fetch stats:', err);
-    } finally {
-      setStatsLoading(false);
-    }
-  };
-
-  const checkAuth = async () => {
-    try {
-      const backendUrl = "https://puc-backend-t8pl.onrender.com";
-      const res = await fetch(`${backendUrl}/api/admin/me`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      console.log('Auth check response status:', res.status);
-      
-      if (!res.ok) {
-        console.log('Auth check failed, redirecting to login');
-        router.push('/admin/login');
-        return;
-      }
-
-      const data = await res.json();
-      console.log('Auth check success:', data);
-      
-      if (data.admin && data.admin.isAdmin) {
-        setAdmin(data.admin);
-      } else {
-        console.log('User is not admin, redirecting to login');
-        router.push('/admin/login');
-      }
-    } catch (err) {
-      console.error('Auth check error:', err);
-      setError('Authentication check failed');
-      router.push('/admin/login');
+      console.error('Dashboard load failed:', err);
+      setError(err.message || 'Failed to load dashboard data.');
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      const backendUrl = "https://puc-backend-t8pl.onrender.com";
-      const res = await fetch(`${backendUrl}/api/admin/logout`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-      });
+  useEffect(() => {
+    loadStats();
+  }, []);
 
-      if (res.ok) {
-        // Clear any stored admin data
-        localStorage.removeItem('adminData');
-        console.log('Logout successful, redirecting to login');
-        router.push('/admin/login');
-      } else {
-        console.error('Logout failed');
-      }
-    } catch (err) {
-      console.error('Logout error:', err);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-lg">
-          {error}
-        </div>
-      </div>
-    );
-  }
-
-  if (!admin) {
-    return null; // Will redirect to login
-  }
+  const metrics = [
+    {
+      label: 'Team members',
+      value: stats.totalStaff,
+      icon: Users,
+      accent: 'bg-emerald-50 text-emerald-600',
+      description: 'Profiles live in the directory',
+      href: '/admin/dashboard/staff',
+    },
+    {
+      label: 'Blog posts',
+      value: stats.totalBlogs,
+      icon: FileText,
+      accent: 'bg-sky-50 text-sky-600',
+      description: 'Published + drafts',
+      href: '/admin/dashboard/blog',
+    },
+    {
+      label: 'Published',
+      value: stats.publishedBlogs,
+      icon: CheckCircle2,
+      accent: 'bg-lime-50 text-lime-600',
+      description: 'Live on the website',
+      href: '/admin/dashboard/blog',
+    },
+    {
+      label: 'Drafts',
+      value: stats.draftBlogs,
+      icon: Clock,
+      accent: 'bg-amber-50 text-amber-600',
+      description: 'Waiting for review',
+      href: '/admin/dashboard/blog',
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-slate-800">Admin Dashboard</h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-slate-600">
-                Welcome, {admin.email}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Logout
-              </button>
-            </div>
+    <div className="admin-page space-y-8">
+      <section className={`${cardBase} flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between`}>
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-emerald-600">Overview</p>
+          <h1 className="mt-2 text-2xl font-bold admin-text md:text-3xl">Welcome back, {adminName}.</h1>
+          <p className="mt-3 text-sm admin-text-muted max-w-2xl">
+            Monitor content momentum, keep an eye on staff visibility, and jump into the tasks that matter most. Everything updates in real time as submissions go live.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => loadStats(true)}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium admin-text transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <Sparkles className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh data
+          </button>
+          <Link
+            href="/admin/dashboard/blog/create"
+            className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+          >
+            <PenSquare className="h-4 w-4" />
+            New post
+          </Link>
+        </div>
+      </section>
+
+      {error && (
+        <div className="admin-surface rounded-2xl border border-rose-200 p-4 text-sm text-rose-700">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="admin-surface flex min-h-[200px] items-center justify-center rounded-2xl border border-slate-200">
+          <div className="flex items-center gap-3 admin-text-muted">
+            <span className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+            Loading dashboard…
           </div>
         </div>
-      </header>
+      ) : (
+        <>
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {metrics.map(({ label, value, icon: Icon, accent, description, href }) => (
+              <Link key={label} href={href} className="block">
+                <article className={`${cardBase} transition hover:-translate-y-0.5 hover:shadow-lg`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={smallText}>{label}</p>
+                      <p className={`${metricValue} mt-2`}>{value}</p>
+                    </div>
+                    <span className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${accent}`}>
+                      <Icon className="h-5 w-5" />
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm admin-text-muted">{description}</p>
+                </article>
+              </Link>
+            ))}
+          </section>
 
-      {/* Main Content */}
-      <main className="w-full">
-        {statsLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-          </div>
-        ) : (
-          <>
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {/* Total Staff */}
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg shadow-lg p-6 text-white">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium opacity-90">Total Staff</h3>
-                  <svg className="w-8 h-8 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
+          <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+            <article className={`${cardBase} space-y-5`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold admin-text">Recent blog activity</h2>
+                  <p className="text-sm admin-text-muted">Latest posts and their performance at a glance.</p>
                 </div>
-                <p className="text-4xl font-bold">{stats.totalStaff}</p>
-                <p className="text-sm opacity-90 mt-1">Active employees</p>
-              </div>
-
-              {/* Total Blogs */}
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium opacity-90">Total Blogs</h3>
-                  <svg className="w-8 h-8 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                  </svg>
-                </div>
-                <p className="text-4xl font-bold">{stats.totalBlogs}</p>
-                <p className="text-sm opacity-90 mt-1">Blog posts</p>
-              </div>
-
-              {/* Published Blogs */}
-              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium opacity-90">Published</h3>
-                  <svg className="w-8 h-8 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <p className="text-4xl font-bold">{stats.publishedBlogs}</p>
-                <p className="text-sm opacity-90 mt-1">Public posts</p>
-              </div>
-
-              {/* Draft Blogs */}
-              <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg shadow-lg p-6 text-white">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium opacity-90">Drafts</h3>
-                  <svg className="w-8 h-8 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </div>
-                <p className="text-4xl font-bold">{stats.draftBlogs}</p>
-                <p className="text-sm opacity-90 mt-1">Unpublished drafts</p>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-800 mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Link href="/admin/dashboard/blog/create">
-                  <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-6 rounded-lg text-center transition-colors shadow hover:shadow-lg">
-                    <div className="text-2xl mb-2">📝</div>
-                    <div className="text-lg font-semibold">New Blog Post</div>
-                    <div className="text-sm opacity-90">Create & publish content</div>
-                  </button>
-                </Link>
-                
-                <Link href="/admin/dashboard/blog">
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white p-6 rounded-lg text-center transition-colors shadow hover:shadow-lg">
-                    <div className="text-2xl mb-2">📰</div>
-                    <div className="text-lg font-semibold">Manage Blogs</div>
-                    <div className="text-sm opacity-90">View all posts</div>
-                  </button>
-                </Link>
-                
-                <Link href="/people">
-                  <button className="w-full bg-purple-600 hover:bg-purple-700 text-white p-6 rounded-lg text-center transition-colors shadow hover:shadow-lg">
-                    <div className="text-2xl mb-2">👥</div>
-                    <div className="text-lg font-semibold">View Staff</div>
-                    <div className="text-sm opacity-90">Browse team page</div>
-                  </button>
-                </Link>
-                
-                <Link href="/admin/dashboard/settings">
-                  <button className="w-full bg-orange-600 hover:bg-orange-700 text-white p-6 rounded-lg text-center transition-colors shadow hover:shadow-lg">
-                    <div className="text-2xl mb-2">⚙️</div>
-                    <div className="text-lg font-semibold">Settings</div>
-                    <div className="text-sm opacity-90">Manage preferences</div>
-                  </button>
+                <Link
+                  href="/admin/dashboard/blog"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                >
+                  Manage posts <ArrowUpRight className="h-4 w-4" />
                 </Link>
               </div>
-            </div>
 
-            {/* Leave Management Section */}
-            <div className="bg-white rounded-lg shadow mb-8">
-              <div className="px-6 py-4 border-b border-slate-200">
-                <h2 className="text-xl font-semibold text-slate-800">Leave Management System</h2>
-                <p className="text-sm text-slate-600 mt-1">Manage staff leaves and approvals</p>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Link href="/admin/dashboard/leave">
-                    <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-lg text-left transition-colors shadow hover:shadow-lg">
-                      <div className="text-lg mb-1">📅</div>
-                      <div className="font-semibold">Leave Management</div>
-                      <div className="text-sm opacity-90">View all staff & approvals</div>
-                    </button>
+              {stats.recentBlogs.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 py-10 text-center">
+                  <p className="text-sm admin-text-muted">No blog posts yet. Publish your first story to populate this feed.</p>
+                  <Link
+                    href="/admin/dashboard/blog/create"
+                    className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                  >
+                    <PenSquare className="h-4 w-4" />
+                    Write a post
                   </Link>
-                  
-                  <div className="w-full bg-orange-100 border border-orange-300 p-4 rounded-lg">
-                    <div className="text-lg mb-1">ℹ️</div>
-                    <div className="font-semibold text-orange-800">Staff Portal</div>
-                    <div className="text-sm text-orange-700">Staff members login at <code className="bg-orange-200 px-1 rounded">/leave/login</code> to manage their leaves</div>
-                  </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Recent Blog Posts */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-slate-800">Recent Blog Posts</h2>
-                <Link href="/admin/dashboard/blog" className="text-sm text-emerald-600 hover:text-emerald-700">
-                  View All →
-                </Link>
-              </div>
-              <div className="p-6">
-                {stats.recentBlogs.length > 0 ? (
-                  <div className="space-y-4">
-                    {stats.recentBlogs.map((blog) => (
-                      <Link key={blog._id} href={`/admin/dashboard/blog/edit/${blog._id}`}>
-                        <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 hover:shadow transition-all">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                                blog.status === 'published' ? 'bg-green-100 text-green-700' :
-                                blog.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
-                                'bg-gray-100 text-gray-700'
-                              }`}>
-                                {blog.status}
+              ) : (
+                <div className="space-y-4">
+                  {stats.recentBlogs.map((blog) => (
+                    <Link key={blog._id} href={`/admin/dashboard/blog/edit/${blog._id}`} className="block">
+                      <div className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-emerald-200 hover:bg-emerald-50/40">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                                blog.status === 'published'
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : blog.status === 'scheduled'
+                                    ? 'bg-sky-100 text-sky-700'
+                                    : 'bg-slate-100 text-slate-600'
+                              }`}
+                            >
+                              {blog.status}
+                            </span>
+                            {blog.featured && (
+                              <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
+                                Featured
                               </span>
-                              {blog.featured && (
-                                <span className="px-3 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-700">
-                                  Featured
-                                </span>
-                              )}
-                            </div>
-                            <h3 className="font-semibold text-slate-800 mb-1">{blog.title}</h3>
-                            <p className="text-sm text-slate-600">{new Date(blog.createdAt).toLocaleDateString()}</p>
+                            )}
                           </div>
-                          <div className="text-right ml-4">
-                            <p className="text-sm text-slate-600">{blog.views || 0} views</p>
-                          </div>
+                          <h3 className="mt-2 text-sm font-semibold admin-text">{blog.title}</h3>
+                          <p className="text-xs admin-text-muted">
+                            {new Date(blog.createdAt).toLocaleDateString()} • {(blog.tags || []).slice(0, 2).join(', ') || 'No tags'}
+                          </p>
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-slate-500 mb-4">No blog posts yet</p>
-                    <Link href="/admin/dashboard/blog/create">
-                      <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-                        Create Your First Post
-                      </button>
+                        <div className="ml-4 flex items-center gap-2 text-xs admin-text-muted">
+                          <Eye className="h-4 w-4" />
+                          {blog.views || 0}
+                        </div>
+                      </div>
                     </Link>
-                  </div>
+                  ))}
+                </div>
+              )}
+            </article>
+
+            <aside className="space-y-6">
+              <article className={`${cardBase} space-y-5`}>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold admin-text">Newest team members</h2>
+                  <Link href="/admin/dashboard/staff" className="text-sm font-medium text-emerald-600 hover:text-emerald-700">
+                    View all
+                  </Link>
+                </div>
+
+                {stats.newestStaff.length === 0 ? (
+                  <p className="text-sm admin-text-muted">No staff profiles yet. Add a team member to populate this list.</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {stats.newestStaff.map((member) => (
+                      <li key={member._id} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3">
+                        <div>
+                          <p className="text-sm font-medium admin-text">
+                            {member.firstName} {member.lastName}
+                          </p>
+                          <p className="text-xs admin-text-muted">
+                            {member.position || 'Role pending'} • {new Date(member.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                            member.isVisible === false
+                              ? 'bg-slate-200 text-slate-600'
+                              : 'bg-emerald-100 text-emerald-700'
+                          }`}
+                        >
+                          {member.isVisible === false ? 'Hidden' : 'Live'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              </div>
-            </div>
-          </>
-        )}
-      </main>
+              </article>
+
+              <article className={`${cardBase} space-y-4`}>
+                <h2 className="text-lg font-semibold admin-text">Quick actions</h2>
+                <div className="space-y-3">
+                  <Link href="/admin/dashboard/blog/create" className="block">
+                    <div className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-3 transition hover:border-emerald-200 hover:bg-emerald-50/40">
+                      <div>
+                        <p className="text-sm font-medium admin-text">Draft a new blog post</p>
+                        <p className="text-xs admin-text-muted">Jump straight into the editor</p>
+                      </div>
+                      <PenSquare className="h-4 w-4 admin-text-muted" />
+                    </div>
+                  </Link>
+                  <Link href="/admin/dashboard/staff" className="block">
+                    <div className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-3 transition hover:border-emerald-200 hover:bg-emerald-50/40">
+                      <div>
+                        <p className="text-sm font-medium admin-text">Manage staff visibility</p>
+                        <p className="text-xs admin-text-muted">Update bios and order</p>
+                      </div>
+                      <Users className="h-4 w-4 admin-text-muted" />
+                    </div>
+                  </Link>
+                  <Link href="/admin/dashboard/settings" className="block">
+                    <div className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-3 transition hover:border-emerald-200 hover:bg-emerald-50/40">
+                      <div>
+                        <p className="text-sm font-medium admin-text">Review admin settings</p>
+                        <p className="text-xs admin-text-muted">Password & theme</p>
+                      </div>
+                      <Settings className="h-4 w-4 admin-text-muted" />
+                    </div>
+                  </Link>
+                </div>
+              </article>
+            </aside>
+          </section>
+        </>
+      )}
     </div>
   );
 }

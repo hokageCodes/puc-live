@@ -56,5 +56,96 @@ html {
   @apply w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500;
 }
 
+:root {
+  --admin-bg: #ffffff;
+  --admin-surface: #ffffff;
+  --admin-surface-alt: #ffffff;
+  --admin-border: rgba(1, 85, 61, 0.08);
+  --admin-text: #0f172a;
+  --admin-text-muted: #475569;
+  --admin-accent: #047857;
+}
+
+[data-admin-theme='dark'] {
+  --admin-bg: #020817;
+  --admin-surface: #0f172a;
+  --admin-surface-alt: #111c2d;
+  --admin-border: #1e293b;
+  --admin-text: #e2e8f0;
+  --admin-text-muted: #94a3b8;
+  --admin-accent: #34d399;
+}
+
+[data-admin-theme='light'] {
+  --admin-bg: #ffffff;
+  --admin-surface: #ffffff;
+  --admin-surface-alt: #ffffff;
+  --admin-border: rgba(1, 85, 61, 0.08);
+  --admin-text: #0f172a;
+  --admin-text-muted: #475569;
+  --admin-accent: #047857;
+}
+
+.admin-page {
+  background-color: var(--admin-bg);
+  color: var(--admin-text);
+}
+
+.admin-surface {
+  background-color: var(--admin-surface);
+  color: var(--admin-text);
+  border-color: var(--admin-border);
+}
+
+.admin-surface-alt {
+  background-color: var(--admin-surface-alt);
+  color: var(--admin-text);
+  border-color: var(--admin-border);
+}
+
+.admin-border {
+  border-color: var(--admin-border);
+}
+
+.admin-text-muted {
+  color: var(--admin-text-muted);
+}
+
+.admin-text {
+  color: var(--admin-text);
+}
+
+.admin-accent {
+  color: var(--admin-accent);
+}
+
+.admin-accent-bg {
+  background-color: var(--admin-accent);
+}
+
+[data-admin-theme='dark'] .admin-page .text-slate-900,
+[data-admin-theme='dark'] .admin-page .text-slate-800,
+[data-admin-theme='dark'] .admin-page .text-slate-700,
+[data-admin-theme='dark'] .admin-page .text-slate-600,
+[data-admin-theme='dark'] .admin-page .text-slate-500 {
+  color: var(--admin-text) !important;
+}
+
+[data-admin-theme='dark'] .admin-page .text-slate-400,
+[data-admin-theme='dark'] .admin-page .text-slate-300 {
+  color: var(--admin-text-muted) !important;
+}
+
+[data-admin-theme='dark'] .admin-page .bg-white,
+[data-admin-theme='dark'] .admin-page .bg-slate-50,
+[data-admin-theme='dark'] .admin-page .bg-slate-100 {
+  background-color: var(--admin-surface) !important;
+}
+
+[data-admin-theme='dark'] .admin-page .border-slate-200,
+[data-admin-theme='dark'] .admin-page .border-slate-100 {
+  border-color: var(--admin-border) !important;
+}
+
 
 
