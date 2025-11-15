@@ -117,7 +117,7 @@ export default function RootLayout({ children }) {
       </Head>
       <body>
         <ToastProvider />
-        <AdminWrapper children={children} />
+        <AdminWrapper>{children}</AdminWrapper>
         <Analytics />
       </body>
     </html>
