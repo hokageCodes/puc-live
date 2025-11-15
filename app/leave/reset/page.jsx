@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, Suspense } from 'react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext.jsx';
 
-export default function LeaveResetPasswordPage() {
+function ResetForm() {
   const { backendUrl } = useLeaveAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -190,6 +190,21 @@ export default function LeaveResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LeaveResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-sm text-slate-500">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ResetForm />
+    </Suspense>
   );
 }
 

@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Suspense } from 'react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext.jsx';
 
-export default function LeaveActivatePage() {
+function ActivateForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { backendUrl } = useLeaveAuth();
@@ -197,6 +197,21 @@ export default function LeaveActivatePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LeaveActivatePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-sm text-slate-500">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ActivateForm />
+    </Suspense>
   );
 }
 
