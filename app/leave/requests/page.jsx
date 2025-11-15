@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext.jsx';
+import { useLeaveAuth, useLeaveGuard } from '@/components/leave/LeaveAuthContext';
+
 
 // Force dynamic rendering since this page uses client-side auth hooks
 export const dynamic = 'force-dynamic';
