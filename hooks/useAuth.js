@@ -1,21 +1,71 @@
 // hooks/useAuth.js
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+
+const ADMIN_TOKEN_KEY = 'admin_token';
+const ADMIN_DATA_KEY = 'adminData';
+
+const getBackendUrl = () => process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+
+const getStoredToken = () => {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(ADMIN_TOKEN_KEY);
+};
+
+const getStoredAdmin = () => {
+  if (typeof window === 'undefined') return null;
+  const raw = window.localStorage.getItem(ADMIN_DATA_KEY);
+  try {
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
 
 export function useAuth() {
   const router = useRouter();
-  const [admin, setAdmin] = useState(null);
+  const [admin, setAdmin] = useState(() => getStoredAdmin());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const checkAuth = async () => {
+  const buildHeaders = useCallback(() => {
+    const token = getStoredToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }, []);
+
+  const persistSession = useCallback((accessToken, adminProfile) => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(ADMIN_TOKEN_KEY, accessToken);
+      window.localStorage.setItem(ADMIN_DATA_KEY, JSON.stringify(adminProfile));
+    }
+    setAdmin(adminProfile);
+  }, []);
+
+  const clearSession = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+      window.localStorage.removeItem(ADMIN_DATA_KEY);
+    }
+    setAdmin(null);
+  }, []);
+
+  const checkAuth = useCallback(async () => {
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend-t8pl.onrender.com";
-      // Fixed: Use proper template literal with backticks
+      const backendUrl = getBackendUrl();
+      const token = getStoredToken();
+
+      if (!token) {
+        clearSession();
+        return null;
+      }
+
       const res = await fetch(`${backendUrl}/api/admin/me`, {
         method: 'GET',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...buildHeaders(),
+        },
       });
 
       if (!res.ok) {
@@ -23,94 +73,122 @@ export function useAuth() {
       }
 
       const data = await res.json();
-      
-      if (data.admin && data.admin.isAdmin) {
-        setAdmin(data.admin);
+
+      if (Array.isArray(data?.admin?.roles) && data.admin.roles.includes('admin')) {
+        persistSession(token, data.admin);
         return data.admin;
-      } else {
-        throw new Error('User is not admin');
       }
+
+      throw new Error('User is not authorized for CMS');
     } catch (err) {
       console.error('Auth check error:', err);
       setError(err.message);
-      setAdmin(null);
+      clearSession();
       return null;
     } finally {
       setLoading(false);
     }
-  };
+  }, [buildHeaders, clearSession, persistSession]);
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     try {
       setLoading(true);
       setError('');
-      
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend-t8pl.onrender.com";
-      // Fixed: Use proper template literal with backticks
-      const res = await fetch(`${backendUrl}/api/admin/login`, {
+
+      const backendUrl = getBackendUrl();
+      const res = await fetch(`${backendUrl}/api/auth/login`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, scope: 'cms' }),
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.message || 'Login failed');
       }
 
-      const data = await res.json();
-      
-      if (data.admin && data.admin.isAdmin) {
-        setAdmin(data.admin);
-        localStorage.setItem('adminData', JSON.stringify(data.admin));
-        return { success: true, admin: data.admin };
-      } else {
-        throw new Error('Login successful but admin data is missing');
+      if (!data?.accessToken || !data?.user) {
+        throw new Error('Login successful but session data missing');
       }
+
+      if (!Array.isArray(data.user.roles) || !data.user.roles.includes('admin')) {
+        throw new Error('User is not authorized for CMS');
+      }
+
+      persistSession(data.accessToken, data.user);
+      return { success: true, admin: data.user };
     } catch (err) {
+      clearSession();
       setError(err.message);
       return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
-  };
+  }, [clearSession, persistSession]);
 
-  const logout = async () => {
+  const refresh = useCallback(async () => {
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend-t8pl.onrender.com";
-      // Fixed: Use proper template literal with backticks
-      const res = await fetch(`${backendUrl}/api/admin/logout`, {
+      const backendUrl = getBackendUrl();
+      const res = await fetch(`${backendUrl}/api/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scope: 'cms' }),
       });
 
-      if (res.ok) {
-        setAdmin(null);
-        localStorage.removeItem('adminData');
-        router.push('/admin/login');
-        return { success: true };
-      } else {
-        throw new Error('Logout failed');
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Unable to refresh session');
       }
+
+      if (!data?.accessToken || !data?.user) {
+        throw new Error('Refresh response missing session data');
+      }
+
+      if (!Array.isArray(data.user.roles) || !data.user.roles.includes('admin')) {
+        throw new Error('User is not authorized for CMS');
+      }
+
+      persistSession(data.accessToken, data.user);
+      return data.user;
+    } catch (err) {
+      console.error('Admin refresh error:', err);
+      clearSession();
+      return null;
+    }
+  }, [clearSession, persistSession]);
+
+  const logout = useCallback(async () => {
+    try {
+      const backendUrl = getBackendUrl();
+      await fetch(`${backendUrl}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scope: 'cms' }),
+      });
     } catch (err) {
       console.error('Logout error:', err);
-      return { success: false, error: err.message };
+    } finally {
+      clearSession();
+      router.push('/admin/login');
     }
-  };
+  }, [clearSession, router]);
 
   const useRequireAuth = () => {
     useEffect(() => {
       if (!loading && !admin) {
         router.push('/admin/login');
       }
-    }, [loading, admin]);
+    }, [admin, loading, router]);
   };
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   return {
     admin,
@@ -119,6 +197,8 @@ export function useAuth() {
     login,
     logout,
     checkAuth,
-    useRequireAuth
+    refresh,
+    buildHeaders,
+    useRequireAuth,
   };
 }

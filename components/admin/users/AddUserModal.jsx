@@ -184,8 +184,8 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
 
       if (selectedPracticeAreas.length > 0) {
         selectedPracticeAreas.forEach((pa) => {
-          formData.append('practiceAreas', pa);
-        });
+        formData.append('practiceAreas', pa);
+      });
       } else {
         formData.append('practiceAreas', '');
       }
@@ -240,15 +240,22 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
         : `${backendUrl}/api/staff`;
 
       const method = editingStaff ? 'PUT' : 'POST';
+      const token = typeof window !== 'undefined' ? window.localStorage.getItem('admin_token') : null;
 
-      const res = await fetch(url, {
+      const requestOptions = {
         method,
         credentials: 'include',
         body: formData,
-      });
+      };
+
+      if (token) {
+        requestOptions.headers = { Authorization: `Bearer ${token}` };
+      }
+
+      const res = await fetch(url, requestOptions);
 
       const data = await res.json().catch(() => ({}));
-
+      
       if (res.ok) {
         toast.success(`Staff member ${editingStaff ? 'updated' : 'created'} successfully!`);
         onSaved?.();
@@ -305,7 +312,7 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
   const textareaClasses = `${inputClasses} min-h-[120px] resize-none`;
   const sectionCardClasses = 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-100';
   const badgeClasses = 'inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm';
- 
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/40 backdrop-blur-sm p-6">
       <form
@@ -349,8 +356,8 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
                             : 'border-slate-200 bg-white text-slate-400'
                       }`}
                     >
-                      {index + 1}
-                    </div>
+                    {index + 1}
+                  </div>
                     <div className="flex flex-col">
                       <span className={`text-sm font-semibold ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>
                         {step.label}
@@ -363,11 +370,11 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
                           index + 1 < currentStep ? 'bg-emerald-300' : 'bg-slate-200'
                         }`}
                       />
-                    )}
-                  </div>
+                  )}
+                </div>
                 );
               })}
-            </div>
+              </div>
 
             <div className="mt-4 grid gap-6">
               {currentStep === 1 && (
@@ -378,11 +385,11 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
                       <p className="text-sm text-slate-500">
                         These details power the contact cards and staff directory listings.
                       </p>
-                    </div>
+          </div>
                     {editingStaff?.staffCode && (
                       <span className={`${badgeClasses} bg-emerald-50/80 text-emerald-700`}>ID · {editingStaff.staffCode}</span>
                     )}
-                  </div>
+        </div>
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
@@ -419,34 +426,34 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Last name</label>
-                      <input
-                        type="text"
+          <input
+            type="text"
                         className={inputClasses}
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        required
+            required
                         placeholder="Obi"
-                      />
+          />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Email address</label>
-                      <input
-                        type="email"
+          <input
+            type="email"
                         className={inputClasses}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
                         placeholder="ada@paulusoro.com"
-                      />
+          />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Phone number</label>
-                      <input
-                        type="tel"
+          <input
+            type="tel"
                         className={inputClasses}
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        required
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            required
                         placeholder="(+234) 801 234 5678"
                       />
                     </div>
@@ -454,10 +461,10 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
 
                   <div className="space-y-2">
                     <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Short bio</label>
-                    <textarea
+          <textarea
                       className={textareaClasses}
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
                       placeholder="Summarise their expertise and notable achievements..."
                     />
                   </div>
@@ -546,9 +553,9 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
                         <p className="text-sm font-medium text-slate-700">Upload profile photo</p>
                         <p className="mt-1 text-xs text-slate-500">JPG or PNG, at least 600×600px for crisp results (max 5MB).</p>
                         <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700">
-                          <input
-                            type="file"
-                            accept="image/*"
+          <input
+            type="file"
+            accept="image/*"
                             className="hidden"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
@@ -577,13 +584,13 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
                         )}
                       </div>
                     </div>
-                  </div>
+          </div>
                 </section>
-              )}
+        )}
 
-              {currentStep === 2 && (
+        {currentStep === 2 && (
                 <section className={`${sectionCardClasses} space-y-6`}>
-                  <div>
+          <div>
                     <h3 className="text-base font-semibold text-slate-900">Website placement</h3>
                     <p className="text-sm text-slate-500">
                       Control where this profile appears by selecting the right department, team, and practice areas.
@@ -593,35 +600,34 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Primary department</label>
-                      <select
+          <select
                         className={inputClasses}
-                        value={selectedDepartment}
-                        onChange={(e) => setSelectedDepartment(e.target.value)}
-                        required
-                      >
+            value={selectedDepartment}
+            onChange={(e) => setSelectedDepartment(e.target.value)}
+          >
                         <option value="">Select department</option>
-                        {departments?.map((d) => (
-                          <option key={d._id} value={d._id}>
-                            {d.name}
-                          </option>
-                        ))}
-                      </select>
+            {departments?.map((d) => (
+              <option key={d._id} value={d._id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Team (optional)</label>
-                      <select
+          <select
                         className={`${inputClasses} ${!selectedDepartment ? 'cursor-not-allowed bg-slate-100 text-slate-400' : ''}`}
-                        value={selectedTeam}
-                        onChange={(e) => setSelectedTeam(e.target.value)}
-                        disabled={!selectedDepartment}
-                      >
+            value={selectedTeam}
+            onChange={(e) => setSelectedTeam(e.target.value)}
+            disabled={!selectedDepartment}
+          >
                         <option value="">Select team</option>
-                        {filteredTeams?.map((t) => (
-                          <option key={t._id} value={t._id}>
-                            {t.name}
-                          </option>
-                        ))}
-                      </select>
+            {filteredTeams?.map((t) => (
+              <option key={t._id} value={t._id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
                     </div>
                   </div>
 
@@ -703,14 +709,14 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Confirmation date</label>
-                      <input
+            <input
                         type="date"
                         className={inputClasses}
                         value={confirmationDate}
                         onChange={(e) => setConfirmationDate(e.target.value)}
                       />
-                    </div>
-                  </div>
+          </div>
+          </div>
 
                   <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3">
                     <div>
@@ -735,49 +741,49 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
                 </section>
               )}
             </div>
-          </div>
+        </div>
 
           <footer className="flex flex-col gap-3 border-t border-slate-200 pt-6 md:flex-row md:items-center md:justify-between">
             <div className="text-xs text-slate-400">
               Step {currentStep} of {stepCount}
             </div>
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={onClose}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+          
+            {currentStep > 1 && (
               <button
                 type="button"
-                onClick={onClose}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-
-              {currentStep > 1 && (
-                <button
-                  type="button"
-                  onClick={prevStep}
+                onClick={prevStep}
                   className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-2 text-sm font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
-                >
-                  ← Previous
-                </button>
-              )}
-
+              >
+                ← Previous
+              </button>
+            )}
+            
               {currentStep < stepCount ? (
-                <button
-                  type="button"
-                  onClick={nextStep}
+              <button
+                type="button"
+                onClick={nextStep}
                   className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
-                >
-                  Next →
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={loading}
+              >
+                Next →
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading}
                   className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
+              >
                   {loading ? (editingStaff ? 'Updating…' : 'Creating…') : editingStaff ? '✓ Save changes' : '✓ Create staff'}
-                </button>
-              )}
-            </div>
+              </button>
+            )}
+          </div>
           </footer>
         </div>
       </form>

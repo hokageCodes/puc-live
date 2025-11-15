@@ -51,12 +51,16 @@ export default function AdminDashboard() {
       setIsRefreshing(showToast);
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
       const token = typeof window !== 'undefined' ? window.localStorage.getItem('admin_token') : null;
+      const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
       const [staffRes, blogsRes] = await Promise.all([
-        fetch(`${backendUrl}/api/staff`, { credentials: 'include' }),
+        fetch(`${backendUrl}/api/staff`, {
+          credentials: 'include',
+          headers: authHeaders,
+        }),
         fetch(`${backendUrl}/api/blogs/admin/all`, {
           credentials: 'include',
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          headers: authHeaders,
         }),
       ]);
 

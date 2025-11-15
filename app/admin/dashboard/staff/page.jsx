@@ -21,6 +21,59 @@ const DIVISION_LABELS = {
   other: 'Other',
 };
 
+const STATUS_BADGE_CLASSES = {
+  success: 'bg-emerald-100 text-emerald-700',
+  warning: 'bg-amber-100 text-amber-700',
+  muted: 'bg-slate-200 text-slate-600',
+};
+
+const formatDateTime = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+};
+
+const getActivationStatus = (person) => {
+  const activatedAt = person?.passwordSetAt;
+  const invitedAt = person?.lastInviteSentAt;
+  const lastLoginAt = person?.lastLoginAt;
+
+  if (activatedAt) {
+    return {
+      state: 'active',
+      label: 'Active',
+      badgeClass: STATUS_BADGE_CLASSES.success,
+      description: `Activated ${formatDateTime(activatedAt)}`,
+      subtext: lastLoginAt ? `Last login ${formatDateTime(lastLoginAt)}` : 'No login activity yet',
+    };
+  }
+
+  if (invitedAt) {
+    return {
+      state: 'invited',
+      label: 'Invite sent',
+      badgeClass: STATUS_BADGE_CLASSES.warning,
+      description: `Invite sent ${formatDateTime(invitedAt)}`,
+      subtext: 'Awaiting activation',
+    };
+  }
+
+  return {
+    state: 'pending',
+    label: 'Not invited',
+    badgeClass: STATUS_BADGE_CLASSES.muted,
+    description: 'Send an invite to let this staff member activate their account.',
+    subtext: null,
+  };
+};
+
 export default function StaffManagementPage() {
   const [staff, setStaff] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -39,14 +92,25 @@ export default function StaffManagementPage() {
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
+  const applyStaffUpdate = (id, changes) => {
+    setStaff((prev) =>
+      prev.map((item) => (item._id === id ? { ...item, ...changes } : item))
+    );
+    setFiltered((prev) =>
+      prev.map((item) => (item._id === id ? { ...item, ...changes } : item))
+    );
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
+      const token = typeof window !== 'undefined' ? window.localStorage.getItem('admin_token') : null;
+      const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
       const responses = await Promise.all([
-        fetch(`${backendUrl}/api/staff`, { credentials: 'include' }),
-        fetch(`${backendUrl}/api/departments`, { credentials: 'include' }),
-        fetch(`${backendUrl}/api/teams`, { credentials: 'include' }),
-        fetch(`${backendUrl}/api/practice-areas`, { credentials: 'include' }),
+        fetch(`${backendUrl}/api/staff`, { credentials: 'include', headers: authHeaders }),
+        fetch(`${backendUrl}/api/departments`, { credentials: 'include', headers: authHeaders }),
+        fetch(`${backendUrl}/api/teams`, { credentials: 'include', headers: authHeaders }),
+        fetch(`${backendUrl}/api/practice-areas`, { credentials: 'include', headers: authHeaders }),
       ]);
 
       responses.forEach((res) => {
@@ -127,7 +191,12 @@ export default function StaffManagementPage() {
       const res = await fetch(`${backendUrl}/api/staff/${staffId}`, {
         method: 'DELETE',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(typeof window !== 'undefined' && window.localStorage.getItem('admin_token')
+            ? { Authorization: `Bearer ${window.localStorage.getItem('admin_token')}` }
+            : {}),
+        },
       });
 
       if (!res.ok) {
@@ -155,6 +224,11 @@ export default function StaffManagementPage() {
       const res = await fetch(`${backendUrl}/api/staff/${staffMember._id}`, {
         method: 'PUT',
         credentials: 'include',
+        headers: {
+          ...(typeof window !== 'undefined' && window.localStorage.getItem('admin_token')
+            ? { Authorization: `Bearer ${window.localStorage.getItem('admin_token')}` }
+            : {}),
+        },
         body: formData,
       });
 
@@ -185,10 +259,15 @@ export default function StaffManagementPage() {
   const handleSendInvite = async (staffMember) => {
     setInviteLoadingId(staffMember._id);
     try {
+      const token = typeof window !== 'undefined' ? window.localStorage.getItem('admin_token') : null;
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
       const res = await fetch(`${backendUrl}/api/auth/invite`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ email: staffMember.email }),
       });
 
@@ -198,6 +277,8 @@ export default function StaffManagementPage() {
       }
 
       toast.success('Activation email sent successfully.');
+      const nowIso = new Date().toISOString();
+      applyStaffUpdate(staffMember._id, { lastInviteSentAt: nowIso });
     } catch (error) {
       console.error('Send invite failed:', error);
       toast.error(error.message || 'Failed to send activation email.');
@@ -214,7 +295,6 @@ export default function StaffManagementPage() {
     <div className="admin-page w-full space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.3em] text-emerald-600 font-semibold">Team</p>
           <h1 className="text-2xl md:text-3xl font-bold admin-text">All Staff Directory</h1>
           <p className="text-sm md:text-base admin-text-muted">
             Search, curate, and manage everyone who appears across the website in one streamlined view.
@@ -328,6 +408,7 @@ export default function StaffManagementPage() {
                 <th className="px-6 py-3 font-semibold">Dept & Team</th>
                 <th className="px-6 py-3 font-semibold">Practice Areas</th>
                 <th className="px-6 py-3 font-semibold">Roles</th>
+                <th className="px-6 py-3 font-semibold text-center">Activation</th>
                 <th className="px-6 py-3 font-semibold text-center">Leave Access</th>
                 <th className="px-6 py-3 font-semibold text-center">Website</th>
                 <th className="px-6 py-3 font-semibold text-right">Manage</th>
@@ -340,6 +421,11 @@ export default function StaffManagementPage() {
                 const extraRoles = roles.filter((role) => role !== 'staff');
                 const divisionLabel = DIVISION_LABELS[person.division] || DIVISION_LABELS.legal;
                 const leaveActive = person.leaveEnabled !== false;
+                const activation = getActivationStatus(person);
+                const inviteDisabled = activation.state === 'active';
+                const inviteButtonLabel =
+                  activation.state === 'invited' ? 'Resend' : 'Invite';
+
                 return (
                   <tr key={person._id} className="transition hover:bg-emerald-500/5">
                     <td className="px-6 py-5 align-top">
@@ -439,6 +525,25 @@ export default function StaffManagementPage() {
                         )}
                       </div>
                     </td>
+                    <td className="px-6 py-5 align-top">
+                      <div className="flex flex-col items-center gap-2 text-xs text-center">
+                        <span
+                          className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-semibold ${activation.badgeClass}`}
+                        >
+                          {activation.label}
+                        </span>
+                        {activation.description && (
+                          <span className="block text-xs admin-text-muted">
+                            {activation.description}
+                          </span>
+                        )}
+                        {activation.subtext && (
+                          <span className="block text-[11px] text-slate-400">
+                            {activation.subtext}
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-5 text-center align-top">
                       <span
                         className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-semibold ${
@@ -464,13 +569,17 @@ export default function StaffManagementPage() {
                     <td className="px-6 py-5 text-right align-top">
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+                          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={() => handleSendInvite(person)}
-                          disabled={inviteLoadingId === person._id}
-                          title="Send activation email"
+                          disabled={inviteLoadingId === person._id || inviteDisabled}
+                          title={
+                            inviteDisabled
+                              ? 'Account already activated'
+                              : 'Send activation email'
+                          }
                         >
                           <Send className="h-3.5 w-3.5" />
-                          {inviteLoadingId === person._id ? 'Sending…' : 'Invite'}
+                          {inviteLoadingId === person._id ? 'Sending…' : inviteButtonLabel}
                         </button>
                         <button
                           className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"

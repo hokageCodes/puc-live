@@ -160,26 +160,32 @@ export const api = {
 };
 
 // Admin-specific API calls
+const getAdminHeaders = () => {
+  if (typeof window === 'undefined') return {};
+  const token = window.localStorage.getItem('admin_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 export const adminApi = {
   // Get current admin user
-  getMe: () => api.get('/api/admin/me'),
+  getMe: () => api.get('/api/admin/me', { headers: getAdminHeaders() }),
   
   // Logout
-  logout: () => api.post('/api/admin/logout'),
+  logout: () => api.post('/api/auth/logout', { scope: 'cms' }, { headers: getAdminHeaders() }),
   
   // Get dashboard stats
-  getStats: () => api.get('/api/admin/stats'),
+  getStats: () => api.get('/api/admin/stats', { headers: getAdminHeaders() }),
   
   // Get users
   getUsers: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return api.get(`/api/admin/users${queryString ? `?${queryString}` : ''}`);
+    return api.get(`/api/admin/users${queryString ? `?${queryString}` : ''}`, { headers: getAdminHeaders() });
   },
   
   // Get reports
   getReports: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return api.get(`/api/admin/reports${queryString ? `?${queryString}` : ''}`);
+    return api.get(`/api/admin/reports${queryString ? `?${queryString}` : ''}`, { headers: getAdminHeaders() });
   },
 };
 

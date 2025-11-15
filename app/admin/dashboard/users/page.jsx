@@ -26,13 +26,20 @@ export default function AdminUsersPage() {
 
   const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
+  const getAuthHeaders = () => {
+    if (typeof window === 'undefined') return {};
+    const token = window.localStorage.getItem('admin_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const fetchData = async () => {
     try {
+      const authHeaders = getAuthHeaders();
       const responses = await Promise.all([
-        fetch(`${base}/api/staff`, { credentials: 'include' }),
-        fetch(`${base}/api/departments`, { credentials: 'include' }),
-        fetch(`${base}/api/teams`, { credentials: 'include' }),
-        fetch(`${base}/api/practice-areas`, { credentials: 'include' }),
+        fetch(`${base}/api/staff`, { credentials: 'include', headers: authHeaders }),
+        fetch(`${base}/api/departments`, { credentials: 'include', headers: authHeaders }),
+        fetch(`${base}/api/teams`, { credentials: 'include', headers: authHeaders }),
+        fetch(`${base}/api/practice-areas`, { credentials: 'include', headers: authHeaders }),
       ]);
 
       responses.forEach((res) => {
@@ -102,7 +109,8 @@ export default function AdminUsersPage() {
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`${base}/api/staff/${id}`, { method: 'DELETE', credentials: 'include' });
+      const authHeaders = getAuthHeaders();
+      const res = await fetch(`${base}/api/staff/${id}`, { method: 'DELETE', credentials: 'include', headers: authHeaders });
       if (res.ok) {
         setUsers((prev) => prev.filter((u) => u._id !== id));
         toast.success('Staff member deleted successfully.');

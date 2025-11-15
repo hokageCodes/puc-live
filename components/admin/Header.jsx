@@ -1,22 +1,18 @@
 "use client"
 import { LogOut, User, Menu, X, Sun, Moon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { adminApi } from '../../utils/api';
 import { toast } from 'react-toastify';
 import { useAdminTheme } from './AdminThemeContext';
+import { useAdminAuth } from './AdminAuthContext';
 
 export default function Header({ onToggleSidebar, sidebarOpen, admin }) {
-  const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { theme, toggleTheme } = useAdminTheme();
+  const { logout } = useAdminAuth();
 
   const handleLogout = async () => {
     try {
-      await adminApi.logout();
-      localStorage.removeItem('adminData');
-      localStorage.removeItem('admin_token');
-      router.push('/admin/login');
+      await logout();
     } catch (err) {
       console.error('Logout failed:', err);
     }

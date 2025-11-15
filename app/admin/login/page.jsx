@@ -24,11 +24,11 @@ export default function AdminLoginPage() {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
       console.log('Backend URL:', backendUrl);
       
-      const res = await fetch(`${backendUrl}/api/admin/login`, {
+      const res = await fetch(`${backendUrl}/api/auth/login`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, scope: 'cms' }),
       });
   
       console.log('Response status:', res.status);
@@ -43,27 +43,19 @@ export default function AdminLoginPage() {
       const data = await res.json();
       console.log('Login success response:', JSON.stringify(data, null, 2));
       console.log('Full response keys:', Object.keys(data));
-      console.log('Has admin?:', !!data.admin);
-      console.log('Has token?:', !!data.token);
+      console.log('Has user?:', !!data.user);
+      console.log('Has access token?:', !!data.accessToken);
       
       // Validate admin data
-      if (!data.admin) {
-        console.error('No admin object in response');
-        setError('Login successful but no admin data received');
+      if (!data.user) {
+        console.error('No user object in response');
+        setError('Login successful but no session payload received');
         return;
       }
       
-      if (!data.admin.isAdmin) {
-        console.error('Admin flag is false or missing:', data.admin.isAdmin);
-        setError('Login successful but user is not an admin');
-        return;
-      }
+      localStorage.setItem('adminData', JSON.stringify(data.user));
       
-      // Store admin info in localStorage
-      localStorage.setItem('adminData', JSON.stringify(data.admin));
-      
-      // Try to get token from response or cookies
-      const token = data.token || null;
+      const token = data.accessToken || null;
       if (token) {
         localStorage.setItem('admin_token', token);
         console.log('✅ Token stored in localStorage');
@@ -75,8 +67,18 @@ export default function AdminLoginPage() {
       console.log('✅ Login successful, redirecting to dashboard...');
       console.log('Admin data:', data.admin);
       
-      // Direct redirect without delay
-      window.location.href = '/admin/dashboard';
+      try {
+        router.replace('/admin/dashboard');
+        setTimeout(() => {
+          if (window.location.pathname !== '/admin/dashboard') {
+            console.log('↪️ Fallback redirect using window.location');
+            window.location.href = '/admin/dashboard';
+          }
+        }, 150);
+      } catch (navError) {
+        console.error('Router navigation failed, using window.location instead:', navError);
+        window.location.href = '/admin/dashboard';
+      }
       
     } catch (err) {
       console.error('Login error:', err);
