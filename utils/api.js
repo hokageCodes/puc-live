@@ -216,11 +216,11 @@ export function useApiError() {
   return { handleError };
 }
 
-// Staff-specific API calls
+// Staff-specific API calls (requires CMS auth)
 export const staffApi = {
-  getAll: () => api.get('/api/staff'),
-  getById: (id) => api.get(`/api/staff/${id}`),
-  create: (data) => api.post('/api/staff', data),
-  update: (id, data) => api.put(`/api/staff/${id}`, data),
-  delete: (id) => api.delete(`/api/staff/${id}`),
+  getAll: () => api.get('/api/staff', { headers: getAdminHeaders() }),
+  getById: (id) => api.get(`/api/staff/${id}`, { headers: getAdminHeaders() }),
+  create: (data) => api.post('/api/staff', data, { headers: getAdminHeaders() }),
+  update: (id, data) => api.put(`/api/staff/${id}`, data, { headers: getAdminHeaders() }),
+  delete: (id) => api.delete(`/api/staff/${id}`, { headers: getAdminHeaders() }),
 };
