@@ -5,6 +5,9 @@ import { useMemo } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext.jsx';
 
+// Force dynamic rendering since this page uses client-side auth hooks
+export const dynamic = 'force-dynamic';
+
 const MOCK_REQUESTS = [
   {
     id: 'req-210',
