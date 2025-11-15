@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { CalendarDays, Users } from 'lucide-react';
-import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext.jsx';
+import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext.js';
 
 const MOCK_EVENTS = [
   {

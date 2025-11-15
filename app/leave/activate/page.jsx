@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState, Suspense } from 'react';
-import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext.jsx';
+import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext.js';
 
 function ActivateForm() {
   const router = useRouter();

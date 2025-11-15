@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { ShieldAlert } from 'lucide-react';
-import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext.jsx';
+import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext.js';
 
 const MOCK_APPROVAL_QUEUE = [
   {
