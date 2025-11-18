@@ -11,7 +11,7 @@ import {
   Loader2,
   Users,
 } from 'lucide-react';
-import { useLeaveAuth, useLeaveGuard } from '../../../../components/leave/LeaveAuthContext.jsx';
+import { useLeaveAuth, useLeaveGuard } from '../../../../components/leave/LeaveAuthContext';
 
 const LEAVE_TYPES = [
   { key: 'annual', label: 'Annual Leave', notice: 'Min. 14 days notice recommended.' },

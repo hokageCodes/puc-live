@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useLeaveAuth } from '../../../components/leave/LeaveAuthContext.jsx';
+import { useLeaveAuth } from '../../../components/leave/LeaveAuthContext';
 
 export default function LeaveLoginPage() {
   const router = useRouter();

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext.jsx';
+import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
 
 export default function LeaveForgotPasswordPage() {
   const { backendUrl } = useLeaveAuth();

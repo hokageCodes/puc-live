@@ -10,7 +10,7 @@ import {
   AlertCircle,
   ChevronRight,
 } from 'lucide-react';
-import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext.jsx';
+import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
 
 const MOCK_BALANCES = [
   { code: 'annual', label: 'Annual Leave', total: 20, used: 0, upcoming: 0 },

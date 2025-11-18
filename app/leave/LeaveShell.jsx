@@ -13,7 +13,7 @@ import {
   X,
   LogOut,
 } from 'lucide-react';
-import { useLeaveAuth } from '../../components/leave/LeaveAuthContext.js';
+import { useLeaveAuth } from '../../components/leave/LeaveAuthContext';
 
 const AUTH_FREE_ROUTES = ['/leave/login', '/leave/activate', '/leave/forgot', '/leave/reset'];
 
