@@ -42,6 +42,7 @@ const generateSlug = (text) =>
 export default function CreateBlogPage() {
   const router = useRouter();
   const [formData, setFormData] = useState(defaultForm);
+  const [coverFile, setCoverFile] = useState(null);
   const [slugTouched, setSlugTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -61,6 +62,16 @@ export default function CreateBlogPage() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    setCoverFile(file || null);
+    if (file) {
+      // show preview using object URL
+      const url = URL.createObjectURL(file);
+      setFormData((prev) => ({ ...prev, coverImage: url }));
+    }
   };
 
   const handleTitleChange = (e) => {
@@ -101,18 +112,41 @@ export default function CreateBlogPage() {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
       const token = localStorage.getItem('admin_token');
 
-      const res = await fetch(`${backendUrl}/api/blogs`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-        body: JSON.stringify({
-          ...formData,
-          tags: tagList,
-        }),
-      });
+      let res;
+      if (coverFile) {
+        // multipart upload when a file is selected
+        const data = new FormData();
+        data.append('title', formData.title);
+        data.append('slug', formData.slug);
+        data.append('excerpt', formData.excerpt);
+        data.append('content', formData.content);
+        data.append('status', formData.status);
+        if (formData.scheduledAt) data.append('scheduledAt', formData.scheduledAt);
+        data.append('tags', JSON.stringify(tagList));
+        data.append('coverImage', coverFile);
+
+        res = await fetch(`${backendUrl}/api/blogs`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+          body: data,
+        });
+      } else {
+        res = await fetch(`${backendUrl}/api/blogs`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+          body: JSON.stringify({
+            ...formData,
+            tags: tagList,
+          }),
+        });
+      }
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -274,26 +308,57 @@ export default function CreateBlogPage() {
                 <p className="text-xs text-slate-500">Provide an absolute URL. Recommended 1600×900px.</p>
               </div>
             </div>
-            <div className="mt-4 space-y-3">
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                {previewUrl ? (
-                  <img src={previewUrl} alt="Cover preview" className="h-40 w-full object-cover" />
-                ) : (
-                  <div className="flex h-40 w-full items-center justify-center gap-2 text-sm text-slate-400">
-                    <ImageIcon className="h-5 w-5" /> No cover image yet
+              <div className="mt-4 space-y-3">
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                  {previewUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={previewUrl} alt="Cover preview" className="h-40 w-full object-cover" />
+                  ) : (
+                    <div className="flex h-40 w-full items-center justify-center gap-2 text-sm text-slate-400">
+                      <ImageIcon className="h-5 w-5" /> No cover image yet
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-xs text-slate-500">Cover image</label>
+
+                  {/* Prominent upload area (clickable) */}
+                  <div className="mt-2">
+                    <input
+                      id="cover-file-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="sr-only"
+                    />
+
+                    <label
+                      htmlFor="cover-file-input"
+                      className="group flex cursor-pointer items-center gap-4 rounded-lg border-2 border-dashed border-slate-200 px-4 py-3 hover:border-emerald-300 transition"
+                    >
+                      <ImageIcon className="h-6 w-6 text-emerald-600 group-hover:text-emerald-700" />
+                      <div>
+                        <div className="text-sm font-semibold text-slate-900">Upload image from your device</div>
+                        <div className="text-xs text-slate-500">PNG, JPG — up to 5MB</div>
+                        {coverFile ? (
+                          <div className="mt-1 text-xs text-slate-600">Selected: {coverFile.name}</div>
+                        ) : null}
+                      </div>
+                    </label>
                   </div>
-                )}
+
+                  <div className="mt-3 text-xs text-slate-500">Or paste an external image URL</div>
+                  <input
+                    type="url"
+                    name="coverImage"
+                    value={formData.coverImage}
+                    onChange={handleChange}
+                    className={inputClasses}
+                    placeholder="https://assets.paulusoro.com/blog/cover.jpg"
+                  />
+                </div>
               </div>
-              <input
-                type="url"
-                name="coverImage"
-                value={formData.coverImage}
-                onChange={handleChange}
-                required
-                className={inputClasses}
-                placeholder="https://assets.paulusoro.com/blog/cover.jpg"
-              />
-            </div>
           </section>
 
           <section className={asideSectionClasses}>
