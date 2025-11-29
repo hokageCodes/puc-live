@@ -256,4 +256,6 @@ export const leaveApi = {
   
   // Get calendar data (user's own + team if approver)
   getCalendarData: (token) => api.get('/api/leave/calendar', { headers: getLeaveHeaders(token) }),
+  // Get approvals history (actions this user performed)
+  getMyApprovals: (token) => api.get('/api/leave/approvals/history', { headers: getLeaveHeaders(token) }),
 };

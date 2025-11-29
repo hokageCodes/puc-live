@@ -30,13 +30,16 @@ export default function PeopleTeamPage() {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const data = await staffApi.getAll();
-        const visibleStaff = Array.isArray(data) ? data.filter((member) => member.isVisible !== false) : [];
+        const base = (process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com').replace(/\/$/, '');
+        const res = await fetch(`${base}/api/public/staff`, { credentials: 'include' });
+        if (!res.ok) throw new Error(`Failed to fetch staff: ${res.status}`);
+        const data = await res.json();
+        const visibleStaff = Array.isArray(data) ? data : [];
         setStaff(visibleStaff);
         setError(null);
       } catch (err) {
         console.error('❌ Error fetching staff:', err);
-        setError(err.message);
+        setError(err.message || 'Failed to load team');
       } finally {
         setLoading(false);
       }

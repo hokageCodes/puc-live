@@ -44,6 +44,13 @@ const NAV_ITEMS = [
     roles: ['teamLead', 'lineManager', 'hr'],
   },
   {
+    href: '/leave/approvals/history',
+    label: 'Approvals history',
+    description: 'Your approval actions & request history',
+    icon: ListChecks,
+    roles: ['teamLead', 'lineManager', 'hr'],
+  },
+  {
     href: '/leave/calendar',
     label: 'Leave Calendar',
     description: 'Visualise upcoming absences',

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
-import { staffApi } from '../../utils/api';
+import { apiConfig } from '../../utils/api';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -20,18 +20,16 @@ export default function TeamSection() {
     const fetchStaff = async () => {
       try {
         setLoading(true);
-        const data = await staffApi.getAll();
-        const visibleStaff = Array.isArray(data) ? data.filter((m) => m.isVisible !== false) : [];
+        const base = apiConfig.baseUrl.replace(/\/$/, '');
+        const res = await fetch(`${base}/api/public/staff`, { credentials: 'include' });
+        if (!res.ok) throw new Error(`Failed to fetch staff: ${res.status}`);
+        const data = await res.json();
+        const visibleStaff = Array.isArray(data) ? data : [];
         setStaff(visibleStaff);
         setError(null);
       } catch (err) {
         console.error('❌ Error fetching staff:', err);
-        console.error('❌ Error details:', {
-          message: err.message,
-          name: err.name,
-          stack: err.stack
-        });
-        setError(err.message);
+        setError(err.message || 'Failed to load team');
       } finally {
         setLoading(false);
       }
