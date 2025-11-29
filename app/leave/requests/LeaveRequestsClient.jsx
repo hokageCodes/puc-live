@@ -53,6 +53,7 @@ export default function LeaveRequestsClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expanded, setExpanded] = useState({});
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'list' (mobile)
 
   const isLoading = status === 'loading' || status === 'authenticating' || loading;
 
@@ -119,14 +120,31 @@ export default function LeaveRequestsClient() {
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
+        {/* Controls: allow mobile users to switch to a list/card view */}
+        <div className="mt-4 mb-3 sm:hidden flex items-center gap-2">
+          <button
+            className={`px-3 py-1 rounded-lg text-xs font-semibold ${viewMode === 'table' ? 'bg-[#014634] text-white' : 'bg-white text-slate-700 border border-slate-200'}`}
+            onClick={() => setViewMode('table')}
+          >
+            Table
+          </button>
+          <button
+            className={`px-3 py-1 rounded-lg text-xs font-semibold ${viewMode === 'list' ? 'bg-[#014634] text-white' : 'bg-white text-slate-700 border border-slate-200'}`}
+            onClick={() => setViewMode('list')}
+          >
+            List
+          </button>
+        </div>
 
-        <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
+        {/* Table container: allow horizontal swipe on small screens */}
+        <div className="mt-5 rounded-xl border border-slate-200" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
           {requests.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-slate-500">
               No leave requests yet. <Link href="/leave/request/new" className="font-semibold text-emerald-600 hover:underline">Submit your first request</Link> to get started.
             </div>
-          ) : (
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
+          ) : viewMode === 'table' ? (
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold">Leave</th>
@@ -204,8 +222,48 @@ export default function LeaveRequestsClient() {
                   </Fragment>
                 ))}
               </tbody>
-            </table>
-          )}
+              </table>
+            ) : (
+              <div className="space-y-3 px-4 py-2">
+                {requests.map((request) => (
+                  <div key={request._id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="font-semibold text-slate-900">{request.leaveType?.name || 'Leave'}</div>
+                        <div className="text-xs text-slate-500">{formatDateRange(request.startDate, request.endDate)}</div>
+                        <div className="mt-2 text-xs text-slate-500">{request.reason || ''}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(request.status)}`}>{formatStatus(request.status)}</div>
+                        <div className="text-xs text-slate-400 mt-2">{new Date(request.createdAt).toLocaleDateString()}</div>
+                        <div className="mt-2">
+                          <button
+                            className="text-xs font-semibold text-emerald-600 hover:underline"
+                            onClick={() => setExpanded((s) => ({ ...s, [request._id]: !s[request._id] }))}
+                          >
+                            {expanded[request._id] ? 'Hide chain' : 'View chain'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {expanded[request._id] && (
+                      <div className="mt-3 border-t pt-3 text-sm text-slate-700">
+                        {(request.approverChain || []).map((step, i) => (
+                          <div key={i} className="mb-2">
+                            <div className="text-xs text-slate-500">Step {i + 1} · {step.role === 'teamLead' ? 'Team Lead' : step.role === 'lineManager' ? 'Line Manager' : 'HR'}</div>
+                            <div className="text-sm font-medium text-slate-900">{step.assignee ? (step.assignee.firstName ? `${step.assignee.firstName} ${step.assignee.lastName}` : step.assignee) : 'Unassigned'}</div>
+                            <div className="text-xs text-slate-500">Status: {step.status} {step.actedAt ? `· ${new Date(step.actedAt).toLocaleString()}` : ''}</div>
+                            {step.comment ? <div className="mt-1 text-xs text-slate-500">Note: {step.comment}</div> : null}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </section>
     </div>

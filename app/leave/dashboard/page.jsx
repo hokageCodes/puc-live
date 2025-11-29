@@ -391,7 +391,9 @@ export default function LeaveDashboardPage() {
             </Link>
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
+          {/* Pending approvals table: make swipeable on mobile */}
+          <div className="mt-5 rounded-xl border border-slate-200" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
@@ -424,8 +426,9 @@ export default function LeaveDashboardPage() {
                 })}
               </tbody>
             </table>
-          </div>
-        </section>
+              </div>
+            </div>
+          </section>
       )}
     </div>
   );

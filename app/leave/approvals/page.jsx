@@ -152,7 +152,9 @@ export default function LeaveApprovalsPage() {
           </Link>
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
+        {/* Table container — enable horizontal swipe on mobile */}
+        <div className="mt-5 rounded-xl border border-slate-200" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
           {approvals.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-slate-500">
               No pending approvals at this time. All caught up! 🎉
@@ -164,7 +166,8 @@ export default function LeaveApprovalsPage() {
                   <th className="px-4 py-3 text-left font-semibold">Staff</th>
                   <th className="px-4 py-3 text-left font-semibold">Leave</th>
                   <th className="px-4 py-3 text-left font-semibold">Dates</th>
-                  <th className="px-4 py-3 text-left font-semibold">Coverage</th>
+                    <th className="px-4 py-3 text-left font-semibold">Coverage</th>
+                    <th className="px-4 py-3 text-left font-semibold">Notes</th>
                   <th className="px-4 py-3 text-left font-semibold">Submitted</th>
                   <th className="px-4 py-3 text-left font-semibold">Stage</th>
                 </tr>
@@ -208,6 +211,21 @@ export default function LeaveApprovalsPage() {
                       </td>
                       <td className="px-4 py-3 text-slate-500">
                         {request.coveragePlan || 'Pending handover'}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500 max-w-xs truncate">
+                        {/* Show the staff-provided reason first (required at submission) */}
+                        <div className="text-sm text-slate-700 truncate">{request.reason || '—'}</div>
+                        {/* Then show the most recent timeline note if present (approver comment) */}
+                        {Array.isArray(request.timeline) && request.timeline.length > 0 ? (
+                          (() => {
+                            const notes = request.timeline.filter((t) => t.note).map((t) => ({ note: t.note, when: t.timestamp }));
+                            if (notes.length === 0) return null;
+                            const latest = notes[notes.length - 1];
+                            return (
+                              <div className="mt-1 text-xs text-slate-500 truncate">Approver note: {latest.note}</div>
+                            );
+                          })()
+                        ) : null}
                       </td>
                       <td className="px-4 py-3 text-slate-500">
                         {getTimeAgo(request.createdAt || request.timeline?.[0]?.timestamp)}
@@ -318,6 +336,7 @@ export default function LeaveApprovalsPage() {
               </tbody>
             </table>
           )}
+          </div>
         </div>
       </section>
     </div>

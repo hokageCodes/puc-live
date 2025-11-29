@@ -128,9 +128,17 @@ export default function LeaveShell({ children }) {
         <nav className="flex flex-col gap-1 px-4 py-6">
           {filteredNav.map((item) => {
             const Icon = item.icon;
-            const active =
-              pathname === item.href ||
-              pathname?.startsWith(`${item.href}/`);
+                // Active if the pathname exactly matches the href, OR
+                // if the pathname starts with the href but there is no
+                // other visible nav item with a longer href that also matches
+                const active = (() => {
+                  if (!pathname) return false;
+                  if (pathname === item.href) return true;
+                  if (!pathname.startsWith(item.href + '/')) return false;
+                  // If any other nav item has a longer href that matches, prefer that one
+                  const longerMatch = filteredNav.some((other) => other.href !== item.href && pathname.startsWith(other.href));
+                  return !longerMatch;
+                })();
             return (
               <Link
                 key={item.href}
@@ -176,7 +184,7 @@ export default function LeaveShell({ children }) {
 
       <div className="flex flex-1 flex-col">
         <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+                <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -191,10 +199,16 @@ export default function LeaveShell({ children }) {
                   Leave workspace
                 </p>
                 <h1 className="text-lg font-semibold text-slate-900">
-                  {NAV_ITEMS.find((item) =>
-                    pathname?.startsWith(item.href)
-                  )?.label || 'Overview'}
-                </h1>
+                    {(() => {
+                      if (!pathname) return 'Overview';
+                      // Prefer the longest matching visible nav href to determine the current section
+                      const match = filteredNav
+                        .slice()
+                        .sort((a, b) => b.href.length - a.href.length)
+                        .find((i) => pathname.startsWith(i.href));
+                      return match?.label || 'Overview';
+                    })()}
+                  </h1>
               </div>
             </div>
 
