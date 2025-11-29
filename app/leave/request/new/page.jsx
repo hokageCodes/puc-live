@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -12,6 +12,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useLeaveAuth, useLeaveGuard } from '../../../../components/leave/LeaveAuthContext';
+import { leaveApi } from '../../../../utils/api';
 
 const LEAVE_TYPES = [
   { key: 'annual', label: 'Annual Leave', notice: 'Min. 14 days notice recommended.' },
@@ -26,39 +27,40 @@ const COVERAGE_OPTIONS = [
   { key: 'pending', label: 'To be delegated' },
 ];
 
-const MOCK_REPORTING_CHAIN = (user) => {
-  const name = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || 'Staff member';
+const buildReportingChain = (user) => {
+  // user should include teamLead and lineManager objects (populated by the backend on login/refresh)
+  const teamLeadName = user?.teamLead ? `${user.teamLead.firstName} ${user.teamLead.lastName}`.trim() : 'Not assigned';
+  const lineManagerName = user?.lineManager ? `${user.lineManager.firstName} ${user.lineManager.lastName}`.trim() : 'Not assigned';
+  const hrName = user?.hr ? `${user.hr.firstName} ${user.hr.lastName}`.trim() : 'HR Operations';
+
   return [
     {
-      id: 'tl-001',
+      id: user?.teamLead?.id ? `tl-${user.teamLead.id}` : 'tl-unassigned',
       label: 'Team Lead',
-      name: 'Chinwe Okafor',
-      status: 'Pending',
+      name: teamLeadName,
+      status: user?.teamLead ? 'Pending' : 'Locked',
       meta: 'Team Lead approval required first.',
     },
     {
-      id: 'lm-002',
+      id: user?.lineManager?.id ? `lm-${user.lineManager.id}` : 'lm-unassigned',
       label: 'Line Manager',
-      name: 'Babatunde Adeyemi',
-      status: 'Locked',
+      name: lineManagerName,
+      status: user?.lineManager ? 'Locked' : 'Locked',
       meta: 'Opens after Team Lead approval.',
     },
     {
-      id: 'hr-003',
+      id: user?.hr?.id ? `hr-${user.hr.id}` : 'hr-unassigned',
       label: 'HR',
-      name: 'HR Operations',
+      name: hrName,
       status: 'Locked',
       meta: 'Final endorsement from HR.',
     },
-  ].map((step, index) => ({
-    ...step,
-    order: index + 1,
-  }));
+  ].map((step, index) => ({ ...step, order: index + 1 }));
 };
 
 export default function LeaveRequestCreatePage() {
   const router = useRouter();
-  const { user, status } = useLeaveAuth();
+  const { user, status, token } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
 
   const [leaveType, setLeaveType] = useState('');
@@ -70,9 +72,10 @@ export default function LeaveRequestCreatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [serverLeaveTypes, setServerLeaveTypes] = useState([]);
 
   const isLoading = status === 'loading' || status === 'authenticating';
-  const reportingChain = useMemo(() => MOCK_REPORTING_CHAIN(user), [user]);
+  const reportingChain = useMemo(() => buildReportingChain(user), [user]);
 
   const isValid = useMemo(() => {
     if (!leaveType) return false;
@@ -81,6 +84,25 @@ export default function LeaveRequestCreatePage() {
     if (!reason.trim()) return false;
     return true;
   }, [leaveType, startDate, endDate, reason]);
+
+  // Fetch leave types from backend when token becomes available
+  useEffect(() => {
+    let mounted = true;
+    if (!token) return;
+    (async () => {
+      try {
+        const types = await leaveApi.getLeaveTypes(token);
+        if (!mounted) return;
+        setServerLeaveTypes(Array.isArray(types) ? types : []);
+      } catch (err) {
+        // Keep fallback LEAVE_TYPES if server call fails
+        console.warn('Unable to fetch leave types:', err);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [token]);
 
   const handleSubmit = useCallback(
     async (event) => {
@@ -93,32 +115,41 @@ export default function LeaveRequestCreatePage() {
 
       try {
         const payload = {
-          leaveType,
+          // if serverLeaveTypes available, leaveType must be the id; otherwise fallback to key
+          leaveTypeId: serverLeaveTypes.length ? leaveType : undefined,
+          leaveType: serverLeaveTypes.length ? undefined : leaveType,
           startDate,
           endDate,
-          coverage,
+          coveragePlan: coverage,
           handoverNotes,
           reason,
         };
 
-        console.table(payload);
+        // If backend types are present, ensure a valid id was selected
+        if (serverLeaveTypes.length && !leaveType) {
+          throw new Error('Please select a leave type');
+        }
 
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-
-        setSubmitSuccess(true);
-        setTimeout(() => {
-          router.push('/leave/dashboard');
-        }, 1200);
+        // Call backend to create request when token is available
+        if (token) {
+          const created = await leaveApi.createRequest(token, payload);
+          setSubmitSuccess(true);
+          // Delay briefly so user sees success UI then navigate
+          setTimeout(() => router.push('/leave/requests'), 800);
+        } else {
+          // No token - fall back to mock behavior
+          await new Promise((resolve) => setTimeout(resolve, 1200));
+          setSubmitSuccess(true);
+          setTimeout(() => router.push('/leave/dashboard'), 1200);
+        }
       } catch (error) {
-        console.error('Mock submit failed:', error);
-        setSubmitError(
-          error?.message || 'Unable to save the request right now. Please try again shortly.'
-        );
+        console.error('Submit failed:', error);
+        setSubmitError(error?.message || 'Unable to save the request right now. Please try again shortly.');
       } finally {
         setIsSubmitting(false);
       }
     },
-    [coverage, endDate, handoverNotes, isSubmitting, isValid, leaveType, reason, router, startDate]
+    [coverage, endDate, handoverNotes, isSubmitting, isValid, leaveType, reason, router, startDate, serverLeaveTypes, token]
   );
 
   if (isLoading || !isAuthenticated) {
@@ -168,15 +199,23 @@ export default function LeaveRequestCreatePage() {
                   className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                 >
                   <option value="">Select a leave type</option>
-                  {LEAVE_TYPES.map((type) => (
-                    <option key={type.key} value={type.key}>
-                      {type.label}
-                    </option>
-                  ))}
+                  {serverLeaveTypes.length > 0
+                    ? serverLeaveTypes.map((type) => (
+                        <option key={type._id} value={type._id}>
+                          {type.name}
+                        </option>
+                      ))
+                    : LEAVE_TYPES.map((type) => (
+                        <option key={type.key} value={type.key}>
+                          {type.label}
+                        </option>
+                      ))}
                 </select>
                 {leaveType && (
                   <span className="text-xs text-slate-500">
-                    {LEAVE_TYPES.find((type) => type.key === leaveType)?.notice}
+                    {serverLeaveTypes.length > 0
+                      ? serverLeaveTypes.find((t) => t._id === leaveType)?.description || ''
+                      : LEAVE_TYPES.find((type) => type.key === leaveType)?.notice}
                   </span>
                 )}
               </label>

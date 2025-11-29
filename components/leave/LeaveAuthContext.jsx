@@ -138,13 +138,18 @@ export function LeaveAuthProvider({ children }) {
         const storedUser = safeParse(window.localStorage.getItem(STORAGE_USER_KEY));
 
         if (storedToken && storedUser) {
-          if (isMounted) {
-            setToken(storedToken);
-            setUser(storedUser);
-            setStatus('authenticated');
-          }
-          return;
-        }
+              if (isMounted) {
+                setToken(storedToken);
+                setUser(storedUser);
+                // If the stored user already contains reporting relationships, skip refresh.
+                // Otherwise attempt refresh to fetch the latest profile (includes teamLead/lineManager/hr).
+                const hasReporting = storedUser.teamLead || storedUser.lineManager || storedUser.hr;
+                if (hasReporting) {
+                  setStatus('authenticated');
+                  return;
+                }
+              }
+            }
       }
 
       try {

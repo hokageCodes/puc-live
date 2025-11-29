@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, Fragment } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
 import { leaveApi } from '../../../utils/api';
@@ -52,6 +52,7 @@ export default function LeaveRequestsClient() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expanded, setExpanded] = useState({});
 
   const isLoading = status === 'loading' || status === 'authenticating' || loading;
 
@@ -137,31 +138,70 @@ export default function LeaveRequestsClient() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {requests.map((request) => (
-                  <tr key={request._id} className="hover:bg-emerald-50/30">
-                    <td className="px-4 py-3 text-slate-800">{request.leaveType?.name || 'Leave'}</td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {formatDateRange(request.startDate, request.endDate)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(
-                          request.status
-                        )}`}
-                      >
-                        {formatStatus(request.status)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {getCurrentApprover(request.status)}
-                    </td>
-                    <td className="px-4 py-3 text-slate-500">
-                      {new Date(request.createdAt).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </td>
-                  </tr>
+                  <Fragment key={request._id}>
+                    <tr className="hover:bg-emerald-50/30">
+                      <td className="px-4 py-3 text-slate-800">{request.leaveType?.name || 'Leave'}</td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {formatDateRange(request.startDate, request.endDate)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(
+                            request.status
+                          )}`}
+                        >
+                          {formatStatus(request.status)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {getCurrentApprover(request.status)}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">
+                        {new Date(request.createdAt).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          className="text-xs font-semibold text-emerald-600 hover:underline"
+                          onClick={() => setExpanded((s) => ({ ...s, [request._id]: !s[request._id] }))}
+                        >
+                          {expanded[request._id] ? 'Hide chain' : 'View chain'}
+                        </button>
+                      </td>
+                    </tr>
+
+                    {expanded[request._id] && (
+                      <tr key={`${request._id}-chain`} className="bg-slate-50">
+                        <td colSpan={6} className="px-6 py-4 text-sm text-slate-700">
+                          <div className="space-y-2">
+                            {(request.approverChain || []).map((step, i) => {
+                              const stepKey = step.assignee && (step.assignee._id || step.assignee)
+                                ? (step.assignee._id ? step.assignee._id : step.assignee)
+                                : `${request._id}-step-${i}`;
+
+                              return (
+                                <div key={stepKey} className="flex items-center justify-between rounded-md border border-slate-100 bg-white px-3 py-2">
+                                  <div>
+                                    <div className="text-xs font-semibold uppercase text-slate-500">Step {i + 1} · {step.role === 'teamLead' ? 'Team Lead' : step.role === 'lineManager' ? 'Line Manager' : 'HR'}</div>
+                                    <div className="text-sm font-medium text-slate-900">
+                                      {step.assignee ? (step.assignee.firstName ? `${step.assignee.firstName} ${step.assignee.lastName}` : step.assignee) : 'Unassigned'}
+                                    </div>
+                                    <div className="text-xs text-slate-500">Status: {step.status}</div>
+                                  </div>
+                                  <div className="text-xs text-slate-400">
+                                    {step.actedAt ? new Date(step.actedAt).toLocaleString() : ''}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

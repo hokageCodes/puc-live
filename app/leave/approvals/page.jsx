@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ShieldAlert } from 'lucide-react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
 import { leaveApi } from '../../../utils/api';
+import { toast } from 'react-toastify';
 
 const isApprover = (roles) =>
   Array.isArray(roles) &&
@@ -50,31 +51,42 @@ export default function LeaveApprovalsPage() {
   const [approvals, setApprovals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState({});
 
   const approver = useMemo(() => isApprover(user?.roles), [user?.roles]);
   const isLoading = status === 'loading' || status === 'authenticating' || loading;
 
+  // Debug: surface current auth/approver state in console to help diagnose missing CTAs
   useEffect(() => {
+    try {
+      console.debug('[Approvals] auth state:', { user, token: !!token, approver });
+    } catch (e) {
+      // ignore
+    }
+  }, [user, token, approver]);
+
+  const fetchApprovals = async () => {
     if (!isAuthenticated || !token || !approver) {
       setLoading(false);
       return;
     }
 
-    const fetchApprovals = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await leaveApi.getPendingApprovals(token);
-        setApprovals(data || []);
-      } catch (err) {
-        console.error('Error fetching approvals:', err);
-        setError('Failed to load pending approvals. Please refresh the page.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await leaveApi.getPendingApprovals(token);
+      setApprovals(data || []);
+    } catch (err) {
+      console.error('Error fetching approvals:', err);
+      setError('Failed to load pending approvals. Please refresh the page.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchApprovals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, token, approver]);
 
   if (isLoading || !isAuthenticated) {
@@ -162,6 +174,31 @@ export default function LeaveApprovalsPage() {
                   const staffName = request.staff
                     ? `${request.staff.firstName || ''} ${request.staff.lastName || ''}`.trim()
                     : 'Unknown';
+                  const pendingStep = (request.approverChain || []).find((s) => s.status === 'pending');
+                  // Normalize assignee id whether the approverChain was populated or not
+                  const assigneeId = pendingStep?.assignee
+                    ? pendingStep.assignee._id
+                      ? pendingStep.assignee._id.toString()
+                      : pendingStep.assignee.toString()
+                    : null;
+
+                  // Allow action if the current user is the assignee OR
+                  // if their role matches the pending step (fallback UX). The backend still enforces authorization.
+                  const roleMatchFallback = (pendingStep?.role === 'hr' && (user?.roles || []).includes('hr')) ||
+                    (pendingStep?.role === 'teamLead' && (user?.roles || []).includes('teamLead')) ||
+                    (pendingStep?.role === 'lineManager' && (user?.roles || []).includes('lineManager'));
+
+                  const canAct = Boolean(
+                    pendingStep &&
+                      ((assigneeId && assigneeId === user?.id) || roleMatchFallback)
+                  );
+
+                  // Debug per-row: show pending step and computed permission
+                  try {
+                    console.debug('[Approvals] row:', { requestId: request._id, pendingStep, assigneeId, canAct, userId: user?.id, userRoles: user?.roles });
+                  } catch (e) {
+                    // ignore
+                  }
                   return (
                     <tr key={request._id} className="hover:bg-emerald-50/30">
                       <td className="px-4 py-3 text-slate-800">{staffName}</td>
@@ -177,6 +214,103 @@ export default function LeaveApprovalsPage() {
                       </td>
                       <td className="px-4 py-3 text-slate-600">
                         {formatStatus(request.status)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {canAct ? (
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                              disabled={Boolean(actionLoading[request._id])}
+                              onClick={async () => {
+                                  if (actionLoading[request._id]) return; // guard against double clicks
+                                  console.log('Approve clicked for', request._id);
+                                  if (!token) {
+                                    window.alert('Unable to approve: not authenticated');
+                                    return;
+                                  }
+                                  // Set loading state immediately and mark as approve
+                                  setActionLoading((s) => ({ ...s, [request._id]: 'approve' }));
+                                  const comment = window.prompt('Optional note for approval (press OK to confirm)');
+                                  if (comment === null) {
+                                    // cancelled by user — clear loading
+                                    setActionLoading((s) => { const c = { ...s }; delete c[request._id]; return c; });
+                                    return; // cancelled
+                                  }
+                                  try {
+                                    await leaveApi.approveRequest(token, request._id, comment || undefined);
+                                    if (typeof toast?.success === 'function') toast.success('Request approved'); else window.alert('Request approved');
+                                    // refresh list
+                                    await fetchApprovals();
+                                  } catch (err) {
+                                    console.error('Approve error:', err);
+                                    if (typeof toast?.error === 'function') toast.error(err?.message || 'Failed to approve'); else window.alert(err?.message || 'Failed to approve');
+                                  } finally {
+                                    setActionLoading((s) => { const c = { ...s }; delete c[request._id]; return c; });
+                                  }
+                                }}
+                            >
+                              {actionLoading[request._id] === 'approve' ? (
+                                <>
+                                  <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                                    <path d="M12 2v4" />
+                                    <path d="M12 18v4" />
+                                    <path d="M4.93 4.93l2.83 2.83" />
+                                    <path d="M16.24 16.24l2.83 2.83" />
+                                  </svg>
+                                  Approving...
+                                </>
+                              ) : (
+                                'Approve'
+                              )}
+                            </button>
+                            <button
+                              className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                              disabled={Boolean(actionLoading[request._id])}
+                              onClick={async () => {
+                                if (actionLoading[request._id]) return; // guard
+                                console.log('Reject clicked for', request._id);
+                                if (!token) {
+                                  window.alert('Unable to reject: not authenticated');
+                                  return;
+                                }
+                                // Set loading state immediately and mark as reject
+                                setActionLoading((s) => ({ ...s, [request._id]: 'reject' }));
+                                const reason = window.prompt('Please provide a reason for rejection');
+                                if (!reason) {
+                                  // cancelled / empty - clear loading
+                                  setActionLoading((s) => { const c = { ...s }; delete c[request._id]; return c; });
+                                  return; // require reason
+                                }
+                                try {
+                                  await leaveApi.rejectRequest(token, request._id, reason);
+                                  if (typeof toast?.info === 'function') toast.info('Request rejected'); else window.alert('Request rejected');
+                                  await fetchApprovals();
+                                } catch (err) {
+                                  console.error('Reject error:', err);
+                                  if (typeof toast?.error === 'function') toast.error(err?.message || 'Failed to reject'); else window.alert(err?.message || 'Failed to reject');
+                                } finally {
+                                  setActionLoading((s) => { const c = { ...s }; delete c[request._id]; return c; });
+                                }
+                              }}
+                            >
+                              {actionLoading[request._id] === 'reject' ? (
+                                <>
+                                  <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                                    <path d="M12 2v4" />
+                                    <path d="M12 18v4" />
+                                    <path d="M4.93 4.93l2.83 2.83" />
+                                    <path d="M16.24 16.24l2.83 2.83" />
+                                  </svg>
+                                  Rejecting...
+                                </>
+                              ) : (
+                                'Reject'
+                              )}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-slate-500">No action</div>
+                        )}
                       </td>
                     </tr>
                   );
