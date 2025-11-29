@@ -224,3 +224,36 @@ export const staffApi = {
   update: (id, data) => api.put(`/api/staff/${id}`, data, { headers: getAdminHeaders() }),
   delete: (id) => api.delete(`/api/staff/${id}`, { headers: getAdminHeaders() }),
 };
+
+// Leave-specific API calls (requires leave auth token)
+const getLeaveHeaders = (token) => {
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+export const leaveApi = {
+  // Get user's leave balances
+  getMyBalances: (token) => api.get('/api/leave/balances', { headers: getLeaveHeaders(token) }),
+  
+  // Get user's own leave requests
+  getMyRequests: (token) => api.get('/api/leave/requests', { headers: getLeaveHeaders(token) }),
+  
+  // Get pending approvals (role-based)
+  getPendingApprovals: (token) => api.get('/api/leave/approvals', { headers: getLeaveHeaders(token) }),
+  
+  // Create new leave request
+  createRequest: (token, data) => api.post('/api/leave/requests', data, { headers: getLeaveHeaders(token) }),
+  
+  // Approve leave request
+  approveRequest: (token, requestId, comment) => 
+    api.post(`/api/leave/requests/${requestId}/approve`, { comment }, { headers: getLeaveHeaders(token) }),
+  
+  // Reject leave request
+  rejectRequest: (token, requestId, comment) => 
+    api.post(`/api/leave/requests/${requestId}/reject`, { comment }, { headers: getLeaveHeaders(token) }),
+  
+  // Get leave types
+  getLeaveTypes: (token) => api.get('/api/leave/types', { headers: getLeaveHeaders(token) }),
+  
+  // Get calendar data (user's own + team if approver)
+  getCalendarData: (token) => api.get('/api/leave/calendar', { headers: getLeaveHeaders(token) }),
+};

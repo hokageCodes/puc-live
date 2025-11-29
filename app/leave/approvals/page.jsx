@@ -1,41 +1,81 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ShieldAlert } from 'lucide-react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
-
-const MOCK_APPROVAL_QUEUE = [
-  {
-    id: 'req-220',
-    staff: 'Chidinma Nwosu',
-    type: 'Annual Leave',
-    dates: '19 – 23 Aug 2025',
-    submitted: '2h ago',
-    stage: 'Awaiting Line Manager',
-    coverage: 'Handover to Samuel',
-  },
-  {
-    id: 'req-221',
-    staff: 'Ibrahim Bello',
-    type: 'Sick Leave',
-    dates: '05 Aug 2025',
-    submitted: '4h ago',
-    stage: 'Awaiting Team Lead',
-    coverage: 'Pending handover',
-  },
-];
+import { leaveApi } from '../../../utils/api';
 
 const isApprover = (roles) =>
   Array.isArray(roles) &&
   roles.some((role) => ['teamLead', 'lineManager', 'hr'].includes(role));
 
+function formatDateRange(startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const startStr = start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const endStr = end.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  if (start.getTime() === end.getTime()) {
+    return startStr;
+  }
+  return `${startStr} – ${endStr}`;
+}
+
+function formatStatus(status) {
+  if (status === 'approved') return 'Approved';
+  if (status === 'rejected') return 'Declined';
+  if (status.startsWith('pending_')) {
+    const role = status.replace('pending_', '');
+    return `Awaiting ${role === 'teamlead' ? 'Team Lead' : role === 'linemanager' ? 'Line Manager' : 'HR'}`;
+  }
+  return status;
+}
+
+function getTimeAgo(date) {
+  const now = new Date();
+  const then = new Date(date);
+  const diffMs = now - then;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return `${diffDays}d ago`;
+}
+
 export default function LeaveApprovalsPage() {
-  const { user, status } = useLeaveAuth();
+  const { user, token, status } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
+  const [approvals, setApprovals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const approver = useMemo(() => isApprover(user?.roles), [user?.roles]);
-  const isLoading = status === 'loading' || status === 'authenticating';
+  const isLoading = status === 'loading' || status === 'authenticating' || loading;
+
+  useEffect(() => {
+    if (!isAuthenticated || !token || !approver) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchApprovals = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await leaveApi.getPendingApprovals(token);
+        setApprovals(data || []);
+      } catch (err) {
+        console.error('Error fetching approvals:', err);
+        setError('Failed to load pending approvals. Please refresh the page.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApprovals();
+  }, [isAuthenticated, token, approver]);
 
   if (isLoading || !isAuthenticated) {
     return (
@@ -67,6 +107,16 @@ export default function LeaveApprovalsPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-6 py-4 text-sm text-red-600">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-1">
@@ -91,37 +141,51 @@ export default function LeaveApprovalsPage() {
         </div>
 
         <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold">Staff</th>
-                <th className="px-4 py-3 text-left font-semibold">Leave</th>
-                <th className="px-4 py-3 text-left font-semibold">Dates</th>
-                <th className="px-4 py-3 text-left font-semibold">Coverage</th>
-                <th className="px-4 py-3 text-left font-semibold">Submitted</th>
-                <th className="px-4 py-3 text-left font-semibold">Stage</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {MOCK_APPROVAL_QUEUE.map((request) => (
-                <tr key={request.id} className="hover:bg-emerald-50/30">
-                  <td className="px-4 py-3 text-slate-800">{request.staff}</td>
-                  <td className="px-4 py-3 text-slate-600">{request.type}</td>
-                  <td className="px-4 py-3 text-slate-600">{request.dates}</td>
-                  <td className="px-4 py-3 text-slate-500">{request.coverage}</td>
-                  <td className="px-4 py-3 text-slate-500">{request.submitted}</td>
-                  <td className="px-4 py-3 text-slate-600">{request.stage}</td>
+          {approvals.length === 0 ? (
+            <div className="px-4 py-8 text-center text-sm text-slate-500">
+              No pending approvals at this time. All caught up! 🎉
+            </div>
+          ) : (
+            <table className="min-w-full divide-y divide-slate-200 text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold">Staff</th>
+                  <th className="px-4 py-3 text-left font-semibold">Leave</th>
+                  <th className="px-4 py-3 text-left font-semibold">Dates</th>
+                  <th className="px-4 py-3 text-left font-semibold">Coverage</th>
+                  <th className="px-4 py-3 text-left font-semibold">Submitted</th>
+                  <th className="px-4 py-3 text-left font-semibold">Stage</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {approvals.map((request) => {
+                  const staffName = request.staff
+                    ? `${request.staff.firstName || ''} ${request.staff.lastName || ''}`.trim()
+                    : 'Unknown';
+                  return (
+                    <tr key={request._id} className="hover:bg-emerald-50/30">
+                      <td className="px-4 py-3 text-slate-800">{staffName}</td>
+                      <td className="px-4 py-3 text-slate-600">{request.leaveType?.name || 'Leave'}</td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {formatDateRange(request.startDate, request.endDate)}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">
+                        {request.coveragePlan || 'Pending handover'}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">
+                        {getTimeAgo(request.createdAt || request.timeline?.[0]?.timestamp)}
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {formatStatus(request.status)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
-      </section>
-
-      <section className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-8 text-sm text-slate-600">
-        Approve / decline actions, delegation, and notification settings will slot in once backend endpoints are ready.
       </section>
     </div>
   );
 }
-
