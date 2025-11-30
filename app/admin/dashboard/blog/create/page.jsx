@@ -30,14 +30,15 @@ const defaultForm = {
   featured: false,
 };
 
+// FIXED: Corrected regex pattern - was [^  -] which matches nothing, should be [^\w\s-]
 const generateSlug = (text) =>
   text
     .toLowerCase()
     .trim()
-    .replace(/[^  -]/g, '')
-    .replace(/[\W_]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[^\w\s-]/g, '') // Remove special characters, keep alphanumeric, whitespace, and hyphens
+    .replace(/[\s_]+/g, '-')   // Replace spaces and underscores with hyphens
+    .replace(/-+/g, '-')        // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, '');     // Remove leading/trailing hyphens
 
 export default function CreateBlogPage() {
   const router = useRouter();
@@ -68,7 +69,6 @@ export default function CreateBlogPage() {
     const file = e.target.files && e.target.files[0];
     setCoverFile(file || null);
     if (file) {
-      // show preview using object URL
       const url = URL.createObjectURL(file);
       setFormData((prev) => ({ ...prev, coverImage: url }));
     }
@@ -85,9 +85,10 @@ export default function CreateBlogPage() {
 
   const handleSlugChange = (e) => {
     setSlugTouched(true);
+    const rawValue = e.target.value;
     setFormData((prev) => ({
       ...prev,
-      slug: generateSlug(e.target.value),
+      slug: generateSlug(rawValue),
     }));
   };
 
@@ -114,7 +115,6 @@ export default function CreateBlogPage() {
 
       let res;
       if (coverFile) {
-        // multipart upload when a file is selected
         const data = new FormData();
         data.append('title', formData.title);
         data.append('slug', formData.slug);
@@ -323,7 +323,6 @@ export default function CreateBlogPage() {
                 <div>
                   <label className="text-xs text-slate-500">Cover image</label>
 
-                  {/* Prominent upload area (clickable) */}
                   <div className="mt-2">
                     <input
                       id="cover-file-input"
@@ -439,4 +438,3 @@ export default function CreateBlogPage() {
     </div>
   );
 }
-
