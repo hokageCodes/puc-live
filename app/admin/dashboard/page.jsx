@@ -114,12 +114,12 @@ export default function AdminDashboard() {
       href: '/admin/dashboard/staff',
     },
     {
-      label: 'Blog posts',
+      label: 'News posts',
       value: stats.totalBlogs,
       icon: FileText,
       accent: 'bg-sky-50 text-sky-600',
       description: 'Published + drafts',
-      href: '/admin/dashboard/blog',
+      href: '/admin/dashboard/news',
     },
     {
       label: 'Published',
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
       icon: CheckCircle2,
       accent: 'bg-lime-50 text-lime-600',
       description: 'Live on the website',
-      href: '/admin/dashboard/blog',
+      href: '/admin/dashboard/news',
     },
     {
       label: 'Drafts',
@@ -135,7 +135,7 @@ export default function AdminDashboard() {
       icon: Clock,
       accent: 'bg-amber-50 text-amber-600',
       description: 'Waiting for review',
-      href: '/admin/dashboard/blog',
+      href: '/admin/dashboard/news',
     },
   ];
 
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
             Refresh data
           </button>
           <Link
-            href="/admin/dashboard/blog/create"
+            href="/admin/dashboard/news/create"
             className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
           >
             <PenSquare className="h-4 w-4" />
@@ -206,11 +206,11 @@ export default function AdminDashboard() {
             <article className={`${cardBase} space-y-5`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold admin-text">Recent blog activity</h2>
+                  <h2 className="text-lg font-semibold admin-text">Recent news activity</h2>
                   <p className="text-sm admin-text-muted">Latest posts and their performance at a glance.</p>
                 </div>
                 <Link
-                  href="/admin/dashboard/blog"
+                  href="/admin/dashboard/news"
                   className="inline-flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700"
                 >
                   Manage posts <ArrowUpRight className="h-4 w-4" />
@@ -219,9 +219,9 @@ export default function AdminDashboard() {
 
               {stats.recentBlogs.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-200 py-10 text-center">
-                  <p className="text-sm admin-text-muted">No blog posts yet. Publish your first story to populate this feed.</p>
+                  <p className="text-sm admin-text-muted">No news posts yet. Publish your first story to populate this feed.</p>
                   <Link
-                    href="/admin/dashboard/blog/create"
+                    href="/admin/dashboard/news/create"
                     className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
                   >
                     <PenSquare className="h-4 w-4" />
@@ -231,7 +231,7 @@ export default function AdminDashboard() {
               ) : (
                 <div className="space-y-4">
                   {stats.recentBlogs.map((blog) => (
-                    <Link key={blog._id} href={`/admin/dashboard/blog/edit/${blog._id}`} className="block">
+                    <Link key={blog._id} href={`/admin/dashboard/news/edit/${blog._id}`} className="block">
                       <div className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-emerald-200 hover:bg-emerald-50/40">
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
@@ -309,10 +309,10 @@ export default function AdminDashboard() {
               <article className={`${cardBase} space-y-4`}>
                 <h2 className="text-lg font-semibold admin-text">Quick actions</h2>
                 <div className="space-y-3">
-                  <Link href="/admin/dashboard/blog/create" className="block">
+                  <Link href="/admin/dashboard/news/create" className="block">
                     <div className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-3 transition hover:border-emerald-200 hover:bg-emerald-50/40">
                       <div>
-                        <p className="text-sm font-medium admin-text">Draft a new blog post</p>
+                        <p className="text-sm font-medium admin-text">Draft a new news post</p>
                         <p className="text-xs admin-text-muted">Jump straight into the editor</p>
                       </div>
                       <PenSquare className="h-4 w-4 admin-text-muted" />

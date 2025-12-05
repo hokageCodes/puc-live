@@ -13,7 +13,7 @@ import { useAdminTheme } from './AdminThemeContext';
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'All Staff', href: '/admin/dashboard/staff', icon: Users },
-  { name: 'Blog', href: '/admin/dashboard/blog', icon: FileText },
+  { name: 'News', href: '/admin/dashboard/news', icon: FileText },
   { name: 'Settings', href: '/admin/dashboard/settings', icon: Settings },
 ];
 

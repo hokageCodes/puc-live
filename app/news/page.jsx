@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function BlogPage() {
+function BlogPageContent() {
+  const searchParams = useSearchParams();
+  const authorFilter = searchParams?.get('author');
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,32 +35,66 @@ export default function BlogPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading blog posts...</p>
+          <p className="text-gray-600">Loading news posts...</p>
         </div>
       </div>
     );
   }
 
+  // Filter by author if specified
+  let filteredBlogs = blogs;
+  if (authorFilter) {
+    filteredBlogs = blogs.filter(blog => 
+      blog.author && blog.author.toLowerCase().includes(authorFilter.toLowerCase())
+    );
+  }
+
   // Separate featured and regular posts
-  const featuredPost = blogs.find(blog => blog.featured);
-  const regularPosts = blogs.filter(blog => !blog.featured);
+  const featuredPost = filteredBlogs.find(blog => blog.featured);
+  const regularPosts = filteredBlogs.filter(blog => !blog.featured);
+
+  // Get all unique tags for sidebar
+  const allTags = Array.from(
+    new Set(
+      blogs.flatMap(blog => blog.tags || [])
+    )
+  ).sort();
 
   return (
     <div className="min-h-screen bg-white pt-32 overflow-x-hidden">
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-emerald-700 mb-4">
-          Our Blog
-        </h1>
-        <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
-          Insights, updates, and thought leadership from our team
-        </p>
+        {authorFilter ? (
+          <>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-emerald-700 mb-4">
+              Articles by {authorFilter}
+            </h1>
+            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-4">
+              {filteredBlogs.length} {filteredBlogs.length === 1 ? 'article' : 'articles'} found
+            </p>
+            <Link 
+              href="/news" 
+              className="inline-flex items-center text-emerald-600 hover:text-emerald-700 transition-colors"
+            >
+              ← View all news
+            </Link>
+          </>
+        ) : (
+          <>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-emerald-700 mb-4">
+              Our News
+            </h1>
+            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
+              Insights, updates, and thought leadership from our team
+            </p>
+          </>
+        )}
       </div>
 
       {/* Featured Post */}
       {featuredPost && (
         <div className="max-w-7xl mx-auto px-4 mb-20 overflow-hidden">
-          <Link href={`/blog/${featuredPost.slug}`}>
+          <Link href={`/news/${featuredPost.slug}`}>
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-slate-100 w-full">
               <div className="aspect-video w-full overflow-hidden bg-slate-100">
                 <img
@@ -85,12 +122,14 @@ export default function BlogPage() {
                 )}
                 <div className="flex flex-wrap gap-2 mb-6">
                   {featuredPost.tags?.map((tag, index) => (
-                    <span
+                    <Link
                       key={index}
-                      className="px-3 py-1 bg-emerald-50 text-emerald-700 text-sm font-medium rounded-full border border-emerald-200"
+                      href={`/news/tag/${encodeURIComponent(tag)}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="px-3 py-1 bg-emerald-50 text-emerald-700 text-sm font-medium rounded-full border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
                     >
                       {tag}
-                    </span>
+                    </Link>
                   ))}
                 </div>
                 <div className="flex items-center text-emerald-600 font-semibold group">
@@ -106,9 +145,10 @@ export default function BlogPage() {
       {/* Regular Posts */}
       <div className="max-w-7xl mx-auto px-4 pb-20">
         {regularPosts.length > 0 ? (
-          <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-2">
             {regularPosts.map((post) => (
-              <Link key={post._id} href={`/blog/${post.slug}`} className="group block h-full">
+              <Link key={post._id} href={`/news/${post.slug}`} className="group block h-full">
                 <article className="h-full bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-300">
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
                     <img
@@ -137,12 +177,14 @@ export default function BlogPage() {
                     {post.tags?.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-auto mb-4">
                         {post.tags.slice(0, 3).map((tag, tagIndex) => (
-                          <span
+                          <Link
                             key={tagIndex}
-                            className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full border border-emerald-200"
+                            href={`/news/tag/${encodeURIComponent(tag)}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
                           >
                             {tag}
-                          </span>
+                          </Link>
                         ))}
                       </div>
                     )}
@@ -154,6 +196,27 @@ export default function BlogPage() {
                 </article>
               </Link>
             ))}
+            </div>
+
+            {/* Popular Tags Sidebar */}
+            {allTags.length > 0 && (
+              <aside className="lg:sticky lg:top-32 h-fit">
+                <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-4">Browse by Topic</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {allTags.map((tag) => (
+                      <Link
+                        key={tag}
+                        href={`/news/tag/${encodeURIComponent(tag)}`}
+                        className="px-3 py-1.5 bg-white text-emerald-700 text-sm font-medium rounded-full border border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
+                      >
+                        {tag}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </aside>
+            )}
           </div>
         ) : (
           <div className="text-center py-16 text-slate-500 text-sm">
@@ -162,12 +225,39 @@ export default function BlogPage() {
         )}
       </div>
 
-      {blogs.length === 0 && (
+      {filteredBlogs.length === 0 && !loading && (
         <div className="max-w-7xl mx-auto px-4 py-20 text-center overflow-hidden">
-          <p className="text-xl md:text-2xl text-slate-500 mb-4">No blog posts yet. Check back soon!</p>
+          <p className="text-xl md:text-2xl text-slate-500 mb-4">
+            {authorFilter 
+              ? `No articles found by ${authorFilter}.` 
+              : 'No news posts yet. Check back soon!'}
+          </p>
+          {authorFilter && (
+            <Link 
+              href="/news" 
+              className="inline-block mt-4 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+            >
+              View all news
+            </Link>
+          )}
           <div className="mt-8 text-6xl">📝</div>
         </div>
       )}
     </div>
+  );
+}
+
+export default function BlogPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center pt-32">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <BlogPageContent />
+    </Suspense>
   );
 }

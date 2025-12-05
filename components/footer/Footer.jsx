@@ -45,7 +45,7 @@ export default function Footer() {
               <h2 className="mb-4 font-semibold uppercase text-white">Resources</h2>
               <ul className="space-y-2 text-white/80">
                 <li>
-                  <Link href="#" className="hover:underline">Blog</Link>
+                  <Link href="/news" className="hover:underline">News</Link>
                 </li>
                 <li>
                   <Link href="/job-openings" className="hover:underline">Job Offers</Link>

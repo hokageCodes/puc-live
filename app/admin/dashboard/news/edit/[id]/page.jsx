@@ -34,6 +34,7 @@ export default function EditBlogPage() {
     title: '',
     slug: '',
     excerpt: '',
+    author: '',
     coverImage: '',
     tags: '',
     content: '',
@@ -69,7 +70,7 @@ export default function EditBlogPage() {
         });
 
         if (!res.ok) {
-          throw new Error('Failed to load blog post');
+          throw new Error('Failed to load news post');
         }
 
         const blog = await res.json();
@@ -77,6 +78,7 @@ export default function EditBlogPage() {
           title: blog.title || '',
           slug: blog.slug || '',
           excerpt: blog.excerpt || '',
+          author: blog.author || '',
           coverImage: blog.coverImage || '',
           tags: Array.isArray(blog.tags) ? blog.tags.join(', ') : '',
           content: blog.content || '',
@@ -87,7 +89,7 @@ export default function EditBlogPage() {
         setSlugTouched(true);
       } catch (err) {
         console.error('Failed to fetch blog:', err);
-        const message = err.message || 'Failed to load blog post';
+        const message = err.message || 'Failed to load news post';
         setError(message);
         toast.error(message);
       } finally {
@@ -159,14 +161,14 @@ export default function EditBlogPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to update blog post');
+        throw new Error(data.message || 'Failed to update news post');
       }
 
-      toast.success('Blog post updated successfully.');
-      router.push('/admin/dashboard/blog');
+      toast.success('News post updated successfully.');
+      router.push('/admin/dashboard/news');
     } catch (err) {
       console.error('Error updating blog:', err);
-      const message = err.message || 'Failed to update blog post';
+      const message = err.message || 'Failed to update news post';
       setError(message);
       toast.error(message);
     } finally {
@@ -182,7 +184,7 @@ export default function EditBlogPage() {
       <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white">
         <div className="flex flex-col items-center gap-3 text-slate-500">
           <span className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
-          <p className="text-sm font-medium">Loading blog post…</p>
+          <p className="text-sm font-medium">Loading news post…</p>
         </div>
       </div>
     );
@@ -200,7 +202,7 @@ export default function EditBlogPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to blog list
           </button>
-          <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">Edit blog post</h1>
+          <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">Edit news post</h1>
           <p className="max-w-2xl text-sm text-slate-600">
             Update the content, imagery, and publishing status for this article. Saved changes go live immediately when published.
           </p>
@@ -258,7 +260,7 @@ export default function EditBlogPage() {
                   />
                   <p className="flex items-center gap-2 text-xs text-slate-500">
                     <Link2 className="h-3.5 w-3.5" />
-                    `/blog/{formData.slug || 'your-slug'}`
+                    `/news/{formData.slug || 'your-slug'}`
                   </p>
                 </div>
                 <button
@@ -279,6 +281,19 @@ export default function EditBlogPage() {
                   className={textareaClasses}
                   placeholder="Short summary that appears on listings and previews."
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className={labelClasses}>Author(s)</label>
+                <input
+                  type="text"
+                  name="author"
+                  value={formData.author}
+                  onChange={handleChange}
+                  className={inputClasses}
+                  placeholder="John Doe, Jane Smith"
+                />
+                <p className="text-xs text-slate-500">Enter author name(s). Separate multiple authors with commas.</p>
               </div>
 
               <div className="space-y-2">

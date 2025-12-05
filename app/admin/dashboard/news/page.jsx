@@ -106,17 +106,17 @@ export default function BlogManagementPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Unable to load blog posts.');
+        throw new Error(errorData.message || 'Unable to load news posts.');
       }
 
         const data = await res.json();
       setBlogs(Array.isArray(data) ? data : []);
       if (showToast) {
-        toast.success('Blog posts refreshed.');
+        toast.success('News posts refreshed.');
       }
     } catch (err) {
       console.error('Failed to fetch blogs:', err);
-      toast.error(err.message || 'Failed to fetch blog posts.');
+      toast.error(err.message || 'Failed to fetch news posts.');
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -145,14 +145,14 @@ export default function BlogManagementPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to delete blog post.');
+        throw new Error(errorData.message || 'Failed to delete news post.');
       }
 
-      toast.success('Blog post deleted.');
+      toast.success('News post deleted.');
       setBlogs((prev) => prev.filter((blog) => blog._id !== id));
     } catch (err) {
       console.error('Failed to delete blog:', err);
-      toast.error(err.message || 'Failed to delete blog post.');
+      toast.error(err.message || 'Failed to delete news post.');
     }
   };
 
@@ -175,7 +175,7 @@ export default function BlogManagementPage() {
       <div className="admin-surface flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-slate-200">
         <div className="flex flex-col items-center gap-3 admin-text-muted">
           <span className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
-          <p className="text-sm font-medium">Loading blog posts...</p>
+          <p className="text-sm font-medium">Loading news posts...</p>
         </div>
       </div>
     );
@@ -191,11 +191,11 @@ export default function BlogManagementPage() {
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold admin-text-muted transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to blog list
+            Back to news list
           </button>
-          <h1 className="text-2xl font-bold admin-text md:text-3xl">Blog Management</h1>
+          <h1 className="text-2xl font-bold admin-text md:text-3xl">News Management</h1>
           <p className="max-w-2xl text-sm admin-text-muted">
-            Publish insight pieces, highlight firm achievements, and keep the public blog fresh.
+            Publish insight pieces, highlight firm achievements, and keep the public news fresh.
             Drafts stay private until you publish.
           </p>
       </div>
@@ -209,7 +209,7 @@ export default function BlogManagementPage() {
             Refresh
           </button>
           <button
-            onClick={() => router.push('/admin/dashboard/blog/create')}
+            onClick={() => router.push('/admin/dashboard/news/create')}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
           >
             <Plus className="h-4 w-4" />
@@ -353,7 +353,7 @@ export default function BlogManagementPage() {
               Reset Filters
             </button>
             <button
-              onClick={() => router.push('/admin/dashboard/blog/create')}
+              onClick={() => router.push('/admin/dashboard/news/create')}
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition hover:bg-emerald-700"
             >
               <Plus className="h-4 w-4" />
@@ -455,8 +455,8 @@ export default function BlogManagementPage() {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => router.push(`/admin/dashboard/blog/edit/${blog._id}`)}
+                        <button
+                          onClick={() => router.push(`/admin/dashboard/news/edit/${blog._id}`)}
                           className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                       >
                           <Edit className="h-3.5 w-3.5" />
@@ -470,7 +470,7 @@ export default function BlogManagementPage() {
                         Delete
                       </button>
                         <button
-                          onClick={() => router.push(`/blog/${blog.slug}`)}
+                          onClick={() => router.push(`/news/${blog.slug}`)}
                           className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
                         >
                           <Eye className="h-3.5 w-3.5" />

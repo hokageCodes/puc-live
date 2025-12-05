@@ -21,7 +21,7 @@ const navItems = [
   { path: "/expertise", label: "Expertise", icon: HiOutlineBriefcase },
   { path: "/people", label: "People", icon: HiOutlineUsers },
   { path: "/careers", label: "Careers", icon: HiOutlineUserGroup },
-  { path: "/blog", label: "Blog", icon: HiOutlineNewspaper },
+  { path: "/news", label: "News", icon: HiOutlineNewspaper },
   { path: "/contact", label: "Contact", icon: HiOutlineMail },
 ];
 

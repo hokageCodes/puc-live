@@ -22,6 +22,7 @@ const defaultForm = {
   title: '',
   slug: '',
   excerpt: '',
+  author: '',
   coverImage: '',
   tags: '',
   content: '',
@@ -150,14 +151,14 @@ export default function CreateBlogPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to create blog post');
+        throw new Error(data.message || 'Failed to create news post');
       }
 
-      toast.success('Blog post created successfully.');
-      router.push('/admin/dashboard/blog');
+      toast.success('News post created successfully.');
+      router.push('/admin/dashboard/news');
     } catch (err) {
       console.error('Error creating blog:', err);
-      const message = err.message || 'Failed to create blog post';
+      const message = err.message || 'Failed to create news post';
       setError(message);
       toast.error(message);
     } finally {
@@ -178,9 +179,9 @@ export default function CreateBlogPage() {
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:border-slate-300 hover:bg-slate-50"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to blog list
+            Back to news list
           </button>
-          <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">Create new blog post</h1>
+          <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">Create new news post</h1>
           <p className="max-w-2xl text-sm text-slate-600">
             Craft a polished article for the public site. Provide a strong cover image, a descriptive slug, and rich content to boost engagement.
           </p>
@@ -238,7 +239,7 @@ export default function CreateBlogPage() {
                   />
                   <p className="flex items-center gap-2 text-xs text-slate-500">
                     <Link2 className="h-3.5 w-3.5" />
-                    `/blog/{formData.slug || 'your-slug'}`
+                    `/news/{formData.slug || 'your-slug'}`
                   </p>
                 </div>
                 <button
@@ -259,6 +260,19 @@ export default function CreateBlogPage() {
                   className={textareaClasses}
                   placeholder="Short summary that appears on listings and previews."
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className={labelClasses}>Author(s)</label>
+                <input
+                  type="text"
+                  name="author"
+                  value={formData.author}
+                  onChange={handleChange}
+                  className={inputClasses}
+                  placeholder="John Doe, Jane Smith"
+                />
+                <p className="text-xs text-slate-500">Enter author name(s). Separate multiple authors with commas.</p>
               </div>
 
               <div className="space-y-2">
@@ -392,7 +406,7 @@ export default function CreateBlogPage() {
               <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3">
                 <div>
                   <p className="text-sm font-medium text-slate-700">Feature this post</p>
-                  <p className="text-xs text-slate-500">Pinned to the top of the public blog.</p>
+                  <p className="text-xs text-slate-500">Pinned to the top of the public news.</p>
                 </div>
                 <button
                   type="button"
