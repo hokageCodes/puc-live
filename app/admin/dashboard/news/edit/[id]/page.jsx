@@ -146,18 +146,28 @@ export default function EditBlogPage() {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
       const token = localStorage.getItem('admin_token');
 
-      const res = await fetch(`${backendUrl}/api/blogs/${params.id}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-        body: JSON.stringify({
-          ...formData,
-          tags: tagList,
-        }),
-      });
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+      let res;
+      try {
+        res = await fetch(`${backendUrl}/api/blogs/${params.id}`, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+          body: JSON.stringify({
+            ...formData,
+            tags: tagList,
+          }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -168,7 +178,14 @@ export default function EditBlogPage() {
       router.push('/admin/dashboard/news');
     } catch (err) {
       console.error('Error updating blog:', err);
-      const message = err.message || 'Failed to update news post';
+      let message = 'Failed to update news post';
+      
+      if (err.name === 'AbortError') {
+        message = 'Request timed out. Please try again.';
+      } else if (err.message) {
+        message = err.message;
+      }
+      
       setError(message);
       toast.error(message);
     } finally {

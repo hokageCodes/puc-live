@@ -114,39 +114,51 @@ export default function CreateBlogPage() {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
       const token = localStorage.getItem('admin_token');
 
-      let res;
-      if (coverFile) {
-        const data = new FormData();
-        data.append('title', formData.title);
-        data.append('slug', formData.slug);
-        data.append('excerpt', formData.excerpt);
-        data.append('content', formData.content);
-        data.append('status', formData.status);
-        if (formData.scheduledAt) data.append('scheduledAt', formData.scheduledAt);
-        data.append('tags', JSON.stringify(tagList));
-        data.append('coverImage', coverFile);
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
-        res = await fetch(`${backendUrl}/api/blogs`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            Authorization: token ? `Bearer ${token}` : undefined,
-          },
-          body: data,
-        });
-      } else {
-        res = await fetch(`${backendUrl}/api/blogs`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token ? `Bearer ${token}` : undefined,
-          },
-          body: JSON.stringify({
-            ...formData,
-            tags: tagList,
-          }),
-        });
+      let res;
+      try {
+        if (coverFile) {
+          const data = new FormData();
+          data.append('title', formData.title);
+          data.append('slug', formData.slug);
+          data.append('excerpt', formData.excerpt);
+          data.append('author', formData.author);
+          data.append('content', formData.content);
+          data.append('status', formData.status);
+          data.append('featured', formData.featured.toString());
+          if (formData.scheduledAt) data.append('scheduledAt', formData.scheduledAt);
+          data.append('tags', JSON.stringify(tagList));
+          data.append('coverImage', coverFile);
+
+          res = await fetch(`${backendUrl}/api/blogs`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              Authorization: token ? `Bearer ${token}` : undefined,
+            },
+            body: data,
+            signal: controller.signal,
+          });
+        } else {
+          res = await fetch(`${backendUrl}/api/blogs`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: token ? `Bearer ${token}` : undefined,
+            },
+            body: JSON.stringify({
+              ...formData,
+              tags: tagList,
+            }),
+            signal: controller.signal,
+          });
+        }
+      } finally {
+        clearTimeout(timeoutId);
       }
 
       if (!res.ok) {
@@ -158,7 +170,14 @@ export default function CreateBlogPage() {
       router.push('/admin/dashboard/news');
     } catch (err) {
       console.error('Error creating blog:', err);
-      const message = err.message || 'Failed to create news post';
+      let message = 'Failed to create news post';
+      
+      if (err.name === 'AbortError') {
+        message = 'Request timed out. The image might be too large. Try compressing it or using a smaller file.';
+      } else if (err.message) {
+        message = err.message;
+      }
+      
       setError(message);
       toast.error(message);
     } finally {
