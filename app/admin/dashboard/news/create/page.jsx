@@ -114,18 +114,20 @@ export default function CreateBlogPage() {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
       const token = localStorage.getItem('admin_token');
 
-      // Create abort controller for timeout
+      // Create abort controller for timeout - increased to 90 seconds for image uploads
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout
 
       let res;
       try {
         if (coverFile) {
+          console.log('Uploading with file:', coverFile.name, `(${(coverFile.size / 1024 / 1024).toFixed(2)} MB)`);
+          
           const data = new FormData();
           data.append('title', formData.title);
           data.append('slug', formData.slug);
-          data.append('excerpt', formData.excerpt);
-          data.append('author', formData.author);
+          data.append('excerpt', formData.excerpt || '');
+          data.append('author', formData.author || '');
           data.append('content', formData.content);
           data.append('status', formData.status);
           data.append('featured', formData.featured.toString());
@@ -143,6 +145,8 @@ export default function CreateBlogPage() {
             signal: controller.signal,
           });
         } else {
+          console.log('Creating post with URL:', formData.coverImage);
+          
           res = await fetch(`${backendUrl}/api/blogs`, {
             method: 'POST',
             credentials: 'include',

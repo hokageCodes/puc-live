@@ -146,12 +146,14 @@ export default function EditBlogPage() {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
       const token = localStorage.getItem('admin_token');
 
-      // Create abort controller for timeout
+      // Create abort controller for timeout - increased to 90 seconds
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout
 
       let res;
       try {
+        console.log('Updating post:', params.id);
+        
         res = await fetch(`${backendUrl}/api/blogs/${params.id}`, {
           method: 'PUT',
           credentials: 'include',
