@@ -5,4 +5,13 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  theme: {
+    extend: {
+      colors: {
+        green: {
+          DEFAULT: '#32CD32', // Custom green color
+        },
+      },
+    },
+  },
 };
