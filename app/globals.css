@@ -125,6 +125,44 @@ html {
   background-color: var(--admin-accent);
 }
 
+/* ── Tiptap rich editor ─────────────────────────────────────────── */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #94a3b8;
+  pointer-events: none;
+  height: 0;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
+/* Inline code style inside the editor */
+.ProseMirror code {
+  background: #f1f5f9;
+  border-radius: 4px;
+  padding: 0.15em 0.35em;
+  font-size: 0.875em;
+  font-family: ui-monospace, monospace;
+}
+
+/* Blockquote style */
+.ProseMirror blockquote {
+  border-left: 3px solid #10b981;
+  margin-left: 0;
+  padding-left: 1rem;
+  color: #475569;
+  font-style: italic;
+}
+
+/* HR style */
+.ProseMirror hr {
+  border: none;
+  border-top: 2px solid #e2e8f0;
+  margin: 1.5rem 0;
+}
+
 [data-admin-theme='dark'] .admin-page .text-slate-900,
 [data-admin-theme='dark'] .admin-page .text-slate-800,
 [data-admin-theme='dark'] .admin-page .text-slate-700,

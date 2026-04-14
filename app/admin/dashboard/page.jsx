@@ -68,10 +68,13 @@ export default function AdminDashboard() {
         throw new Error('Unable to load dashboard data.');
       }
 
-      const [staffData = [], blogData = []] = await Promise.all([
+      const [staffRaw, blogRaw] = await Promise.all([
         staffRes.ok ? staffRes.json() : Promise.resolve([]),
         blogsRes.ok ? blogsRes.json() : Promise.resolve([]),
       ]);
+
+      const staffData = Array.isArray(staffRaw) ? staffRaw : (staffRaw?.data ?? staffRaw?.staff ?? []);
+      const blogData = Array.isArray(blogRaw) ? blogRaw : (blogRaw?.data ?? blogRaw?.blogs ?? []);
 
       const sortedBlogs = [...blogData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       const recentBlogs = sortedBlogs.slice(0, 4);

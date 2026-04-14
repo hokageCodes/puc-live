@@ -21,7 +21,8 @@ function BlogPageContent() {
       
       if (res.ok) {
         const data = await res.json();
-        setBlogs(data);
+        const list = Array.isArray(data) ? data : (data?.data ?? data?.blogs ?? []);
+        setBlogs(list);
       }
     } catch (err) {
       console.error('Failed to fetch blogs:', err);

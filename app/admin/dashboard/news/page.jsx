@@ -110,7 +110,8 @@ export default function BlogManagementPage() {
       }
 
         const data = await res.json();
-      setBlogs(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : (data?.data ?? data?.blogs ?? []);
+      setBlogs(list);
       if (showToast) {
         toast.success('News posts refreshed.');
       }
