@@ -135,7 +135,7 @@ export default function LeaveShell({ children }) {
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-72 flex flex-col h-full lg:hidden">
+        <SheetContent className="p-0 w-72 flex flex-col h-full lg:hidden">
           {/* Sidebar content for mobile */}
           {renderSidebarContent()}
         </SheetContent>
