@@ -5,6 +5,7 @@ import AddUserModal from '../../../../components/admin/users/AddUserModal';
 import { getImageUrl } from '../../../../lib/getImageUrl';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
+import { useAdminAuth } from '../../../../components/admin/AdminAuthContext';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
@@ -25,12 +26,7 @@ export default function AdminUsersPage() {
   const itemsPerPage = 12;
 
   const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-
-  const getAuthHeaders = () => {
-    if (typeof window === 'undefined') return {};
-    const token = window.localStorage.getItem('admin_token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
+  const { getAuthHeaders } = useAdminAuth();
 
   const fetchData = async () => {
     try {
@@ -109,8 +105,7 @@ export default function AdminUsersPage() {
     if (!confirmed) return;
 
     try {
-      const authHeaders = getAuthHeaders();
-      const res = await fetch(`${base}/api/staff/${id}`, { method: 'DELETE', credentials: 'include', headers: authHeaders });
+      const res = await fetch(`${base}/api/staff/${id}`, { method: 'DELETE', credentials: 'include', headers: getAuthHeaders() });
       if (res.ok) {
         setUsers((prev) => prev.filter((u) => u._id !== id));
         toast.success('Staff member deleted successfully.');

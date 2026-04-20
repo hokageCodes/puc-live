@@ -1,10 +1,11 @@
-// Alternative approach - Modified login component using Authorization header
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAdminAuth } from '../../../components/admin/AdminAuthContext';
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { login } = useAdminAuth();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,69 +18,16 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
-    console.log('Submitting login form:', form);
-    
+
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-      console.log('Backend URL:', backendUrl);
-      
-      const res = await fetch(`${backendUrl}/api/auth/login`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, scope: 'cms' }),
-      });
-  
-      console.log('Response status:', res.status);
-      
-      if (!res.ok) {
-        const data = await res.json();
-        console.log('Login error response:', data);
-        setError(data.message || 'Login failed');
+      const result = await login(form.email, form.password);
+
+      if (!result.success) {
+        setError(result.error || 'Login failed');
         return;
       }
 
-      const data = await res.json();
-      console.log('Login success response:', JSON.stringify(data, null, 2));
-      console.log('Full response keys:', Object.keys(data));
-      console.log('Has user?:', !!data.user);
-      console.log('Has access token?:', !!data.accessToken);
-      
-      // Validate admin data
-      if (!data.user) {
-        console.error('No user object in response');
-        setError('Login successful but no session payload received');
-        return;
-      }
-      
-      localStorage.setItem('adminData', JSON.stringify(data.user));
-      
-      const token = data.accessToken || null;
-      if (token) {
-        localStorage.setItem('admin_token', token);
-        console.log('✅ Token stored in localStorage');
-      } else {
-        console.log('⚠️ No token in response, will rely on cookies');
-      }
-      
-      // Redirect to dashboard
-      console.log('✅ Login successful, redirecting to dashboard...');
-      console.log('Admin data:', data.admin);
-      
-      try {
-        router.replace('/admin/dashboard');
-        setTimeout(() => {
-          if (window.location.pathname !== '/admin/dashboard') {
-            console.log('↪️ Fallback redirect using window.location');
-            window.location.href = '/admin/dashboard';
-          }
-        }, 150);
-      } catch (navError) {
-        console.error('Router navigation failed, using window.location instead:', navError);
-        window.location.href = '/admin/dashboard';
-      }
-      
+      router.replace('/admin/dashboard');
     } catch (err) {
       console.error('Login error:', err);
       setError('Connection error. Please check if the backend is running.');
@@ -92,13 +40,13 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center text-slate-800">Admin Login</h1>
-        
+
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
@@ -116,7 +64,7 @@ export default function AdminLoginPage() {
               disabled={loading}
             />
           </div>
-          
+
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
               Password
@@ -133,24 +81,19 @@ export default function AdminLoginPage() {
               disabled={loading}
             />
           </div>
-          
+
           <button
             type="submit"
             disabled={loading}
             className={`w-full py-2 px-4 rounded-md text-white font-medium transition-colors ${
-              loading 
-                ? 'bg-slate-400 cursor-not-allowed' 
+              loading
+                ? 'bg-slate-400 cursor-not-allowed'
                 : 'bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500'
             }`}
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-        
-        <div className="mt-4 text-xs text-slate-500">
-          <p>Backend URL: {process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com'}</p>
-          <p>Storage: localStorage + Authorization header</p>
-        </div>
       </div>
     </div>
   );

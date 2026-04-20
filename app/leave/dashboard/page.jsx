@@ -92,7 +92,7 @@ function getTimeAgo(date) {
 }
 
 export default function LeaveDashboardPage() {
-  const { user, token, status } = useLeaveAuth();
+  const { user, status } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
   const [balances, setBalances] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
@@ -108,7 +108,7 @@ export default function LeaveDashboardPage() {
   }, [user?.roles]);
 
   useEffect(() => {
-    if (!isAuthenticated || !token) return;
+    if (!isAuthenticated) return;
 
     const fetchData = async () => {
       try {
@@ -116,9 +116,9 @@ export default function LeaveDashboardPage() {
         setError(null);
 
         const [balancesData, requestsData, approvalsData] = await Promise.all([
-          leaveApi.getMyBalances(token).catch(() => []),
-          leaveApi.getMyRequests(token).catch(() => []),
-          isApprover ? leaveApi.getPendingApprovals(token).catch(() => []) : Promise.resolve([]),
+          leaveApi.getMyBalances().catch(() => []),
+          leaveApi.getMyRequests().catch(() => []),
+          isApprover ? leaveApi.getPendingApprovals().catch(() => []) : Promise.resolve([]),
         ]);
 
         setBalances(balancesData);
@@ -133,7 +133,7 @@ export default function LeaveDashboardPage() {
     };
 
     fetchData();
-  }, [isAuthenticated, token, isApprover]);
+  }, [isAuthenticated, isApprover]);
 
   // Get upcoming leave (approved or pending, within next 30 days)
   const upcomingLeave = useMemo(() => {

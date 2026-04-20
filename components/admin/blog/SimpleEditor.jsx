@@ -6,31 +6,44 @@ import { BlockNoteView } from '@blocknote/mantine';
 import { useCreateBlockNote } from '@blocknote/react';
 import '@blocknote/core/fonts/inter.css';
 import '@blocknote/mantine/style.css';
+import { toast } from 'react-toastify';
+import { useAdminAuth } from '../../admin/AdminAuthContext';
 
-async function uploadImageToBackend(file) {
+async function uploadImageToBackend(file, getAuthHeaders) {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
-
   const formData = new FormData();
   formData.append('image', file);
 
   const res = await fetch(`${backendUrl}/api/blogs/upload-image`, {
     method: 'POST',
     credentials: 'include',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    headers: getAuthHeaders(),
     body: formData,
   });
 
-  if (!res.ok) throw new Error('Image upload failed');
-  const data = await res.json();
-  return data.url;
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Image upload failed');
+  }
+
+  const { url } = await res.json();
+  return url;
 }
 
 export default function SimpleEditor({ value, onChange }) {
   const initialised = useRef(false);
+  const { getAuthHeaders } = useAdminAuth();
 
   const editor = useCreateBlockNote({
-    uploadFile: uploadImageToBackend,
+    uploadFile: async (file) => {
+      try {
+        return await uploadImageToBackend(file, getAuthHeaders);
+      } catch (err) {
+        console.error('Inline image upload error:', err);
+        toast.error(err.message || 'Failed to upload image');
+        throw err;
+      }
+    },
   });
 
   // Load existing HTML content once on mount

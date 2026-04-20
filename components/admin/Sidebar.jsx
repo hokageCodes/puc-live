@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -76,7 +77,7 @@ export default function Sidebar({ isOpen, onClose }) {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
-              <a
+              <Link
                 key={item.name}
                 href={item.href}
                 className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition duration-200 ${
@@ -90,7 +91,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   }`}
                 />
                 {item.name}
-              </a>
+              </Link>
             );
           })}
         </nav>

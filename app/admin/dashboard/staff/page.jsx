@@ -1,80 +1,120 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AddUserModal from '../../../../components/admin/users/AddUserModal';
-import { Search, UserPlus, Edit, Trash2, Users, Eye, EyeOff, Send } from 'lucide-react';
+import { Search, UserPlus, Edit2, Trash2, Eye, EyeOff, Send, ChevronLeft, ChevronRight, MoreHorizontal, CheckCircle2, Clock, CircleDashed } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getImageUrl } from '../../../../lib/getImageUrl';
+import { useAdminAuth } from '../../../../components/admin/AdminAuthContext';
 
 const ROLE_LABELS = {
-  staff: 'Staff',
-  teamLead: 'Team Lead',
-  lineManager: 'Line Manager',
-  hr: 'HR',
-  admin: 'Admin',
-  cms: 'CMS',
+  staff: 'Staff', teamLead: 'Team Lead', lineManager: 'Line Manager',
+  hr: 'HR', admin: 'Admin', cms: 'CMS',
 };
 
-const DIVISION_LABELS = {
-  legal: 'Legal',
-  admin: 'Admin/Operations',
-  other: 'Other',
+const DIVISION_LABELS = { legal: 'Legal', admin: 'Admin/Ops', other: 'Other' };
+
+const fmt = (v) => {
+  if (!v) return null;
+  const d = new Date(v);
+  return isNaN(d) ? null : new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
 };
 
-const STATUS_BADGE_CLASSES = {
-  success: 'bg-emerald-100 text-emerald-700',
-  warning: 'bg-amber-100 text-amber-700',
-  muted: 'bg-slate-200 text-slate-600',
+const getStatus = (p) => {
+  if (p?.passwordSetAt) return { key: 'active', label: 'Active', since: fmt(p.passwordSetAt) };
+  if (p?.lastInviteSentAt) return { key: 'invited', label: 'Invited', since: fmt(p.lastInviteSentAt) };
+  return { key: 'pending', label: 'Pending', since: null };
 };
 
-const formatDateTime = (value) => {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-};
-
-const getActivationStatus = (person) => {
-  const activatedAt = person?.passwordSetAt;
-  const invitedAt = person?.lastInviteSentAt;
-  const lastLoginAt = person?.lastLoginAt;
-
-  if (activatedAt) {
-    return {
-      state: 'active',
-      label: 'Active',
-      badgeClass: STATUS_BADGE_CLASSES.success,
-      description: `Activated ${formatDateTime(activatedAt)}`,
-      subtext: lastLoginAt ? `Last login ${formatDateTime(lastLoginAt)}` : 'No login activity yet',
-    };
-  }
-
-  if (invitedAt) {
-    return {
-      state: 'invited',
-      label: 'Invite sent',
-      badgeClass: STATUS_BADGE_CLASSES.warning,
-      description: `Invite sent ${formatDateTime(invitedAt)}`,
-      subtext: 'Awaiting activation',
-    };
-  }
-
-  return {
-    state: 'pending',
-    label: 'Not invited',
-    badgeClass: STATUS_BADGE_CLASSES.muted,
-    description: 'Send an invite to let this staff member activate their account.',
-    subtext: null,
+const StatusDot = ({ status }) => {
+  const map = {
+    active:  { icon: CheckCircle2, cls: 'text-emerald-500' },
+    invited: { icon: Clock,         cls: 'text-amber-400'  },
+    pending: { icon: CircleDashed,  cls: 'text-slate-400'  },
   };
+  const { icon: Icon, cls } = map[status.key] || map.pending;
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${cls}`}>
+      <Icon className="h-3.5 w-3.5" />
+      {status.label}
+      {status.since && <span className="font-normal text-slate-400">· {status.since}</span>}
+    </span>
+  );
 };
+
+function ActionsMenu({ person, onEdit, onDelete, onToggleVisibility, onSendInvite, inviteLoading }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const status = getStatus(person);
+  const visible = person.isVisible !== false;
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-50 mt-1 w-48 origin-top-right rounded-xl border border-slate-100 bg-white py-1 shadow-xl shadow-slate-200/60">
+          <button
+            onClick={() => { onEdit(); setOpen(false); }}
+            className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+          >
+            <Edit2 className="h-3.5 w-3.5 text-slate-400" /> Edit profile
+          </button>
+          {status.key !== 'active' && (
+            <button
+              onClick={() => { onSendInvite(); setOpen(false); }}
+              disabled={inviteLoading}
+              className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              <Send className="h-3.5 w-3.5 text-slate-400" />
+              {inviteLoading ? 'Sending…' : status.key === 'invited' ? 'Resend invite' : 'Send invite'}
+            </button>
+          )}
+          <button
+            onClick={() => { onToggleVisibility(); setOpen(false); }}
+            className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+          >
+            {visible
+              ? <><EyeOff className="h-3.5 w-3.5 text-slate-400" /> Hide from site</>
+              : <><Eye className="h-3.5 w-3.5 text-slate-400" /> Show on site</>}
+          </button>
+          <div className="my-1 border-t border-slate-100" />
+          <button
+            onClick={() => { onDelete(); setOpen(false); }}
+            className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Delete
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Avatar({ person }) {
+  const initials = `${person.firstName?.[0] ?? ''}${person.lastName?.[0] ?? ''}`.toUpperCase();
+  const src = getImageUrl(person.profilePhoto);
+  return src && !src.includes('default-avatar') ? (
+    <img src={src} alt={initials} className="h-9 w-9 rounded-full object-cover ring-2 ring-white" />
+  ) : (
+    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-xs font-semibold text-white ring-2 ring-white">
+      {initials || '?'}
+    </span>
+  );
+}
 
 export default function StaffManagementPage() {
+  const { getAuthHeaders } = useAdminAuth();
   const [staff, setStaff] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -89,521 +129,273 @@ export default function StaffManagementPage() {
   const [inviteLoadingId, setInviteLoadingId] = useState(null);
 
   const pageSize = 25;
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-
-  const applyStaffUpdate = (id, changes) => {
-    setStaff((prev) =>
-      prev.map((item) => (item._id === id ? { ...item, ...changes } : item))
-    );
-    setFiltered((prev) =>
-      prev.map((item) => (item._id === id ? { ...item, ...changes } : item))
-    );
+  const applyUpdate = (id, changes) => {
+    const patch = (list) => list.map((x) => (x._id === id ? { ...x, ...changes } : x));
+    setStaff(patch);
+    setFiltered(patch);
   };
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = typeof window !== 'undefined' ? window.localStorage.getItem('admin_token') : null;
-      const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-      const responses = await Promise.all([
-        fetch(`${backendUrl}/api/staff`, { credentials: 'include', headers: authHeaders }),
-        fetch(`${backendUrl}/api/departments`, { credentials: 'include', headers: authHeaders }),
-        fetch(`${backendUrl}/api/teams`, { credentials: 'include', headers: authHeaders }),
-        fetch(`${backendUrl}/api/practice-areas`, { credentials: 'include', headers: authHeaders }),
+      const h = getAuthHeaders();
+      const [r1, r2, r3, r4] = await Promise.all([
+        fetch(`${base}/api/staff`, { credentials: 'include', headers: h }),
+        fetch(`${base}/api/departments`, { credentials: 'include', headers: h }),
+        fetch(`${base}/api/teams`, { credentials: 'include', headers: h }),
+        fetch(`${base}/api/practice-areas`, { credentials: 'include', headers: h }),
       ]);
-
-      responses.forEach((res) => {
-        if (!res.ok) {
-          throw new Error('Unable to load staff data. Please try again.');
-        }
-      });
-
-      const [staffData, deptData, teamData, paData] = await Promise.all(
-        responses.map((res) => res.json())
-      );
-
-      setStaff(staffData);
-      setFiltered(staffData);
-      setCurrentPage(1);
-      setDepartments(deptData);
-      setTeams(teamData);
-      setPracticeAreas(paData);
-    } catch (error) {
-      console.error('Failed to fetch staff data:', error);
-      toast.error(error.message || 'Failed to fetch staff data.');
+      if (![r1, r2, r3, r4].every((r) => r.ok)) throw new Error('Failed to load staff data.');
+      const [s, d, t, p] = await Promise.all([r1, r2, r3, r4].map((r) => r.json()));
+      setStaff(s); setFiltered(s); setCurrentPage(1);
+      setDepartments(d); setTeams(t); setPracticeAreas(p);
+    } catch (e) {
+      toast.error(e.message || 'Failed to load staff data.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   useEffect(() => {
-    let filteredList = [...staff];
+    let list = [...staff];
     if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filteredList = filteredList.filter((person) =>
-        `${person.firstName} ${person.lastName}`.toLowerCase().includes(term) ||
-        person.email?.toLowerCase().includes(term) ||
-        person.position?.toLowerCase().includes(term)
+      const t = searchTerm.toLowerCase();
+      list = list.filter((p) =>
+        `${p.firstName} ${p.lastName}`.toLowerCase().includes(t) ||
+        p.email?.toLowerCase().includes(t) ||
+        p.position?.toLowerCase().includes(t)
       );
     }
-    if (departmentFilter) {
-      filteredList = filteredList.filter((person) => person.department?._id === departmentFilter);
-    }
-    setFiltered(filteredList);
+    if (departmentFilter) list = list.filter((p) => p.department?._id === departmentFilter);
+    setFiltered(list);
     setCurrentPage(1);
   }, [searchTerm, departmentFilter, staff]);
 
-  useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [filtered, currentPage]);
-
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedStaff = filtered.slice(startIndex, startIndex + pageSize);
-  const showingFrom = filtered.length === 0 ? 0 : startIndex + 1;
-  const showingTo = Math.min(startIndex + pageSize, filtered.length);
-  const totalVisible = staff.filter((person) => person.isVisible !== false).length;
-  const totalHidden = Math.max(0, staff.length - totalVisible);
+  const safePage = Math.min(Math.max(currentPage, 1), totalPages);
+  const slice = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const totalVisible = staff.filter((p) => p.isVisible !== false).length;
+  const totalActive = staff.filter((p) => p.passwordSetAt).length;
 
-  const handleAdd = () => {
-    setEditingStaff(null);
-    setShowModal(true);
-  };
-
-  const handleEdit = (staffMember) => {
-    setEditingStaff(staffMember);
-    setShowModal(true);
-  };
-
-  const handleDelete = async (staffId) => {
-    const confirmed = window.confirm('Are you sure you want to delete this staff member?');
-    if (!confirmed) return;
-
+  const handleDelete = async (id) => {
+    if (!confirm('Permanently delete this staff member?')) return;
     try {
-      const res = await fetch(`${backendUrl}/api/staff/${staffId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(typeof window !== 'undefined' && window.localStorage.getItem('admin_token')
-            ? { Authorization: `Bearer ${window.localStorage.getItem('admin_token')}` }
-            : {}),
-        },
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Delete failed');
-      }
-
-      setStaff((prev) => prev.filter((s) => s._id !== staffId));
-      setFiltered((prev) => prev.filter((s) => s._id !== staffId));
-      toast.success('Staff member deleted successfully.');
-    } catch (err) {
-      console.error('Delete staff failed:', err);
-      toast.error(err.message || 'Failed to delete staff. Please try again.');
-    }
+      const r = await fetch(`${base}/api/staff/${id}`, { method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() } });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message || 'Delete failed');
+      setStaff((p) => p.filter((s) => s._id !== id));
+      setFiltered((p) => p.filter((s) => s._id !== id));
+      toast.success('Staff member deleted.');
+    } catch (e) { toast.error(e.message); }
   };
 
-  const handleToggleVisibility = async (staffMember) => {
-    const current = staffMember.isVisible === false ? false : true;
-    const newValue = !current;
-
-    const formData = new FormData();
-    formData.append('isVisible', String(newValue));
-
+  const handleToggleVisibility = async (person) => {
+    const newValue = person.isVisible === false ? true : !true;
+    const isVisible = person.isVisible !== false;
+    const next = !isVisible;
+    const fd = new FormData();
+    fd.append('isVisible', String(next));
     try {
-      const res = await fetch(`${backendUrl}/api/staff/${staffMember._id}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          ...(typeof window !== 'undefined' && window.localStorage.getItem('admin_token')
-            ? { Authorization: `Bearer ${window.localStorage.getItem('admin_token')}` }
-            : {}),
-        },
-        body: formData,
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(data.message || data.error || 'Failed to update visibility.');
-      }
-
-      setStaff((prev) =>
-        prev.map((item) =>
-          item._id === staffMember._id ? { ...item, isVisible: newValue } : item
-        )
-      );
-      setFiltered((prev) =>
-        prev.map((item) =>
-          item._id === staffMember._id ? { ...item, isVisible: newValue } : item
-        )
-      );
-
-      toast.success(`Staff member is now ${newValue ? 'visible' : 'hidden'} on the website.`);
-    } catch (error) {
-      console.error('Toggle visibility failed:', error);
-      toast.error(error.message || 'Failed to update visibility.');
-    }
+      const r = await fetch(`${base}/api/staff/${person._id}`, { method: 'PUT', credentials: 'include', headers: getAuthHeaders(), body: fd });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message || 'Update failed');
+      applyUpdate(person._id, { isVisible: next });
+      toast.success(`${next ? 'Now visible' : 'Hidden'} on website.`);
+    } catch (e) { toast.error(e.message); }
   };
 
-  const handleSendInvite = async (staffMember) => {
-    setInviteLoadingId(staffMember._id);
+  const handleSendInvite = async (person) => {
+    setInviteLoadingId(person._id);
     try {
-      const token = typeof window !== 'undefined' ? window.localStorage.getItem('admin_token') : null;
-      const headers = {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      };
-      const res = await fetch(`${backendUrl}/api/auth/invite`, {
-        method: 'POST',
-        credentials: 'include',
-        headers,
-        body: JSON.stringify({ email: staffMember.email }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to send activation email.');
-      }
-
-      toast.success('Activation email sent successfully.');
-      const nowIso = new Date().toISOString();
-      applyStaffUpdate(staffMember._id, { lastInviteSentAt: nowIso });
-    } catch (error) {
-      console.error('Send invite failed:', error);
-      toast.error(error.message || 'Failed to send activation email.');
-    } finally {
-      setInviteLoadingId(null);
-    }
+      const r = await fetch(`${base}/api/auth/invite`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify({ email: person.email }) });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message || 'Failed to send invite');
+      toast.success('Activation email sent.');
+      applyUpdate(person._id, { lastInviteSentAt: new Date().toISOString() });
+    } catch (e) { toast.error(e.message); }
+    finally { setInviteLoadingId(null); }
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div>Loading...</div></div>;
+    return (
+      <div className="flex h-96 flex-col items-center justify-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-500" />
+        <p className="text-sm text-slate-500">Loading staff directory…</p>
+      </div>
+    );
   }
 
   return (
-    <div className="admin-page w-full space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="text-2xl md:text-3xl font-bold admin-text">All Staff Directory</h1>
-          <p className="text-sm md:text-base admin-text-muted">
-            Search, curate, and manage everyone who appears across the website in one streamlined view.
+    <div className="space-y-6">
+
+      {/* ── Page header ────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">Staff Directory</h1>
+          <p className="mt-0.5 text-sm text-slate-500">
+            {staff.length} members · {totalVisible} visible on site · {totalActive} activated
           </p>
         </div>
         <button
-          onClick={handleAdd}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+          onClick={() => { setEditingStaff(null); setShowModal(true); }}
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
         >
-          <UserPlus className="w-4 h-4" />
-          Add Staff
+          <UserPlus className="h-4 w-4" />
+          Add staff
         </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="admin-surface rounded-xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide admin-text-muted">Total Staff</p>
-              <p className="mt-2 text-3xl font-semibold admin-text">{staff.length}</p>
-            </div>
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-              <Users className="h-5 w-5" />
-            </span>
+      {/* ── Metrics strip ──────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[
+          { label: 'Total staff', value: staff.length, sub: 'in directory' },
+          { label: 'Live on site', value: totalVisible, sub: 'publicly visible', accent: true },
+          { label: 'Activated', value: totalActive, sub: 'portal access' },
+          { label: 'Pending', value: staff.length - totalActive, sub: 'not yet activated' },
+        ].map(({ label, value, sub, accent }) => (
+          <div key={label} className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-medium text-slate-500">{label}</p>
+            <p className={`mt-1 text-2xl font-semibold ${accent ? 'text-emerald-600' : 'text-slate-900'}`}>{value}</p>
+            <p className="mt-0.5 text-xs text-slate-400">{sub}</p>
           </div>
-          <p className="mt-3 text-xs admin-text-muted">All profiles in the system, regardless of visibility.</p>
-        </div>
-
-        <div className="admin-surface rounded-xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide admin-text-muted">Live On Website</p>
-              <p className="mt-2 text-3xl font-semibold text-emerald-600">{totalVisible}</p>
-            </div>
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-              <Eye className="h-5 w-5" />
-            </span>
-          </div>
-          <p className="mt-3 text-xs admin-text-muted">Staff currently visible on public pages.</p>
-        </div>
-
-        <div className="admin-surface rounded-xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide admin-text-muted">Hidden</p>
-              <p className="mt-2 text-3xl font-semibold admin-text">{totalHidden}</p>
-            </div>
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-              <EyeOff className="h-5 w-5" />
-            </span>
-          </div>
-          <p className="mt-3 text-xs admin-text-muted">Profiles prepared but not published yet.</p>
-        </div>
-
-        <div className="admin-surface rounded-xl border border-dashed border-amber-200 p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Quick Tip</p>
-          <p className="mt-3 text-sm admin-text-muted">
-            Use filters to narrow down by department. Toggle visibility directly from the table without opening edit forms.
-          </p>
-        </div>
+        ))}
       </div>
 
-      <div className="admin-surface rounded-xl border border-slate-200 p-5 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="relative w-full md:max-w-sm">
-            <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by name, email, or role..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200"
-            />
-          </div>
-
-          <div className="flex w-full flex-wrap items-center gap-3 md:justify-end">
-            <select
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="min-w-[200px] rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-            >
-              <option value="">All Departments</option>
-              {departments.map((d) => (
-                <option key={d._id} value={d._id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-            <span className="text-xs font-medium uppercase tracking-wide admin-text-muted">
-              {filtered.length} result{filtered.length === 1 ? '' : 's'}
-            </span>
-          </div>
+      {/* ── Toolbar ────────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search name, email or position…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+          />
         </div>
+        <select
+          value={departmentFilter}
+          onChange={(e) => setDepartmentFilter(e.target.value)}
+          className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+        >
+          <option value="">All departments</option>
+          {departments.map((d) => <option key={d._id} value={d._id}>{d.name}</option>)}
+        </select>
+        {(searchTerm || departmentFilter) && (
+          <span className="shrink-0 text-xs text-slate-400">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
+        )}
       </div>
 
-      <div className="admin-surface rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="flex flex-col gap-2 border-b admin-border px-6 py-4 text-sm admin-text-muted md:flex-row md:items-center md:justify-between">
-          <div>
-            Showing {showingFrom === 0 ? 0 : `${showingFrom}-${showingTo}`} of {filtered.length} staff
-          </div>
-          <div>
-            Page {currentPage} of {Math.max(totalPages, 1)}
-          </div>
-        </div>
+      {/* ── Table ──────────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-[960px] w-full text-sm text-slate-700">
-            <thead className="bg-emerald-500/5 text-xs uppercase tracking-wide admin-text-muted">
-              <tr className="text-left">
-                <th className="px-6 py-3 font-semibold">Staff</th>
-                <th className="px-6 py-3 font-semibold">Contact</th>
-                <th className="px-6 py-3 font-semibold">Dept & Team</th>
-                <th className="px-6 py-3 font-semibold">Practice Areas</th>
-                <th className="px-6 py-3 font-semibold">Roles</th>
-                <th className="px-6 py-3 font-semibold text-center">Activation</th>
-                <th className="px-6 py-3 font-semibold text-center">Leave Access</th>
-                <th className="px-6 py-3 font-semibold text-center">Website</th>
-                <th className="px-6 py-3 font-semibold text-right">Manage</th>
+          <table className="w-full min-w-[800px] text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                <th className="px-5 py-3">Person</th>
+                <th className="px-5 py-3">Department</th>
+                <th className="px-5 py-3">Practice areas</th>
+                <th className="px-5 py-3">Account</th>
+                <th className="px-5 py-3">Site</th>
+                <th className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
-              {paginatedStaff.map((person) => {
-                const isCurrentlyVisible = person.isVisible === false ? false : true;
-                const roles = Array.isArray(person.roles) ? person.roles : [];
-                const extraRoles = roles.filter((role) => role !== 'staff');
-                const divisionLabel = DIVISION_LABELS[person.division] || DIVISION_LABELS.legal;
-                const leaveActive = person.leaveEnabled !== false;
-                const activation = getActivationStatus(person);
-                const inviteDisabled = activation.state === 'active';
-                const inviteButtonLabel =
-                  activation.state === 'invited' ? 'Resend' : 'Invite';
+            <tbody className="divide-y divide-slate-100">
+              {slice.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-5 py-16 text-center text-sm text-slate-400">
+                    No staff match your filter.
+                  </td>
+                </tr>
+              )}
+              {slice.map((person) => {
+                const status = getStatus(person);
+                const visible = person.isVisible !== false;
+                const roles = (person.roles || []).filter((r) => r !== 'staff');
+                const pas = person.practiceAreas || [];
 
                 return (
-                  <tr key={person._id} className="transition hover:bg-emerald-500/5">
-                    <td className="px-6 py-5 align-top">
-                      <div className="flex items-center">
-                        <div className="mr-4 flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-emerald-50">
-                          {person.profilePhoto ? (
-                            <img
-                              src={getImageUrl(person.profilePhoto)}
-                              alt={`${person.firstName} ${person.lastName}`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-                              No Photo
-                            </span>
-                          )}
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-sm font-semibold admin-text">
+                  <tr key={person._id} className="group transition-colors hover:bg-slate-50/60">
+                    {/* Person */}
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <Avatar person={person} />
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-slate-900">
                             {person.firstName} {person.lastName}
-                          </div>
-                          <div className="text-xs font-medium uppercase tracking-wide text-emerald-600">
-                            {person.position || 'Role pending'}
-                          </div>
-                          <div className="text-xs admin-text-muted">
-                            Code: {person.staffCode || '—'}
-                          </div>
-                          {person.bio && (
-                            <p className="max-w-sm text-xs admin-text-muted line-clamp-2">{person.bio}</p>
+                          </p>
+                          <p className="truncate text-xs text-slate-500">{person.email}</p>
+                          {person.position && (
+                            <p className="truncate text-xs text-emerald-600 font-medium">{person.position}</p>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-5 align-top">
-                      <div className="space-y-2 text-sm">
-                        {person.email && (
-                          <a
-                            href={`mailto:${person.email}`}
-                            className="block admin-text hover:text-emerald-600 underline-offset-2 hover:underline"
-                          >
-                            {person.email}
-                          </a>
-                        )}
-                        {person.phoneNumber && (
-                          <span className="block text-xs admin-text-muted">{person.phoneNumber}</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 align-top">
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium admin-text">
-                          {person.department?.name || <span className="text-slate-400">Department TBD</span>}
+
+                    {/* Department */}
+                    <td className="px-5 py-3.5">
+                      <p className="text-sm text-slate-700">{person.department?.name || <span className="text-slate-400">—</span>}</p>
+                      {person.team?.name && <p className="text-xs text-slate-400">{person.team.name}</p>}
+                      {roles.length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {roles.map((r) => (
+                            <span key={r} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                              {ROLE_LABELS[r] || r}
+                            </span>
+                          ))}
                         </div>
-                        <div className="text-xs uppercase tracking-wide admin-text-muted">
-                          {person.team?.name || '—'}
-                        </div>
-                        <div className="text-xs admin-text-muted">Division: {divisionLabel}</div>
-                      </div>
+                      )}
                     </td>
-                    <td className="px-6 py-5 align-top">
-                      <div className="flex flex-wrap gap-2">
-                        {person.practiceAreas && person.practiceAreas.length > 0 ? (
-                          person.practiceAreas.map((area) => {
-                            const key = typeof area === 'object' ? area._id || area.name : area;
-                            const label = typeof area === 'object' ? area.name : area;
+
+                    {/* Practice areas */}
+                    <td className="px-5 py-3.5">
+                      {pas.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {pas.slice(0, 3).map((a) => {
+                            const k = typeof a === 'object' ? a._id : a;
+                            const l = typeof a === 'object' ? a.name : a;
                             return (
-                              <span
-                                key={key}
-                                className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700"
-                              >
-                                {label}
+                              <span key={k} className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+                                {l}
                               </span>
                             );
-                          })
-                        ) : (
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium admin-text-muted">
-                            General Staff
-                          </span>
-                        )}
-                      </div>
+                          })}
+                          {pas.length > 3 && (
+                            <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">+{pas.length - 3}</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400">—</span>
+                      )}
                     </td>
-                    <td className="px-6 py-5 align-top">
-                      <div className="flex flex-wrap gap-2">
-                        {extraRoles.length ? (
-                          extraRoles.map((role) => (
-                            <span
-                              key={role}
-                              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium admin-text"
-                            >
-                              {ROLE_LABELS[role] || role}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium admin-text-muted">
-                            Staff
-                          </span>
-                        )}
-                      </div>
+
+                    {/* Account status */}
+                    <td className="px-5 py-3.5">
+                      <StatusDot status={status} />
+                      <p className="mt-1 text-[10px] text-slate-400">
+                        Leave: {person.leaveEnabled !== false ? 'enabled' : 'disabled'}
+                      </p>
                     </td>
-                    <td className="px-6 py-5 align-top">
-                      <div className="flex flex-col items-center gap-2 text-xs text-center">
-                        <span
-                          className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-semibold ${activation.badgeClass}`}
-                        >
-                          {activation.label}
-                        </span>
-                        {activation.description && (
-                          <span className="block text-xs admin-text-muted">
-                            {activation.description}
-                          </span>
-                        )}
-                        {activation.subtext && (
-                          <span className="block text-[11px] text-slate-400">
-                            {activation.subtext}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-center align-top">
-                      <span
-                        className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-semibold ${
-                          leaveActive
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-slate-300/50 text-slate-600'
-                        }`}
-                      >
-                        {leaveActive ? 'Enabled' : 'Disabled'}
+
+                    {/* Website visibility */}
+                    <td className="px-5 py-3.5">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${visible ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                        {visible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                        {visible ? 'Live' : 'Hidden'}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-center align-top">
-                      <span
-                        className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-semibold ${
-                          isCurrentlyVisible
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-slate-300/50 text-slate-600'
-                        }`}
-                      >
-                        {isCurrentlyVisible ? 'Visible' : 'Hidden'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 text-right align-top">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                          onClick={() => handleSendInvite(person)}
-                          disabled={inviteLoadingId === person._id || inviteDisabled}
-                          title={
-                            inviteDisabled
-                              ? 'Account already activated'
-                              : 'Send activation email'
-                          }
-                        >
-                          <Send className="h-3.5 w-3.5" />
-                          {inviteLoadingId === person._id ? 'Sending…' : inviteButtonLabel}
-                        </button>
-                        <button
-                          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
-                          onClick={() => handleEdit(person)}
-                          title="Edit"
-                        >
-                          <Edit className="h-3.5 w-3.5" />
-                          Edit
-                        </button>
-                        <button
-                          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                          onClick={() => handleToggleVisibility(person)}
-                          title={isCurrentlyVisible ? 'Hide from website' : 'Show on website'}
-                        >
-                          {isCurrentlyVisible ? 'Hide' : 'Show'}
-                        </button>
-                        <button
-                          className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-red-600 transition hover:border-red-200 hover:bg-red-50"
-                          onClick={() => handleDelete(person._id)}
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+
+                    {/* Actions */}
+                    <td className="px-5 py-3.5 text-right">
+                      <ActionsMenu
+                        person={person}
+                        onEdit={() => { setEditingStaff(person); setShowModal(true); }}
+                        onDelete={() => handleDelete(person._id)}
+                        onToggleVisibility={() => handleToggleVisibility(person)}
+                        onSendInvite={() => handleSendInvite(person)}
+                        inviteLoading={inviteLoadingId === person._id}
+                      />
                     </td>
                   </tr>
                 );
@@ -611,83 +403,64 @@ export default function StaffManagementPage() {
             </tbody>
           </table>
         </div>
-      </div>
 
-      {filtered.length > 0 && totalPages > 1 && (
-        <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="text-xs uppercase tracking-wide admin-text-muted">
-            Page {currentPage} of {totalPages}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Previous
-            </button>
+        {/* Pagination footer */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
+            <p className="text-xs text-slate-400">
+              {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, filtered.length)} of {filtered.length}
+            </p>
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }).map((_, idx) => {
-                const page = idx + 1;
-                const isActive = page === currentPage;
-                const showLabel =
-                  page === 1 ||
-                  page === totalPages ||
-                  Math.abs(page - currentPage) <= 1 ||
-                  (currentPage === 1 && page <= 3) ||
-                  (currentPage === totalPages && page >= totalPages - 2);
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={safePage === 1}
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:text-slate-700 disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
 
-                if (!showLabel) {
-                  if (
-                    (page === currentPage - 2 && currentPage > 3) ||
-                    (page === currentPage + 2 && currentPage < totalPages - 2)
-                  ) {
-                    return (
-                      <span key={page} className="px-2 text-slate-400">
-                        …
-                      </span>
-                    );
+              {(() => {
+                const pages = [];
+                for (let n = 1; n <= totalPages; n++) {
+                  if (n === 1 || n === totalPages || Math.abs(n - safePage) <= 1) {
+                    pages.push(n);
                   }
-                  return null;
                 }
+                const items = [];
+                for (let i = 0; i < pages.length; i++) {
+                  if (i > 0 && pages[i] - pages[i - 1] > 1) {
+                    items.push(<span key={`gap-${i}`} className="w-7 text-center text-xs text-slate-400">…</span>);
+                  }
+                  const n = pages[i];
+                  items.push(
+                    <button
+                      key={n}
+                      onClick={() => setCurrentPage(n)}
+                      className={`h-7 w-7 rounded-md text-xs font-medium transition ${n === safePage ? 'bg-slate-900 text-white' : 'border border-slate-200 text-slate-600 hover:border-slate-300'}`}
+                    >
+                      {n}
+                    </button>
+                  );
+                }
+                return items;
+              })()}
 
-                return (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`h-9 w-9 rounded-full text-sm font-medium transition ${
-                      isActive
-                        ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-200'
-                        : 'border border-slate-200 text-slate-600 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                disabled={safePage === totalPages}
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:text-slate-700 disabled:opacity-40"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Next
-            </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {showModal && (
         <AddUserModal
-          onClose={() => {
-            setShowModal(false);
-            setEditingStaff(null);
-          }}
-          onSaved={() => {
-            setShowModal(false);
-            setEditingStaff(null);
-            fetchData();
-          }}
+          onClose={() => { setShowModal(false); setEditingStaff(null); }}
+          onSaved={() => { setShowModal(false); setEditingStaff(null); fetchData(); }}
           departments={departments}
           teams={teams}
           practiceAreas={practiceAreas}
@@ -698,4 +471,3 @@ export default function StaffManagementPage() {
     </div>
   );
 }
-

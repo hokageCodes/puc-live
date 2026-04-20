@@ -159,33 +159,26 @@ export const api = {
   delete: (endpoint, options = {}) => apiRequest(endpoint, { ...options, method: 'DELETE' }),
 };
 
-// Admin-specific API calls
-const getAdminHeaders = () => {
-  if (typeof window === 'undefined') return {};
-  const token = window.localStorage.getItem('admin_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 export const adminApi = {
   // Get current admin user
-  getMe: () => api.get('/api/admin/me', { headers: getAdminHeaders() }),
+  getMe: () => api.get('/api/admin/me'),
   
   // Logout
-  logout: () => api.post('/api/auth/logout', { scope: 'cms' }, { headers: getAdminHeaders() }),
+  logout: () => api.post('/api/auth/logout', { scope: 'cms' }),
   
   // Get dashboard stats
-  getStats: () => api.get('/api/admin/stats', { headers: getAdminHeaders() }),
+  getStats: () => api.get('/api/admin/stats'),
   
   // Get users
   getUsers: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return api.get(`/api/admin/users${queryString ? `?${queryString}` : ''}`, { headers: getAdminHeaders() });
+    return api.get(`/api/admin/users${queryString ? `?${queryString}` : ''}`);
   },
   
   // Get reports
   getReports: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return api.get(`/api/admin/reports${queryString ? `?${queryString}` : ''}`, { headers: getAdminHeaders() });
+    return api.get(`/api/admin/reports${queryString ? `?${queryString}` : ''}`);
   },
 };
 
@@ -218,44 +211,44 @@ export function useApiError() {
 
 // Staff-specific API calls (requires CMS auth)
 export const staffApi = {
-  getAll: () => api.get('/api/staff', { headers: getAdminHeaders() }),
-  getById: (id) => api.get(`/api/staff/${id}`, { headers: getAdminHeaders() }),
-  create: (data) => api.post('/api/staff', data, { headers: getAdminHeaders() }),
-  update: (id, data) => api.put(`/api/staff/${id}`, data, { headers: getAdminHeaders() }),
-  delete: (id) => api.delete(`/api/staff/${id}`, { headers: getAdminHeaders() }),
-};
-
-// Leave-specific API calls (requires leave auth token)
-const getLeaveHeaders = (token) => {
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  getAll: () => api.get('/api/staff'),
+  getById: (id) => api.get(`/api/staff/${id}`),
+  create: (data) => api.post('/api/staff', data),
+  update: (id, data) => api.put(`/api/staff/${id}`, data),
+  delete: (id) => api.delete(`/api/staff/${id}`),
 };
 
 export const leaveApi = {
   // Get user's leave balances
-  getMyBalances: (token) => api.get('/api/leave/balances', { headers: getLeaveHeaders(token) }),
+  getMyBalances: () => api.get('/api/leave/balances'),
   
   // Get user's own leave requests
-  getMyRequests: (token) => api.get('/api/leave/requests', { headers: getLeaveHeaders(token) }),
+  getMyRequests: () => api.get('/api/leave/requests'),
   
   // Get pending approvals (role-based)
-  getPendingApprovals: (token) => api.get('/api/leave/approvals', { headers: getLeaveHeaders(token) }),
+  getPendingApprovals: () => api.get('/api/leave/approvals'),
   
   // Create new leave request
-  createRequest: (token, data) => api.post('/api/leave/requests', data, { headers: getLeaveHeaders(token) }),
+  createRequest: (data) => api.post('/api/leave/requests', data),
   
   // Approve leave request
-  approveRequest: (token, requestId, comment) => 
-    api.post(`/api/leave/requests/${requestId}/approve`, { comment }, { headers: getLeaveHeaders(token) }),
+  approveRequest: (requestId, comment) => 
+    api.post(`/api/leave/requests/${requestId}/approve`, { comment }),
   
   // Reject leave request
-  rejectRequest: (token, requestId, comment) => 
-    api.post(`/api/leave/requests/${requestId}/reject`, { comment }, { headers: getLeaveHeaders(token) }),
+  rejectRequest: (requestId, comment) => 
+    api.post(`/api/leave/requests/${requestId}/reject`, { comment }),
   
   // Get leave types
-  getLeaveTypes: (token) => api.get('/api/leave/types', { headers: getLeaveHeaders(token) }),
+  getLeaveTypes: () => api.get('/api/leave/types'),
   
   // Get calendar data (user's own + team if approver)
-  getCalendarData: (token) => api.get('/api/leave/calendar', { headers: getLeaveHeaders(token) }),
+  getCalendarData: (params = {}) => {
+    const queryString = Object.keys(params).length
+      ? '?' + new URLSearchParams(params).toString()
+      : '';
+    return api.get(`/api/leave/calendar${queryString}`);
+  },
   // Get approvals history (actions this user performed)
-  getMyApprovals: (token) => api.get('/api/leave/approvals/history', { headers: getLeaveHeaders(token) }),
+  getMyApprovals: () => api.get('/api/leave/approvals/history'),
 };

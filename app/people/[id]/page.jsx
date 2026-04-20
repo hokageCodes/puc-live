@@ -3,8 +3,8 @@ import { getImageUrl } from '../../../lib/getImageUrl';
 
 // Fetch individual staff data
 async function getStaffDetail(id) {
-  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5000';
-  const res = await fetch(`${baseUrl}/api/staff/${id}`, {
+  const baseUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '');
+  const res = await fetch(`${baseUrl}/api/public/staff/${id}`, {
     cache: 'no-store',
   });
   if (!res.ok) {

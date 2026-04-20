@@ -47,25 +47,31 @@ function getCurrentApprover(status) {
 }
 
 export default function LeaveRequestsClient() {
-  const { token, status } = useLeaveAuth();
+  const { status } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expanded, setExpanded] = useState({});
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'list' (mobile)
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const isLoading = status === 'loading' || status === 'authenticating' || loading;
 
   useEffect(() => {
-    if (!isAuthenticated || !token) return;
+    if (!isAuthenticated) return;
 
     const fetchRequests = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await leaveApi.getMyRequests(token);
+        // Fetch with pagination
+        const res = await fetch(`/api/leave/requests?page=${page}`);
+        const data = await res.json();
         setRequests(data || []);
+        const totalPagesHeader = res.headers.get('X-Total-Pages');
+        setTotalPages(totalPagesHeader ? parseInt(totalPagesHeader, 10) : 1);
       } catch (err) {
         console.error('Error fetching requests:', err);
         setError('Failed to load your leave requests. Please refresh the page.');
@@ -75,7 +81,7 @@ export default function LeaveRequestsClient() {
     };
 
     fetchRequests();
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, page]);
 
   if (isLoading || !isAuthenticated) {
     return (
@@ -265,6 +271,26 @@ export default function LeaveRequestsClient() {
             )}
           </div>
         </div>
+        {/* Pagination controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-6">
+            <button
+              className="px-3 py-1 mx-1 rounded border text-sm disabled:opacity-50"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </button>
+            <span className="px-2 py-1 text-sm">Page {page} of {totalPages}</span>
+            <button
+              className="px-3 py-1 mx-1 rounded border text-sm disabled:opacity-50"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

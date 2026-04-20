@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useAdminAuth } from '../../../components/admin/AdminAuthContext';
 import Link from 'next/link';
 import {
   Users,
@@ -20,6 +21,7 @@ const smallText = 'text-xs font-semibold uppercase tracking-wide admin-text-mute
 const metricValue = 'text-3xl font-semibold admin-text';
 
 export default function AdminDashboard() {
+  const { getAuthHeaders } = useAdminAuth();
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [stats, setStats] = useState({
@@ -50,9 +52,8 @@ export default function AdminDashboard() {
     try {
       setIsRefreshing(showToast);
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-      const token = typeof window !== 'undefined' ? window.localStorage.getItem('admin_token') : null;
-      const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
+      const authHeaders = getAuthHeaders();
       const [staffRes, blogsRes] = await Promise.all([
         fetch(`${backendUrl}/api/staff`, {
           credentials: 'include',

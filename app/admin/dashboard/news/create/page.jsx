@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAdminAuth } from '../../../../../components/admin/AdminAuthContext';
 import dynamic from 'next/dynamic';
 import { toast } from 'react-toastify';
 import { ArrowLeft, Sparkles, Image as ImageIcon, Link2, RefreshCcw } from 'lucide-react';
@@ -43,6 +44,7 @@ const generateSlug = (text) =>
 
 export default function CreateBlogPage() {
   const router = useRouter();
+  const { getAuthHeaders } = useAdminAuth();
   const [formData, setFormData] = useState(defaultForm);
   const [coverFile, setCoverFile] = useState(null);
   const [slugTouched, setSlugTouched] = useState(false);
@@ -112,17 +114,14 @@ export default function CreateBlogPage() {
 
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
-      const token = localStorage.getItem('admin_token');
+      const authHeaders = getAuthHeaders();
 
-      // Create abort controller for timeout - increased to 90 seconds for image uploads
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
 
       let res;
       try {
         if (coverFile) {
-          console.log('Uploading with file:', coverFile.name, `(${(coverFile.size / 1024 / 1024).toFixed(2)} MB)`);
-          
           const data = new FormData();
           data.append('title', formData.title);
           data.append('slug', formData.slug);
@@ -138,26 +137,16 @@ export default function CreateBlogPage() {
           res = await fetch(`${backendUrl}/api/blogs`, {
             method: 'POST',
             credentials: 'include',
-            headers: {
-              Authorization: token ? `Bearer ${token}` : undefined,
-            },
+            headers: authHeaders,
             body: data,
             signal: controller.signal,
           });
         } else {
-          console.log('Creating post with URL:', formData.coverImage);
-          
           res = await fetch(`${backendUrl}/api/blogs`, {
             method: 'POST',
             credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: token ? `Bearer ${token}` : undefined,
-            },
-            body: JSON.stringify({
-              ...formData,
-              tags: tagList,
-            }),
+            headers: { 'Content-Type': 'application/json', ...authHeaders },
+            body: JSON.stringify({ ...formData, tags: tagList }),
             signal: controller.signal,
           });
         }

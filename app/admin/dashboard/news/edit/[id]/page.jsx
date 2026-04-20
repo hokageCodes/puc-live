@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useAdminAuth } from '../../../../../../components/admin/AdminAuthContext';
 import dynamic from 'next/dynamic';
 import { toast } from 'react-toastify';
 import { ArrowLeft, Sparkles, Image as ImageIcon, Link2, RefreshCcw } from 'lucide-react';
@@ -30,6 +31,7 @@ const generateSlug = (text) =>
 export default function EditBlogPage() {
   const router = useRouter();
   const params = useParams();
+  const { getAuthHeaders } = useAdminAuth();
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -60,13 +62,10 @@ export default function EditBlogPage() {
     const fetchBlog = async () => {
       try {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
-        const token = localStorage.getItem('admin_token');
 
         const res = await fetch(`${backendUrl}/api/blogs/id/${params.id}`, {
           credentials: 'include',
-          headers: {
-            Authorization: token ? `Bearer ${token}` : undefined,
-          },
+          headers: getAuthHeaders(),
         });
 
         if (!res.ok) {
@@ -144,7 +143,6 @@ export default function EditBlogPage() {
 
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
-      const token = localStorage.getItem('admin_token');
 
       // Create abort controller for timeout - increased to 90 seconds
       const controller = new AbortController();
@@ -152,19 +150,11 @@ export default function EditBlogPage() {
 
       let res;
       try {
-        console.log('Updating post:', params.id);
-        
         res = await fetch(`${backendUrl}/api/blogs/${params.id}`, {
           method: 'PUT',
           credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token ? `Bearer ${token}` : undefined,
-          },
-          body: JSON.stringify({
-            ...formData,
-            tags: tagList,
-          }),
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ ...formData, tags: tagList }),
           signal: controller.signal,
         });
       } finally {

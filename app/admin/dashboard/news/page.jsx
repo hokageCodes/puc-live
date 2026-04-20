@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
+import { useAdminAuth } from '../../../../components/admin/AdminAuthContext';
 import {
   Plus,
   RefreshCcw,
@@ -47,6 +48,7 @@ const formatDate = (dateString) => {
 
 export default function BlogManagementPage() {
   const router = useRouter();
+  const { getAuthHeaders } = useAdminAuth();
   const [blogs, setBlogs] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -95,13 +97,10 @@ export default function BlogManagementPage() {
   const fetchBlogs = async (showToast = false) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('admin_token');
       
       const res = await fetch(`${backendUrl}/api/blogs/admin/all`, {
         credentials: 'include',
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: getAuthHeaders(),
       });
 
       if (!res.ok) {
@@ -134,14 +133,10 @@ export default function BlogManagementPage() {
     if (!confirmDelete) return;
 
     try {
-      const token = localStorage.getItem('admin_token');
-      
       const res = await fetch(`${backendUrl}/api/blogs/${id}`, {
         method: 'DELETE',
         credentials: 'include',
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: getAuthHeaders(),
       });
 
       if (!res.ok) {

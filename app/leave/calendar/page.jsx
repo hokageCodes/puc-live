@@ -19,7 +19,7 @@ function formatDateRange(startDate, endDate) {
 }
 
 export default function LeaveCalendarPage() {
-  const { user, token, status } = useLeaveAuth();
+  const { user, status } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,13 +34,13 @@ export default function LeaveCalendarPage() {
   );
 
   useEffect(() => {
-    if (!isAuthenticated || !token) return;
+    if (!isAuthenticated) return;
 
     const fetchCalendar = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await leaveApi.getCalendarData(token);
+        const data = await leaveApi.getCalendarData();
         setEvents(data.events || []);
       } catch (err) {
         console.error('Error fetching calendar data:', err);
@@ -51,7 +51,7 @@ export default function LeaveCalendarPage() {
     };
 
     fetchCalendar();
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated]);
 
   // Filter events for current month
   const currentMonthEvents = useMemo(() => {

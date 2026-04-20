@@ -5,7 +5,7 @@ import { useLeaveAuth } from '../../../../components/leave/LeaveAuthContext';
 import { leaveApi } from '../../../../utils/api';
 
 export default function MyApprovalsPage() {
-  const { token, user } = useLeaveAuth();
+  const { user } = useLeaveAuth();
   const [actions, setActions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,12 +17,11 @@ export default function MyApprovalsPage() {
 
   useEffect(() => {
     const fetch = async () => {
-      if (!token) return;
       try {
         setLoading(true);
         const [actionsData, requestsData] = await Promise.all([
-          leaveApi.getMyApprovals(token),
-          leaveApi.getMyRequests(token),
+          leaveApi.getMyApprovals(),
+          leaveApi.getMyRequests(),
         ]);
         setActions(actionsData || []);
         setRequests(requestsData || []);
@@ -34,7 +33,7 @@ export default function MyApprovalsPage() {
       }
     };
     fetch();
-  }, [token]);
+  }, []);
 
   const filteredActions = useMemo(() => {
     return (actions || []).filter((a) => {

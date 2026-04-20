@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
+import { useAdminAuth } from '../AdminAuthContext';
 
 const DIVISIONS = [
   { value: 'legal', label: 'Legal (Website-facing)' },
@@ -78,6 +79,7 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
   };
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+  const { getAuthHeaders } = useAdminAuth();
 
   useEffect(() => {
     if (editingStaff) {
@@ -240,17 +242,13 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
         : `${backendUrl}/api/staff`;
 
       const method = editingStaff ? 'PUT' : 'POST';
-      const token = typeof window !== 'undefined' ? window.localStorage.getItem('admin_token') : null;
 
       const requestOptions = {
         method,
         credentials: 'include',
+        headers: getAuthHeaders(),
         body: formData,
       };
-
-      if (token) {
-        requestOptions.headers = { Authorization: `Bearer ${token}` };
-      }
 
       const res = await fetch(url, requestOptions);
 

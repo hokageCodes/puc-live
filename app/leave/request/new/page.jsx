@@ -60,7 +60,7 @@ const buildReportingChain = (user) => {
 
 export default function LeaveRequestCreatePage() {
   const router = useRouter();
-  const { user, status, token } = useLeaveAuth();
+  const { user, status } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
 
   const [leaveType, setLeaveType] = useState('');
@@ -85,13 +85,12 @@ export default function LeaveRequestCreatePage() {
     return true;
   }, [leaveType, startDate, endDate, reason]);
 
-  // Fetch leave types from backend when token becomes available
+  // Fetch leave types from backend using cookie-based auth
   useEffect(() => {
     let mounted = true;
-    if (!token) return;
     (async () => {
       try {
-        const types = await leaveApi.getLeaveTypes(token);
+        const types = await leaveApi.getLeaveTypes();
         if (!mounted) return;
         setServerLeaveTypes(Array.isArray(types) ? types : []);
       } catch (err) {
@@ -102,7 +101,7 @@ export default function LeaveRequestCreatePage() {
     return () => {
       mounted = false;
     };
-  }, [token]);
+  }, []);
 
   const handleSubmit = useCallback(
     async (event) => {
@@ -130,18 +129,9 @@ export default function LeaveRequestCreatePage() {
           throw new Error('Please select a leave type');
         }
 
-        // Call backend to create request when token is available
-        if (token) {
-          const created = await leaveApi.createRequest(token, payload);
-          setSubmitSuccess(true);
-          // Delay briefly so user sees success UI then navigate
-          setTimeout(() => router.push('/leave/requests'), 800);
-        } else {
-          // No token - fall back to mock behavior
-          await new Promise((resolve) => setTimeout(resolve, 1200));
-          setSubmitSuccess(true);
-          setTimeout(() => router.push('/leave/dashboard'), 1200);
-        }
+        await leaveApi.createRequest(payload);
+        setSubmitSuccess(true);
+        setTimeout(() => router.push('/leave/requests'), 800);
       } catch (error) {
         console.error('Submit failed:', error);
         setSubmitError(error?.message || 'Unable to save the request right now. Please try again shortly.');
@@ -149,7 +139,7 @@ export default function LeaveRequestCreatePage() {
         setIsSubmitting(false);
       }
     },
-    [coverage, endDate, handoverNotes, isSubmitting, isValid, leaveType, reason, router, startDate, serverLeaveTypes, token]
+    [coverage, endDate, handoverNotes, isSubmitting, isValid, leaveType, reason, router, startDate, serverLeaveTypes]
   );
 
   if (isLoading || !isAuthenticated) {

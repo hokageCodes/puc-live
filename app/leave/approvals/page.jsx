@@ -46,7 +46,7 @@ function getTimeAgo(date) {
 }
 
 export default function LeaveApprovalsPage() {
-  const { user, token, status } = useLeaveAuth();
+  const { user, status } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
   const [approvals, setApprovals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,14 +59,14 @@ export default function LeaveApprovalsPage() {
   // Debug: surface current auth/approver state in console to help diagnose missing CTAs
   useEffect(() => {
     try {
-      console.debug('[Approvals] auth state:', { user, token: !!token, approver });
+      console.debug('[Approvals] auth state:', { user, approver });
     } catch (e) {
       // ignore
     }
-  }, [user, token, approver]);
+  }, [user, approver]);
 
   const fetchApprovals = async () => {
-    if (!isAuthenticated || !token || !approver) {
+    if (!isAuthenticated || !approver) {
       setLoading(false);
       return;
     }
@@ -74,7 +74,7 @@ export default function LeaveApprovalsPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await leaveApi.getPendingApprovals(token);
+      const data = await leaveApi.getPendingApprovals();
       setApprovals(data || []);
     } catch (err) {
       console.error('Error fetching approvals:', err);
@@ -87,7 +87,7 @@ export default function LeaveApprovalsPage() {
   useEffect(() => {
     fetchApprovals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, token, approver]);
+  }, [isAuthenticated, approver]);
 
   if (isLoading || !isAuthenticated) {
     return (
@@ -242,10 +242,6 @@ export default function LeaveApprovalsPage() {
                               onClick={async () => {
                                   if (actionLoading[request._id]) return; // guard against double clicks
                                   console.log('Approve clicked for', request._id);
-                                  if (!token) {
-                                    window.alert('Unable to approve: not authenticated');
-                                    return;
-                                  }
                                   // Set loading state immediately and mark as approve
                                   setActionLoading((s) => ({ ...s, [request._id]: 'approve' }));
                                   const comment = window.prompt('Optional note for approval (press OK to confirm)');
@@ -255,7 +251,7 @@ export default function LeaveApprovalsPage() {
                                     return; // cancelled
                                   }
                                   try {
-                                    await leaveApi.approveRequest(token, request._id, comment || undefined);
+                                    await leaveApi.approveRequest(request._id, comment || undefined);
                                     if (typeof toast?.success === 'function') toast.success('Request approved'); else window.alert('Request approved');
                                     // refresh list
                                     await fetchApprovals();
@@ -287,10 +283,6 @@ export default function LeaveApprovalsPage() {
                               onClick={async () => {
                                 if (actionLoading[request._id]) return; // guard
                                 console.log('Reject clicked for', request._id);
-                                if (!token) {
-                                  window.alert('Unable to reject: not authenticated');
-                                  return;
-                                }
                                 // Set loading state immediately and mark as reject
                                 setActionLoading((s) => ({ ...s, [request._id]: 'reject' }));
                                 const reason = window.prompt('Please provide a reason for rejection');
@@ -300,7 +292,7 @@ export default function LeaveApprovalsPage() {
                                   return; // require reason
                                 }
                                 try {
-                                  await leaveApi.rejectRequest(token, request._id, reason);
+                                  await leaveApi.rejectRequest(request._id, reason);
                                   if (typeof toast?.info === 'function') toast.info('Request rejected'); else window.alert('Request rejected');
                                   await fetchApprovals();
                                 } catch (err) {
