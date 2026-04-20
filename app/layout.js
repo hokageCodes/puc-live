@@ -109,7 +109,7 @@ export default function RootLayout({ children }) {
 
         <link
           rel="preload"
-          href="/assets/fonts/Optima.woff2"
+          href="/assets/fonts/optima.woff2"
           as="font"
           type="font/otf"
           crossOrigin="anonymous"
