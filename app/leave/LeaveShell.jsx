@@ -14,6 +14,26 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useLeaveAuth } from '../../components/leave/LeaveAuthContext';
+import { ShadcnSidebarUI } from '../../components/leave/ShadcnSidebarUI';
+
+const {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  Button,
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetClose,
+  Separator,
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} = ShadcnSidebarUI;
 
 const AUTH_FREE_ROUTES = ['/leave/login', '/leave/activate', '/leave/forgot', '/leave/reset'];
 
@@ -102,112 +122,166 @@ export default function LeaveShell({ children }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 flex flex-col border-r border-slate-200 bg-white shadow-lg transition-transform duration-200 lg:static lg:z-30 lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
-      >
-        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-600">
-              Paul Usoro &amp; Co.
-            </p>
-            <p className="text-sm font-semibold text-slate-900">Leave Portal</p>
-          </div>
-          <button
-            type="button"
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Close navigation"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
 
-        <nav className="flex flex-col gap-1 px-4 py-6 flex-1 overflow-y-auto">
-          {filteredNav.map((item) => {
-            const Icon = item.icon;
-            const active = (() => {
-              if (!pathname) return false;
-              if (pathname === item.href) return true;
-              if (!pathname.startsWith(item.href + '/')) return false;
-              const longerMatch = filteredNav.some((other) => other.href !== item.href && pathname.startsWith(other.href));
-              return !longerMatch;
-            })();
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={handleNavigate}
-                className={`group flex flex-col rounded-xl px-3 py-3 px-2 transition ${
-                  active
-                    ? 'bg-emerald-50/80 text-emerald-700'
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg border ${
-                      active
-                        ? 'border-emerald-200 bg-emerald-100 text-emerald-700'
-                        : 'border-slate-200 bg-white text-slate-500 group-hover:border-slate-300'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold">
-                      {item.label}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </nav>
-        {/* Profile and sign out at the bottom */}
-        <div className="border-t border-slate-200 px-5 py-4 mt-auto">
-          <div className="mb-2">
-            <p className="text-sm font-medium text-slate-800">
-              {user?.firstName} {user?.lastName}
-            </p>
-            <p className="text-xs text-slate-500">{formatRoles(user?.roles)}</p>
-          </div>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 w-full justify-center"
+      {/* Mobile sidebar (Sheet) */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 left-4 z-50 lg:hidden"
+            aria-label="Open navigation"
           >
-            <LogOut className="h-3.5 w-3.5" />
-            Sign out
-          </button>
-        </div>
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="p-0 w-72 flex flex-col h-full lg:hidden">
+          {/* Sidebar content for mobile */}
+          {renderSidebarContent()}
+        </SheetContent>
+      </Sheet>
+
+      {/* Desktop sidebar (always visible) */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-30 w-72 flex-col border-r border-slate-200 bg-white shadow-lg">
+        {renderSidebarContent()}
       </aside>
 
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-slate-900/30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {/* Main content area (with left margin on desktop) */}
+      <div className="flex flex-1 flex-col lg:ml-72">
 
-      <div className="flex flex-1 flex-col">
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-6xl px-6 py-8">
-            {isLoading ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-6 py-4 text-sm text-slate-600">
-                Loading your workspace…
-              </div>
-            ) : (
-              children
-            )}
+
+
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-6xl px-6 py-8">
+          {isLoading ? (
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-6 py-4 text-sm text-slate-600">
+              Loading your workspace…
+            </div>
+          ) : (
+            children
+          )}
+        </div>
+      </main>
+    </div>
+    // Sidebar content as a function for reuse
+    function renderSidebarContent() {
+      const pathname = usePathname();
+      const router = useRouter();
+      const { user, signOut, status } = useLeaveAuth();
+      const skipShell = AUTH_FREE_ROUTES.some((route) => pathname?.startsWith(route));
+      const filteredNav = useMemo(() => {
+        if (skipShell) return [];
+        if (!Array.isArray(user?.roles) || user.roles.length === 0) {
+          return NAV_ITEMS.filter((item) => !item.roles);
+        }
+        return NAV_ITEMS.filter(
+          (item) => !item.roles || item.roles.some((role) => user.roles.includes(role))
+        );
+      }, [skipShell, user?.roles]);
+      const handleNavigate = () => setSidebarOpen(false);
+      const handleSignOut = async () => {
+        try {
+          await signOut();
+          router.push('/leave/login');
+        } catch (error) {
+          console.error('Leave sign out failed:', error);
+        }
+      };
+      return (
+        <>
+          <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-600">
+                Paul Usoro &amp; Co.
+              </p>
+              <p className="text-sm font-semibold text-slate-900">Leave Portal</p>
+            </div>
           </div>
-        </main>
-      </div>
+          <nav className="flex flex-col gap-1 px-4 py-6 flex-1 overflow-y-auto">
+            <NavigationMenu orientation="vertical" className="w-full">
+              <NavigationMenuList className="flex flex-col gap-1 w-full">
+                {filteredNav.map((item) => {
+                  const Icon = item.icon;
+                  const active = (() => {
+                    if (!pathname) return false;
+                    if (pathname === item.href) return true;
+                    if (!pathname.startsWith(item.href + '/')) return false;
+                    const longerMatch = filteredNav.some((other) => other.href !== item.href && pathname.startsWith(other.href));
+                    return !longerMatch;
+                  })();
+                  return (
+                    <NavigationMenuItem key={item.href} className="w-full">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Link
+                              href={item.href}
+                              onClick={handleNavigate}
+                              className={`group flex flex-col rounded-xl px-3 py-3 px-2 transition w-full ${
+                                active
+                                  ? 'bg-emerald-50/80 text-emerald-700'
+                                  : 'text-slate-600 hover:bg-slate-100'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <span
+                                  className={`flex h-8 w-8 items-center justify-center rounded-lg border ${
+                                    active
+                                      ? 'border-emerald-200 bg-emerald-100 text-emerald-700'
+                                      : 'border-slate-200 bg-white text-slate-500 group-hover:border-slate-300'
+                                  }`}
+                                >
+                                  <Icon className="h-4 w-4" />
+                                </span>
+                                <div>
+                                  <p className="text-sm font-semibold">
+                                    {item.label}
+                                  </p>
+                                  <p className="text-xs text-slate-500">
+                                    {item.description}
+                                  </p>
+                                </div>
+                              </div>
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            {item.label}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </NavigationMenuItem>
+                  );
+                })}
+              </NavigationMenuList>
+            </NavigationMenu>
+          </nav>
+          <Separator className="my-2" />
+          <div className="flex flex-col items-center gap-2 px-5 py-4 mt-auto">
+            <Avatar size="lg">
+              <AvatarImage src={user?.avatarUrl} alt={user?.firstName} />
+              <AvatarFallback>
+                {user?.firstName?.[0]}
+                {user?.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div className="text-center">
+              <p className="text-sm font-medium text-slate-800">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-xs text-slate-500">{formatRoles(user?.roles)}</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSignOut}
+              className="w-full justify-center mt-2"
+            >
+              <LogOut className="h-4 w-4 mr-2" /> Sign out
+            </Button>
+          </div>
+        </>
+      );
+    }
     </div>
   );
 }
