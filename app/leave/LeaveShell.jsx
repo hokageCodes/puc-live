@@ -104,7 +104,7 @@ export default function LeaveShell({ children }) {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 transform border-r border-slate-200 bg-white shadow-lg transition-transform duration-200 lg:static lg:z-30 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-72 flex flex-col border-r border-slate-200 bg-white shadow-lg transition-transform duration-200 lg:static lg:z-30 lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -125,26 +125,22 @@ export default function LeaveShell({ children }) {
           </button>
         </div>
 
-        <nav className="flex flex-col gap-1 px-4 py-6">
+        <nav className="flex flex-col gap-1 px-4 py-6 flex-1 overflow-y-auto">
           {filteredNav.map((item) => {
             const Icon = item.icon;
-                // Active if the pathname exactly matches the href, OR
-                // if the pathname starts with the href but there is no
-                // other visible nav item with a longer href that also matches
-                const active = (() => {
-                  if (!pathname) return false;
-                  if (pathname === item.href) return true;
-                  if (!pathname.startsWith(item.href + '/')) return false;
-                  // If any other nav item has a longer href that matches, prefer that one
-                  const longerMatch = filteredNav.some((other) => other.href !== item.href && pathname.startsWith(other.href));
-                  return !longerMatch;
-                })();
+            const active = (() => {
+              if (!pathname) return false;
+              if (pathname === item.href) return true;
+              if (!pathname.startsWith(item.href + '/')) return false;
+              const longerMatch = filteredNav.some((other) => other.href !== item.href && pathname.startsWith(other.href));
+              return !longerMatch;
+            })();
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={handleNavigate}
-                className={`group flex flex-col rounded-xl px-3 py-3 transition ${
+                className={`group flex flex-col rounded-xl px-3 py-3 px-2 transition ${
                   active
                     ? 'bg-emerald-50/80 text-emerald-700'
                     : 'text-slate-600 hover:bg-slate-100'
@@ -173,6 +169,23 @@ export default function LeaveShell({ children }) {
             );
           })}
         </nav>
+        {/* Profile and sign out at the bottom */}
+        <div className="border-t border-slate-200 px-5 py-4 mt-auto">
+          <div className="mb-2">
+            <p className="text-sm font-medium text-slate-800">
+              {user?.firstName} {user?.lastName}
+            </p>
+            <p className="text-xs text-slate-500">{formatRoles(user?.roles)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 w-full justify-center"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Sign out
+          </button>
+        </div>
       </aside>
 
       {sidebarOpen && (
@@ -183,54 +196,6 @@ export default function LeaveShell({ children }) {
       )}
 
       <div className="flex flex-1 flex-col">
-        <header className="border-b border-slate-200 bg-white">
-                <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:border-emerald-200 hover:text-emerald-600 lg:hidden"
-                onClick={() => setSidebarOpen(true)}
-                aria-label="Open navigation"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-              <div>
-                <p className="text-xs uppercase tracking-[0.28em] text-slate-400">
-                  Leave workspace
-                </p>
-                <h1 className="text-lg font-semibold text-slate-900">
-                    {(() => {
-                      if (!pathname) return 'Overview';
-                      // Prefer the longest matching visible nav href to determine the current section
-                      const match = filteredNav
-                        .slice()
-                        .sort((a, b) => b.href.length - a.href.length)
-                        .find((i) => pathname.startsWith(i.href));
-                      return match?.label || 'Overview';
-                    })()}
-                  </h1>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="hidden text-right md:block">
-                <p className="text-sm font-medium text-slate-800">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p className="text-xs text-slate-500">{formatRoles(user?.roles)}</p>
-              </div>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                Sign out
-              </button>
-            </div>
-          </div>
-        </header>
-
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-6xl px-6 py-8">
             {isLoading ? (
