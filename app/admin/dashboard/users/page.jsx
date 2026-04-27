@@ -25,7 +25,7 @@ export default function AdminUsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
   const { getAuthHeaders } = useAdminAuth();
 
   const fetchData = async () => {

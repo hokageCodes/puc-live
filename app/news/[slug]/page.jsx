@@ -30,7 +30,7 @@ export default function SingleBlogPage() {
   const [likeLoading, setLikeLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
 
   const fetchBlog = useCallback(async () => {
     if (!params?.slug) return;

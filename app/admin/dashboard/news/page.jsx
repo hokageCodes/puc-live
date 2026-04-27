@@ -57,7 +57,7 @@ export default function BlogManagementPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [featuredOnly, setFeaturedOnly] = useState(false);
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
 
   useEffect(() => {
     fetchBlogs();

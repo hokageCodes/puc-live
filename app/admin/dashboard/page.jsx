@@ -51,7 +51,7 @@ export default function AdminDashboard() {
   const loadStats = async (showToast = false) => {
     try {
       setIsRefreshing(showToast);
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
 
       const authHeaders = getAuthHeaders();
       const [staffRes, blogsRes] = await Promise.all([

@@ -78,7 +78,7 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
     );
   };
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
   const { getAuthHeaders } = useAdminAuth();
 
   useEffect(() => {

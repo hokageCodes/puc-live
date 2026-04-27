@@ -8,7 +8,7 @@ const LeaveAuthContext = createContext(undefined);
 const STORAGE_USER_KEY = 'leave_user';
 const REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
-const getBackendUrl = () => process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+const getBackendUrl = () => process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
 
 const safeParse = (value) => {
   try {

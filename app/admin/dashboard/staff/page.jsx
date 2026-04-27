@@ -129,7 +129,7 @@ export default function StaffManagementPage() {
   const [inviteLoadingId, setInviteLoadingId] = useState(null);
 
   const pageSize = 25;
-  const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
 
   const applyUpdate = (id, changes) => {
     const patch = (list) => list.map((x) => (x._id === id ? { ...x, ...changes } : x));

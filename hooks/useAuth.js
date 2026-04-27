@@ -6,7 +6,7 @@ const ADMIN_DATA_KEY = 'adminData';
 const ADMIN_TOKEN_KEY = 'adminToken';
 const CMS_ROLES = new Set(['admin', 'hr', 'cms']);
 
-const getBackendUrl = () => process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+const getBackendUrl = () => process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
 const hasCmsRole = (roles) => Array.isArray(roles) && roles.some((role) => CMS_ROLES.has(String(role).toLowerCase()));
 
 const getStoredAdmin = () => {
