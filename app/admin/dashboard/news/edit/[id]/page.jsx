@@ -61,7 +61,7 @@ export default function EditBlogPage() {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
 
         const res = await fetch(`${backendUrl}/api/blogs/id/${params.id}`, {
           credentials: 'include',
@@ -142,7 +142,7 @@ export default function EditBlogPage() {
     setError('');
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
 
       // Create abort controller for timeout - increased to 90 seconds
       const controller = new AbortController();

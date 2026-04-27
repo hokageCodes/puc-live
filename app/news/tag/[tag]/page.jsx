@@ -21,7 +21,7 @@ export default function TagPage() {
 
   const fetchBlogsByTag = async () => {
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend-t8pl.onrender.com";
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend.vercel.app";
       const res = await fetch(`${backendUrl}/api/blogs/public`);
       
       if (res.ok) {
@@ -44,7 +44,7 @@ export default function TagPage() {
 
   const fetchAllTags = async () => {
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend-t8pl.onrender.com";
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend.vercel.app";
       const res = await fetch(`${backendUrl}/api/blogs/public`);
       
       if (res.ok) {

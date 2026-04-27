@@ -113,7 +113,7 @@ export default function CreateBlogPage() {
     setError('');
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
       const authHeaders = getAuthHeaders();
 
       const controller = new AbortController();

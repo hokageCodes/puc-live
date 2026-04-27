@@ -45,6 +45,11 @@ const nextConfig = {
         port: '5000',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'puc-backend.vercel.app',
+        pathname: '/uploads/**',
+      },
     ],
   },
   async headers() {

@@ -30,7 +30,7 @@ export default function PeopleTeamPage() {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const base = (process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com').replace(/\/$/, '');
+        const base = (process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app').replace(/\/$/, '');
         const res = await fetch(`${base}/api/public/staff`, { credentials: 'include' });
         if (!res.ok) throw new Error(`Failed to fetch staff: ${res.status}`);
         const data = await res.json();

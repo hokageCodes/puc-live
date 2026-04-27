@@ -10,7 +10,7 @@ import { toast } from 'react-toastify';
 import { useAdminAuth } from '../../admin/AdminAuthContext';
 
 async function uploadImageToBackend(file, getAuthHeaders) {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com';
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
   const formData = new FormData();
   formData.append('image', file);
 

@@ -9,7 +9,7 @@ export class ApiError extends Error {
 }
 
 export const apiConfig = {
-  baseUrl: process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend-t8pl.onrender.com',
+  baseUrl: process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app',
   timeout: 10000, // 10 seconds
   retryAttempts: 3,
   retryDelay: 1000, // 1 second
