@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 function BlogPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const authorFilter = searchParams?.get('author');
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,7 @@ function BlogPageContent() {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://puc-backend-t8pl.onrender.com";
       const res = await fetch(`${backendUrl}/api/blogs/public`);
-      
+
       if (res.ok) {
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data?.data ?? data?.blogs ?? []);
@@ -42,23 +43,18 @@ function BlogPageContent() {
     );
   }
 
-  // Filter by author if specified
   let filteredBlogs = blogs;
   if (authorFilter) {
-    filteredBlogs = blogs.filter(blog => 
+    filteredBlogs = blogs.filter(blog =>
       blog.author && blog.author.toLowerCase().includes(authorFilter.toLowerCase())
     );
   }
 
-  // Separate featured and regular posts
   const featuredPost = filteredBlogs.find(blog => blog.featured);
   const regularPosts = filteredBlogs.filter(blog => !blog.featured);
 
-  // Get all unique tags for sidebar
   const allTags = Array.from(
-    new Set(
-      blogs.flatMap(blog => blog.tags || [])
-    )
+    new Set(blogs.flatMap(blog => blog.tags || []))
   ).sort();
 
   return (
@@ -73,8 +69,8 @@ function BlogPageContent() {
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-4">
               {filteredBlogs.length} {filteredBlogs.length === 1 ? 'article' : 'articles'} found
             </p>
-            <Link 
-              href="/news" 
+            <Link
+              href="/news"
               className="inline-flex items-center text-emerald-600 hover:text-emerald-700 transition-colors"
             >
               ← View all news
@@ -95,51 +91,52 @@ function BlogPageContent() {
       {/* Featured Post */}
       {featuredPost && (
         <div className="max-w-7xl mx-auto px-4 mb-20 overflow-hidden">
-          <Link href={`/news/${featuredPost.slug}`}>
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-slate-100 w-full">
-              <div className="aspect-video w-full overflow-hidden bg-slate-100">
-                <img
-                  src={featuredPost.coverImage}
-                  alt={featuredPost.title}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                />
+          <div
+            className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-slate-100 w-full cursor-pointer"
+            onClick={() => router.push(`/news/${featuredPost.slug}`)}
+          >
+            <div className="aspect-video w-full overflow-hidden bg-slate-100">
+              <img
+                src={featuredPost.coverImage}
+                alt={featuredPost.title}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            <div className="p-6 md:p-10">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-full shadow-md">
+                  Featured
+                </span>
+                <span className="text-sm text-slate-500">
+                  {new Date(featuredPost.publishedAt || featuredPost.createdAt).toLocaleDateString()}
+                </span>
               </div>
-              <div className="p-6 md:p-10">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-full shadow-md">
-                    Featured
-                  </span>
-                  <span className="text-sm text-slate-500">
-                    {new Date(featuredPost.publishedAt || featuredPost.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-emerald-700 mb-4 hover:text-emerald-600 transition-colors">
-                  {featuredPost.title}
-                </h2>
-                {featuredPost.excerpt && (
-                  <p className="text-base md:text-lg text-slate-600 mb-6 leading-relaxed">
-                    {featuredPost.excerpt}
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {featuredPost.tags?.map((tag, index) => (
-                    <Link
-                      key={index}
-                      href={`/news/tag/${encodeURIComponent(tag)}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="px-3 py-1 bg-emerald-50 text-emerald-700 text-sm font-medium rounded-full border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
-                    >
-                      {tag}
-                    </Link>
-                  ))}
-                </div>
-                <div className="flex items-center text-emerald-600 font-semibold group">
-                  Read More 
-                  <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
-                </div>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-emerald-700 mb-4 hover:text-emerald-600 transition-colors">
+                {featuredPost.title}
+              </h2>
+              {featuredPost.excerpt && (
+                <p className="text-base md:text-lg text-slate-600 mb-6 leading-relaxed">
+                  {featuredPost.excerpt}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2 mb-6">
+                {featuredPost.tags?.map((tag, index) => (
+                  <Link
+                    key={index}
+                    href={`/news/tag/${encodeURIComponent(tag)}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="px-3 py-1 bg-emerald-50 text-emerald-700 text-sm font-medium rounded-full border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
+                  >
+                    {tag}
+                  </Link>
+                ))}
+              </div>
+              <div className="flex items-center text-emerald-600 font-semibold group">
+                Read More
+                <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
               </div>
             </div>
-          </Link>
+          </div>
         </div>
       )}
 
@@ -148,55 +145,59 @@ function BlogPageContent() {
         {regularPosts.length > 0 ? (
           <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
             <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-2">
-            {regularPosts.map((post) => (
-              <Link key={post._id} href={`/news/${post.slug}`} className="group block h-full">
-                <article className="h-full bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-300">
-                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
-                    <img
-                      src={post.coverImage}
-                      alt={post.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="flex flex-col flex-1 px-5 py-6 md:px-6 md:py-7">
-                    <span className="text-xs uppercase tracking-wide text-slate-400 mb-3">
-                      {new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </span>
-                    <h2 className="text-lg md:text-xl font-semibold text-emerald-700 leading-snug mb-3 group-hover:text-emerald-600 transition-colors">
-                      {post.title}
-                    </h2>
-                    {post.excerpt && (
-                      <p className="text-sm text-slate-600 leading-relaxed line-clamp-3 mb-4">
-                        {post.excerpt}
-                      </p>
-                    )}
-                    {post.tags?.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-auto mb-4">
-                        {post.tags.slice(0, 3).map((tag, tagIndex) => (
-                          <Link
-                            key={tagIndex}
-                            href={`/news/tag/${encodeURIComponent(tag)}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
-                          >
-                            {tag}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex items-center text-emerald-600 font-semibold mt-auto">
-                      Read More
-                      <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+              {regularPosts.map((post) => (
+                <div
+                  key={post._id}
+                  className="group block h-full cursor-pointer"
+                  onClick={() => router.push(`/news/${post.slug}`)}
+                >
+                  <article className="h-full bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-300">
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+                      <img
+                        src={post.coverImage}
+                        alt={post.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
                     </div>
-                  </div>
-                </article>
-              </Link>
-            ))}
+                    <div className="flex flex-col flex-1 px-5 py-6 md:px-6 md:py-7">
+                      <span className="text-xs uppercase tracking-wide text-slate-400 mb-3">
+                        {new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </span>
+                      <h2 className="text-lg md:text-xl font-semibold text-emerald-700 leading-snug mb-3 group-hover:text-emerald-600 transition-colors">
+                        {post.title}
+                      </h2>
+                      {post.excerpt && (
+                        <p className="text-sm text-slate-600 leading-relaxed line-clamp-3 mb-4">
+                          {post.excerpt}
+                        </p>
+                      )}
+                      {post.tags?.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-auto mb-4">
+                          {post.tags.slice(0, 3).map((tag, tagIndex) => (
+                            <Link
+                              key={tagIndex}
+                              href={`/news/tag/${encodeURIComponent(tag)}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
+                            >
+                              {tag}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex items-center text-emerald-600 font-semibold mt-auto">
+                        Read More
+                        <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              ))}
             </div>
 
             {/* Popular Tags Sidebar */}
@@ -229,13 +230,13 @@ function BlogPageContent() {
       {filteredBlogs.length === 0 && !loading && (
         <div className="max-w-7xl mx-auto px-4 py-20 text-center overflow-hidden">
           <p className="text-xl md:text-2xl text-slate-500 mb-4">
-            {authorFilter 
-              ? `No articles found by ${authorFilter}.` 
+            {authorFilter
+              ? `No articles found by ${authorFilter}.`
               : 'No news posts yet. Check back soon!'}
           </p>
           {authorFilter && (
-            <Link 
-              href="/news" 
+            <Link
+              href="/news"
               className="inline-block mt-4 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
             >
               View all news

@@ -278,8 +278,8 @@ export default function SingleBlogPage() {
         <div className="border-t border-slate-200 my-8"></div>
 
         {/* Content */}
-        <div 
-          className="prose prose-lg md:prose-xl max-w-none prose-emerald prose-headings:text-emerald-700 prose-a:text-emerald-600 prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg prose-img:shadow-lg prose-blockquote:border-emerald-600 prose-blockquote:bg-emerald-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r prose-strong:text-emerald-900"
+        <div
+          className="blog-content prose prose-lg md:prose-xl max-w-none prose-emerald prose-headings:text-emerald-700 prose-a:text-emerald-600 prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg prose-img:shadow-lg prose-blockquote:border-emerald-600 prose-blockquote:bg-emerald-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r prose-strong:text-emerald-900"
           dangerouslySetInnerHTML={{ __html: blog.content }}
         />
       </div>
