@@ -9,6 +9,7 @@ import {
   ListChecks,
   ClipboardList,
   CalendarClock,
+  BookOpenText,
   Menu,
   LogOut,
 } from 'lucide-react';
@@ -74,6 +75,12 @@ const NAV_ITEMS = [
     description: 'Visualise upcoming absences',
     icon: CalendarClock,
   },
+  {
+    href: '/diary',
+    label: 'Court Diary',
+    description: 'Shared court dates by team',
+    icon: BookOpenText,
+  },
 ];
 
 const formatRoles = (roles) =>
@@ -102,13 +109,9 @@ export default function LeaveShell({ children }) {
     return <>{children}</>;
   }
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      router.push('/leave/login');
-    } catch (error) {
-      console.error('Leave sign out failed:', error);
-    }
+  const handleSignOut = () => {
+    signOut();
+    router.replace('/leave/login');
   };
 
   const handleNavigate = () => setSidebarOpen(false);
@@ -194,6 +197,9 @@ export default function LeaveShell({ children }) {
             {user?.firstName} {user?.lastName}
           </p>
           <p className="text-xs text-slate-500">{formatRoles(user?.roles)}</p>
+          {user?.team?.name ? (
+            <p className="text-xs text-slate-400 mt-1">Team: {user.team.name}</p>
+          ) : null}
         </div>
         <Button
           variant="outline"

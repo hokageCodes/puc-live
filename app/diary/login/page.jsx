@@ -3,15 +3,22 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { resolveLeaveSafeRedirect, useLeaveAuth } from '../../../components/leave/LeaveAuthContext';
+import {
+  DEFAULT_DIARY_POST_LOGIN,
+  resolveLeaveSafeRedirect,
+  useLeaveAuth,
+} from '../../../components/leave/LeaveAuthContext';
 
-export default function LeaveLoginPage() {
+export default function DiaryLoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signIn, status, isAuthenticated } = useLeaveAuth();
 
   const nextParam = searchParams.get('next');
-  const afterLogin = useMemo(() => resolveLeaveSafeRedirect(nextParam), [nextParam]);
+  const afterLogin = useMemo(
+    () => resolveLeaveSafeRedirect(nextParam, DEFAULT_DIARY_POST_LOGIN),
+    [nextParam]
+  );
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -49,7 +56,7 @@ export default function LeaveLoginPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col lg:flex-row">
       <div className="relative hidden w-full max-w-2xl overflow-hidden bg-slate-900 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-slate-900" />
+        <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 via-transparent to-slate-900" />
         <div className="relative h-full w-full">
           <div className="flex h-full flex-col justify-between p-12">
             <header>
@@ -57,10 +64,10 @@ export default function LeaveLoginPage() {
                 Paul Usoro & Co.
               </span>
               <h1 className="mt-10 text-4xl font-semibold leading-tight text-white">
-                Leave Management <br /> Portal
+                Court Diary
               </h1>
               <p className="mt-6 max-w-md text-sm text-white/70">
-                Sign in to request time off, track approvals, and stay aligned with your team’s leave calendar.
+                Sign in with your staff credentials to view and update your team&apos;s court diary.
               </p>
             </header>
 
@@ -80,8 +87,8 @@ export default function LeaveLoginPage() {
       <main className="flex flex-1 items-center justify-center px-6 py-16 lg:px-12">
         <div className="w-full max-w-md space-y-8">
           <div className="space-y-2 text-center">
-            <h2 className="text-3xl font-semibold text-slate-900">Welcome back</h2>
-            <p className="text-sm text-slate-500">Use your firm email and password to access the leave portal.</p>
+            <h2 className="text-3xl font-semibold text-slate-900">Court Diary sign in</h2>
+            <p className="text-sm text-slate-500">Same staff account as leave; this page opens your diary only.</p>
           </div>
 
           {status === 'loading' && (
@@ -98,11 +105,11 @@ export default function LeaveLoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
-              <label htmlFor="email" className="text-sm font-medium text-slate-700">
+              <label htmlFor="diary-email" className="text-sm font-medium text-slate-700">
                 Work email
               </label>
               <input
-                id="email"
+                id="diary-email"
                 name="email"
                 type="email"
                 autoComplete="email"
@@ -117,7 +124,7 @@ export default function LeaveLoginPage() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium text-slate-700">
+                <label htmlFor="diary-password" className="text-sm font-medium text-slate-700">
                   Password
                 </label>
                 <button
@@ -129,7 +136,7 @@ export default function LeaveLoginPage() {
                 </button>
               </div>
               <input
-                id="password"
+                id="diary-password"
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
@@ -147,11 +154,11 @@ export default function LeaveLoginPage() {
               disabled={busy}
               className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:cursor-not-allowed disabled:bg-emerald-300"
             >
-              {busy ? 'Signing in…' : 'Sign in'}
+              {busy ? 'Signing in…' : 'Sign in to diary'}
             </button>
           </form>
 
-          <div className="flex items-center justify-between text-xs text-slate-500">
+          <div className="flex flex-col gap-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
             <Link href="/leave/activate" className="font-medium text-emerald-600 transition hover:text-emerald-500">
               Activate account
             </Link>
@@ -161,9 +168,9 @@ export default function LeaveLoginPage() {
           </div>
 
           <p className="text-center text-xs text-slate-500">
-            Court diary?{' '}
-            <Link href="/diary/login" className="font-medium text-emerald-600 hover:text-emerald-500">
-              Sign in here
+            Looking for leave instead?{' '}
+            <Link href="/leave/login" className="font-medium text-emerald-600 hover:text-emerald-500">
+              Leave portal sign in
             </Link>
           </p>
         </div>
@@ -171,4 +178,3 @@ export default function LeaveLoginPage() {
     </div>
   );
 }
-

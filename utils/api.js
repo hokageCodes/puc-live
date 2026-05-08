@@ -252,3 +252,20 @@ export const leaveApi = {
   // Get approvals history (actions this user performed)
   getMyApprovals: () => api.get('/api/leave/approvals/history'),
 };
+
+export const diaryApi = {
+  listEntries: (params = {}) => {
+    const queryString = Object.keys(params).length
+      ? '?' + new URLSearchParams(params).toString()
+      : '';
+    return api.get(`/api/court-diary/entries${queryString}`);
+  },
+  getEntry: (entryId) => api.get(`/api/court-diary/entries/${entryId}`),
+  createEntry: (payload) => api.post('/api/court-diary/entries', payload),
+  updateEntry: (entryId, payload) => api.patch(`/api/court-diary/entries/${entryId}`, payload),
+  deleteEntry: (entryId) => api.delete(`/api/court-diary/entries/${entryId}`),
+  getAvailability: (date) => {
+    const query = new URLSearchParams({ date }).toString();
+    return api.get(`/api/court-diary/calendar/availability?${query}`);
+  },
+};

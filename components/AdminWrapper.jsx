@@ -8,8 +8,9 @@ export default function AdminWrapper({ children }) {
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith('/admin');
   const isLeaveRoute = pathname?.startsWith('/leave');
+  const isDiaryRoute = pathname?.startsWith('/diary');
 
-  if (isAdminRoute || isLeaveRoute) {
+  if (isAdminRoute || isLeaveRoute || isDiaryRoute) {
     return <>{children}</>;
   }
 
