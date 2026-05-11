@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 // import { getImageUrl } from 'apps/puc-final-2025/lib/getImageUrl';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
-import { staffApi } from '../../utils/api';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -94,18 +93,11 @@ export default function PeopleTeamPage() {
       if (position) {
         for (const [group, positions] of Object.entries(positionGroups)) {
           if (positions.includes(position)) {
-            groups[group].push({
-              ...member,
-              sortOrder: positions.indexOf(position),
-            });
+            groups[group].push(member);
             break;
           }
         }
       }
-    });
-
-    Object.keys(groups).forEach(group => {
-      groups[group].sort((a, b) => a.sortOrder - b.sortOrder);
     });
 
     return groups;
@@ -186,7 +178,7 @@ export default function PeopleTeamPage() {
 
           {/* Team Groups */}
           <div className="space-y-16">
-            {Object.entries(positionGroups).map(([groupName, positions]) => {
+            {Object.entries(positionGroups).map(([groupName]) => {
               if (activeGroup !== 'All' && activeGroup !== groupName) return null;
               const members = staffGroups[groupName];
               if (!members || members.length === 0) return null;

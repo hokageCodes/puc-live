@@ -35,7 +35,6 @@ export default function DiaryPage() {
   /** Entries fetch only — calendar/header render without waiting for this. */
   const [entriesLoading, setEntriesLoading] = useState(true);
   const [error, setError] = useState('');
-  const [teamAssignmentMessage, setTeamAssignmentMessage] = useState('');
   const [visibleMonth, setVisibleMonth] = useState(() => new Date());
   const [selectedDayKey, setSelectedDayKey] = useState(() => toDayKey(new Date()));
 
@@ -48,7 +47,6 @@ export default function DiaryPage() {
     const run = async () => {
       setEntriesLoading(true);
       setError('');
-      setTeamAssignmentMessage('');
       try {
         const data = await diaryApi.listEntries();
         if (cancelled) return;
@@ -61,20 +59,7 @@ export default function DiaryPage() {
         }
       } catch (err) {
         if (cancelled) return;
-        const message = err?.message || 'Failed to load diary entries.';
-        if (message.includes('Diary access requires team assignment.')) {
-          setEntries([]);
-          setTeamName('');
-          setTeamAssignmentMessage(
-            'Your staff profile has no team set in the database, so the diary cannot load. ' +
-              'Re-logging in does not change that. ' +
-              'An admin with CMS access can set your team on your staff record, or run: ' +
-              'node scripts/assignStaffTeam.js <your-email> from the puc-backend folder (see script for options).',
-          );
-          setError('');
-        } else {
-          setError(message);
-        }
+        setError(err?.message || 'Failed to load diary entries.');
       } finally {
         if (!cancelled) setEntriesLoading(false);
       }
@@ -137,21 +122,11 @@ export default function DiaryPage() {
         </div>
         <Link
           href="/diary/new"
-          className={`rounded-lg px-4 py-2 text-sm font-semibold text-white ${
-            teamAssignmentMessage ? 'pointer-events-none bg-slate-300' : 'bg-emerald-600 hover:bg-emerald-700'
-          }`}
-          aria-disabled={!!teamAssignmentMessage}
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700"
         >
           New entry
         </Link>
       </div>
-
-      {teamAssignmentMessage ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
-          <p className="font-semibold">Team assignment required</p>
-          <p className="mt-2 text-amber-900/90">{teamAssignmentMessage}</p>
-        </div>
-      ) : null}
 
       <section className="rounded-xl border border-slate-200 bg-white p-5">
         <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr]">
@@ -233,10 +208,8 @@ export default function DiaryPage() {
                   <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-5 text-sm text-red-600">{error}</div>
                 ) : selectedEntries.length === 0 ? (
                   <div className="rounded-lg border border-dashed border-slate-200 px-4 py-5 text-sm text-slate-500">
-                    {teamAssignmentMessage
-                      ? 'Fix team assignment above to load entries.'
-                      : Object.keys(groupedByDay).length === 0
-                        ? 'No diary entries yet for your team.'
+                    {Object.keys(groupedByDay).length === 0
+                        ? 'No diary entries yet.'
                         : 'No entries on this day.'}
                   </div>
                 ) : (

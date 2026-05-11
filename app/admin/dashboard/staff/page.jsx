@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import AddUserModal from '../../../../components/admin/users/AddUserModal';
-import { Search, UserPlus, Edit2, Trash2, Eye, EyeOff, Send, ChevronLeft, ChevronRight, MoreHorizontal, CheckCircle2, Clock, CircleDashed } from 'lucide-react';
+import { Search, UserPlus, Edit2, Trash2, Eye, EyeOff, Send, ChevronLeft, ChevronRight, MoreHorizontal, CheckCircle2, Clock, CircleDashed, GripVertical, ArrowUpDown } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getImageUrl } from '../../../../lib/getImageUrl';
 import { useAdminAuth } from '../../../../components/admin/AdminAuthContext';
@@ -12,7 +12,11 @@ const ROLE_LABELS = {
   hr: 'HR', admin: 'Admin', cms: 'CMS',
 };
 
-const DIVISION_LABELS = { legal: 'Legal', admin: 'Admin/Ops', other: 'Other' };
+const POSITION_GROUPS = {
+  'Executive Leadership': ['senior partner', 'managing partner', 'partner'],
+  'Team Leadership': ['managing associate', 'senior associate'],
+  'Associates': ['associate'],
+};
 
 const fmt = (v) => {
   if (!v) return null;
@@ -113,6 +117,135 @@ function Avatar({ person }) {
   );
 }
 
+function ArrangeView({ staff, base, getAuthHeaders, onDone }) {
+  const buildGroups = (list) => {
+    const groups = {};
+    Object.keys(POSITION_GROUPS).forEach((g) => { groups[g] = []; });
+    groups['Other'] = [];
+    list.forEach((p) => {
+      const pos = p.position?.trim().toLowerCase() || '';
+      let placed = false;
+      for (const [group, positions] of Object.entries(POSITION_GROUPS)) {
+        if (positions.includes(pos)) { groups[group].push(p); placed = true; break; }
+      }
+      if (!placed) groups['Other'].push(p);
+    });
+    Object.keys(groups).forEach((g) => {
+      groups[g].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+    });
+    return groups;
+  };
+
+  const [groups, setGroups] = useState(() => buildGroups(staff));
+  const [saving, setSaving] = useState(false);
+  const dragSrc = useRef(null); // { group, index }
+
+  const handleDragStart = (group, index) => {
+    dragSrc.current = { group, index };
+  };
+
+  const handleDragOver = (e, group, index) => {
+    e.preventDefault();
+    if (!dragSrc.current || dragSrc.current.group !== group) return;
+    const src = dragSrc.current.index;
+    if (src === index) return;
+    setGroups((prev) => {
+      const next = { ...prev, [group]: [...prev[group]] };
+      const [moved] = next[group].splice(src, 1);
+      next[group].splice(index, 0, moved);
+      dragSrc.current = { group, index };
+      return next;
+    });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updates = [];
+      Object.values(groups).forEach((members) => {
+        members.forEach((m, i) => updates.push({ id: m._id, displayOrder: i }));
+      });
+      const r = await fetch(`${base}/api/staff/reorder`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ updates }),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Save failed');
+      toast.success('Order saved — website will reflect this order.');
+      onDone();
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3">
+        <p className="text-sm text-emerald-800">
+          Drag staff within each category. The order here is how they appear on the website.
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onDone}
+            className="rounded-lg border border-slate-200 bg-white px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-lg bg-slate-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save order'}
+          </button>
+        </div>
+      </div>
+
+      {Object.entries(groups).map(([groupName, members]) => {
+        if (members.length === 0) return null;
+        return (
+          <div key={groupName} className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+            <div className="border-b border-slate-100 bg-slate-50 px-5 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{groupName}</p>
+              <p className="text-xs text-slate-400">{members.length} member{members.length !== 1 ? 's' : ''}</p>
+            </div>
+            <ul className="divide-y divide-slate-100">
+              {members.map((person, index) => (
+                <li
+                  key={person._id}
+                  draggable
+                  onDragStart={() => handleDragStart(groupName, index)}
+                  onDragOver={(e) => handleDragOver(e, groupName, index)}
+                  className="flex items-center gap-3 px-5 py-3 cursor-grab active:cursor-grabbing hover:bg-slate-50 transition-colors select-none"
+                >
+                  <GripVertical className="h-4 w-4 shrink-0 text-slate-300" />
+                  <span className="w-5 text-center text-xs font-medium text-slate-400">{index + 1}</span>
+                  <Avatar person={person} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-slate-900">
+                      {person.firstName} {person.lastName}
+                    </p>
+                    {person.position && (
+                      <p className="truncate text-xs text-emerald-600">{person.position}</p>
+                    )}
+                  </div>
+                  <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${person.isVisible !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                    {person.isVisible !== false ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                    {person.isVisible !== false ? 'Live' : 'Hidden'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function StaffManagementPage() {
   const { getAuthHeaders } = useAdminAuth();
   const [staff, setStaff] = useState([]);
@@ -127,6 +260,7 @@ export default function StaffManagementPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [inviteLoadingId, setInviteLoadingId] = useState(null);
+  const [arrangeMode, setArrangeMode] = useState(false);
 
   const pageSize = 25;
   const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
@@ -193,7 +327,6 @@ export default function StaffManagementPage() {
   };
 
   const handleToggleVisibility = async (person) => {
-    const newValue = person.isVisible === false ? true : !true;
     const isVisible = person.isVisible !== false;
     const next = !isVisible;
     const fd = new FormData();
@@ -226,6 +359,25 @@ export default function StaffManagementPage() {
     );
   }
 
+  if (arrangeMode) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900">Arrange Staff Order</h1>
+            <p className="mt-0.5 text-sm text-slate-500">Drag to set the display order per category on the website.</p>
+          </div>
+        </div>
+        <ArrangeView
+          staff={staff}
+          base={base}
+          getAuthHeaders={getAuthHeaders}
+          onDone={() => { setArrangeMode(false); fetchData(); }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
 
@@ -237,13 +389,22 @@ export default function StaffManagementPage() {
             {staff.length} members · {totalVisible} visible on site · {totalActive} activated
           </p>
         </div>
-        <button
-          onClick={() => { setEditingStaff(null); setShowModal(true); }}
-          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-        >
-          <UserPlus className="h-4 w-4" />
-          Add staff
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setArrangeMode(true)}
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            <ArrowUpDown className="h-4 w-4" />
+            Arrange order
+          </button>
+          <button
+            onClick={() => { setEditingStaff(null); setShowModal(true); }}
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+          >
+            <UserPlus className="h-4 w-4" />
+            Add staff
+          </button>
+        </div>
       </div>
 
       {/* ── Metrics strip ──────────────────────────────────────────── */}
@@ -317,7 +478,6 @@ export default function StaffManagementPage() {
 
                 return (
                   <tr key={person._id} className="group transition-colors hover:bg-slate-50/60">
-                    {/* Person */}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <Avatar person={person} />
@@ -332,8 +492,6 @@ export default function StaffManagementPage() {
                         </div>
                       </div>
                     </td>
-
-                    {/* Department */}
                     <td className="px-5 py-3.5">
                       <p className="text-sm text-slate-700">{person.department?.name || <span className="text-slate-400">—</span>}</p>
                       {person.team?.name && <p className="text-xs text-slate-400">{person.team.name}</p>}
@@ -347,8 +505,6 @@ export default function StaffManagementPage() {
                         </div>
                       )}
                     </td>
-
-                    {/* Practice areas */}
                     <td className="px-5 py-3.5">
                       {pas.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
@@ -369,24 +525,18 @@ export default function StaffManagementPage() {
                         <span className="text-xs text-slate-400">—</span>
                       )}
                     </td>
-
-                    {/* Account status */}
                     <td className="px-5 py-3.5">
                       <StatusDot status={status} />
                       <p className="mt-1 text-[10px] text-slate-400">
                         Leave: {person.leaveEnabled !== false ? 'enabled' : 'disabled'}
                       </p>
                     </td>
-
-                    {/* Website visibility */}
                     <td className="px-5 py-3.5">
                       <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${visible ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                         {visible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
                         {visible ? 'Live' : 'Hidden'}
                       </span>
                     </td>
-
-                    {/* Actions */}
                     <td className="px-5 py-3.5 text-right">
                       <ActionsMenu
                         person={person}
@@ -404,7 +554,6 @@ export default function StaffManagementPage() {
           </table>
         </div>
 
-        {/* Pagination footer */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
             <p className="text-xs text-slate-400">
@@ -422,9 +571,7 @@ export default function StaffManagementPage() {
               {(() => {
                 const pages = [];
                 for (let n = 1; n <= totalPages; n++) {
-                  if (n === 1 || n === totalPages || Math.abs(n - safePage) <= 1) {
-                    pages.push(n);
-                  }
+                  if (n === 1 || n === totalPages || Math.abs(n - safePage) <= 1) pages.push(n);
                 }
                 const items = [];
                 for (let i = 0; i < pages.length; i++) {

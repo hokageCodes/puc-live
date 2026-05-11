@@ -72,13 +72,6 @@ export default function DiaryShell({ children }) {
       </header>
       <div className="mx-auto max-w-4xl px-6 py-6">
         <main>
-          {!isLoading && user && !user.team ? (
-            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-              <span className="font-medium">No team on your profile.</span>{' '}
-              Court diary needs a team in the database. Ask an admin to assign one on your staff record, or use{' '}
-              <code className="rounded bg-amber-100/80 px-1 py-0.5 text-xs">scripts/assignStaffTeam.js</code> locally.
-            </div>
-          ) : null}
           {isLoading ? (
             <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 text-sm text-slate-600">
               Loading diary workspace...
