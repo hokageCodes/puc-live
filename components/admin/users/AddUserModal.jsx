@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useAdminAuth } from '../AdminAuthContext';
 
@@ -7,6 +7,13 @@ const DIVISIONS = [
   { value: 'legal', label: 'Legal (Website-facing)' },
   { value: 'admin', label: 'Admin/Operations' },
   { value: 'other', label: 'Other' },
+];
+
+const OFFICE_OPTIONS = [
+  { value: '', label: 'Not set' },
+  { value: 'lagos', label: 'PUC Lagos' },
+  { value: 'abuja', label: 'PUC Abuja' },
+  { value: 'uyo', label: 'PUC Uyo' },
 ];
 
 const ROLE_OPTIONS = [
@@ -46,6 +53,7 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
   const [removeExistingImage, setRemoveExistingImage] = useState(false);
 
   const [division, setDivision] = useState('legal');
+  const [officeLocation, setOfficeLocation] = useState('');
   const [selectedRoles, setSelectedRoles] = useState(['staff']);
   const [leaveEnabled, setLeaveEnabled] = useState(true);
   const [hireDate, setHireDate] = useState('');
@@ -72,6 +80,12 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
     return /litigation/i.test(String(selectedDepartmentMeta.name || ''));
   }, [selectedDepartmentMeta]);
 
+  const selectedTeamOptionFallback = useMemo(() => {
+    if (!selectedTeam || !Array.isArray(teams)) return null;
+    if (filteredTeams.some((t) => String(t._id) === String(selectedTeam))) return null;
+    return teams.find((t) => String(t._id) === String(selectedTeam)) || null;
+  }, [selectedTeam, teams, filteredTeams]);
+
   const toggleRole = (role) => {
     if (role === 'staff') return;
     setSelectedRoles((prev) => {
@@ -94,7 +108,9 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
   const { getAuthHeaders } = useAdminAuth();
 
-  useEffect(() => {
+  // Run before paint so department/team state is correct before the filter effect below.
+  // Otherwise that effect can still see an empty department and clear the team on open.
+  useLayoutEffect(() => {
     if (editingStaff) {
       setCurrentStep(1);
       setFirstName(editingStaff.firstName || '');
@@ -106,6 +122,7 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
       setEmployeeId(editingStaff.employeeId || '');
       setIsVisible(editingStaff.isVisible !== false);
       setDivision(editingStaff.division || 'legal');
+      setOfficeLocation(editingStaff.officeLocation || '');
       const incomingRoles = Array.isArray(editingStaff.roles) && editingStaff.roles.length
         ? Array.from(new Set(['staff', ...editingStaff.roles]))
         : ['staff'];
@@ -134,6 +151,7 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
       setEmployeeId('');
       setIsVisible(true);
       setDivision('legal');
+      setOfficeLocation('');
       setSelectedRoles(['staff']);
       setLeaveEnabled(true);
       setHireDate('');
@@ -150,17 +168,33 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
   }, [editingStaff]);
 
   useEffect(() => {
-    if (selectedDepartment && teams) {
-      const filtered = teams.filter(t => {
-        // Handle both populated and unpopulated department fields
-        const deptId = t.department?._id || t.department;
-        return deptId?.toString() === selectedDepartment;
-      });
-      setFilteredTeams(filtered);
-    } else {
+    if (!selectedDepartment) {
       setFilteredTeams([]);
-      setSelectedTeam(''); // Clear team selection when department changes
+      setSelectedTeam('');
+      return;
     }
+    if (!Array.isArray(teams)) {
+      setFilteredTeams([]);
+      return;
+    }
+    const filtered = teams.filter((t) => {
+      const deptId = t.department?._id || t.department;
+      return String(deptId || '') === String(selectedDepartment);
+    });
+    setFilteredTeams(filtered);
+    setSelectedTeam((prev) => {
+      if (!prev) return prev;
+      if (filtered.length > 0) {
+        const stillValid = filtered.some((t) => String(t._id) === String(prev));
+        return stillValid ? prev : '';
+      }
+      if (!Array.isArray(teams)) return prev;
+      const teamDoc = teams.find((t) => String(t._id) === String(prev));
+      if (!teamDoc) return '';
+      const tid = teamDoc.department?._id || teamDoc.department;
+      const belongsHere = String(tid || '') === String(selectedDepartment);
+      return belongsHere ? prev : '';
+    });
   }, [selectedDepartment, teams]);
 
   useEffect(() => {
@@ -215,6 +249,12 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
 
       formData.append('division', division);
       formData.append('leaveEnabled', leaveEnabled ? 'true' : 'false');
+
+      if (officeLocation) {
+        formData.append('officeLocation', officeLocation);
+      } else if (editingStaff?.officeLocation) {
+        formData.append('officeLocation', '');
+      }
 
       if (hireDate) {
         formData.append('hireDate', hireDate);
@@ -475,6 +515,23 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
                         placeholder="(+234) 801 234 5678"
                       />
                     </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Primary office / branch</label>
+                      <select
+                        className={inputClasses}
+                        value={officeLocation}
+                        onChange={(e) => setOfficeLocation(e.target.value)}
+                      >
+                        {OFFICE_OPTIONS.map((opt) => (
+                          <option key={opt.value || 'unset'} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-slate-500">
+                        PUC Lagos, Abuja, or Uyo — used for directory and onboarding. Leave unset if not applicable yet.
+                      </p>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -647,6 +704,9 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
             disabled={!selectedDepartment}
           >
                         <option value="">Select team</option>
+            {selectedTeamOptionFallback && (
+              <option value={selectedTeamOptionFallback._id}>{selectedTeamOptionFallback.name}</option>
+            )}
             {filteredTeams?.map((t) => (
               <option key={t._id} value={t._id}>
                 {t.name}

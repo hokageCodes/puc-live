@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useAdminAuth } from '../../../../components/admin/AdminAuthContext';
+import { useRefetchOnVisible } from '../../../../hooks/useRefetchOnVisible';
 import {
   Plus,
   RefreshCcw,
@@ -59,10 +60,46 @@ export default function BlogManagementPage() {
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
 
+  const fetchBlogs = useCallback(
+    async (arg) => {
+      const showToast = arg === true || (typeof arg === 'object' && arg?.showToast);
+      const soft = typeof arg === 'object' && arg?.soft === true;
+      try {
+        if (!soft) setLoading(true);
+
+        const res = await fetch(`${backendUrl}/api/blogs/admin/all`, {
+          cache: 'no-store',
+          credentials: 'include',
+          headers: getAuthHeaders(),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Unable to load news posts.');
+        }
+
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data?.data ?? data?.blogs ?? []);
+        setBlogs(list);
+        if (showToast) {
+          toast.success('News posts refreshed.');
+        }
+      } catch (err) {
+        console.error('Failed to fetch blogs:', err);
+        toast.error(err.message || 'Failed to fetch news posts.');
+      } finally {
+        if (!soft) setLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    [backendUrl, getAuthHeaders]
+  );
+
   useEffect(() => {
     fetchBlogs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchBlogs]);
+
+  useRefetchOnVisible(() => fetchBlogs({ soft: true }));
 
   useEffect(() => {
     let data = [...blogs];
@@ -93,36 +130,6 @@ export default function BlogManagementPage() {
 
     setFiltered(data);
   }, [blogs, statusFilter, featuredOnly, searchTerm]);
-
-  const fetchBlogs = async (showToast = false) => {
-    try {
-      setLoading(true);
-      
-      const res = await fetch(`${backendUrl}/api/blogs/admin/all`, {
-        cache: 'no-store',
-        credentials: 'include',
-        headers: getAuthHeaders(),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Unable to load news posts.');
-      }
-
-        const data = await res.json();
-      const list = Array.isArray(data) ? data : (data?.data ?? data?.blogs ?? []);
-      setBlogs(list);
-      if (showToast) {
-        toast.success('News posts refreshed.');
-      }
-    } catch (err) {
-      console.error('Failed to fetch blogs:', err);
-      toast.error(err.message || 'Failed to fetch news posts.');
-    } finally {
-      setLoading(false);
-      setIsRefreshing(false);
-    }
-  };
 
   const handleRefresh = () => {
     setIsRefreshing(true);

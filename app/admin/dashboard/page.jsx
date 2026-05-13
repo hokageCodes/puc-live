@@ -1,8 +1,9 @@
 // app/admin/dashboard/page.js
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useAdminAuth } from '../../../components/admin/AdminAuthContext';
+import { useRefetchOnVisible } from '../../../hooks/useRefetchOnVisible';
 import Link from 'next/link';
 import {
   Users,
@@ -48,7 +49,7 @@ export default function AdminDashboard() {
     return 'Admin';
   }, []);
 
-  const loadStats = async (showToast = false) => {
+  const loadStats = useCallback(async (showToast = false) => {
     try {
       setIsRefreshing(showToast);
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
@@ -104,11 +105,13 @@ export default function AdminDashboard() {
       setLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [getAuthHeaders]);
 
   useEffect(() => {
     loadStats();
-  }, []);
+  }, [loadStats]);
+
+  useRefetchOnVisible(() => loadStats(false));
 
   const metrics = [
     {

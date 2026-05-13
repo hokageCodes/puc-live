@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import AddUserModal from '../../../../components/admin/users/AddUserModal';
 import { getImageUrl } from '../../../../lib/getImageUrl';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { useAdminAuth } from '../../../../components/admin/AdminAuthContext';
+import { useRefetchOnVisible } from '../../../../hooks/useRefetchOnVisible';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
@@ -28,7 +29,7 @@ export default function AdminUsersPage() {
   const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
   const { getAuthHeaders } = useAdminAuth();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const authHeaders = getAuthHeaders();
       const responses = await Promise.all([
@@ -59,11 +60,13 @@ export default function AdminUsersPage() {
       console.error('Failed to fetch staff records:', error);
       toast.error(error.message || 'Failed to fetch staff records.');
     }
-  };
+  }, [base, getAuthHeaders]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
+
+  useRefetchOnVisible(fetchData);
 
   useEffect(() => {
     let filteredList = [...users];

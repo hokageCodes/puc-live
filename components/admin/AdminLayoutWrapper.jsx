@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import Header from './Header';
@@ -10,8 +10,9 @@ import { AdminAuthProvider, useAdminAuth } from './AdminAuthContext';
 function AdminLayoutShell({ children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { admin, loading } = useAdminAuth();
+  const { admin, loading, checkAuth } = useAdminAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const tabWasHiddenRef = useRef(false);
 
   const isLoginPage = pathname === '/admin/login';
 
@@ -21,6 +22,25 @@ function AdminLayoutShell({ children }) {
       router.replace('/admin/login');
     }
   }, [admin, isLoginPage, loading, router]);
+
+  // When returning to the tab, re-check session so roles/profile match the server (other admins may have changed access).
+  useEffect(() => {
+    if (isLoginPage || loading) return undefined;
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        tabWasHiddenRef.current = true;
+        return;
+      }
+      if (document.visibilityState === 'visible' && tabWasHiddenRef.current) {
+        tabWasHiddenRef.current = false;
+        void checkAuth();
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [isLoginPage, loading, checkAuth]);
 
   if (isLoginPage) {
     return <>{children}</>;

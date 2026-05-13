@@ -1,15 +1,22 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import AddUserModal from '../../../../components/admin/users/AddUserModal';
-import { Search, UserPlus, Edit2, Trash2, Eye, EyeOff, Send, ChevronLeft, ChevronRight, MoreHorizontal, CheckCircle2, Clock, CircleDashed, GripVertical, ArrowUpDown } from 'lucide-react';
+import { Search, UserPlus, Edit2, Trash2, Eye, EyeOff, Send, ChevronLeft, ChevronRight, MoreHorizontal, CheckCircle2, Clock, CircleDashed, GripVertical, ArrowUpDown, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getImageUrl } from '../../../../lib/getImageUrl';
 import { useAdminAuth } from '../../../../components/admin/AdminAuthContext';
+import { useRefetchOnVisible } from '../../../../hooks/useRefetchOnVisible';
 
 const ROLE_LABELS = {
   staff: 'Staff', teamLead: 'Team Lead', lineManager: 'Line Manager',
   hr: 'HR', admin: 'Admin', cms: 'CMS',
+};
+
+const OFFICE_LOCATION_LABELS = {
+  lagos: 'PUC Lagos',
+  abuja: 'PUC Abuja',
+  uyo: 'PUC Uyo',
 };
 
 const POSITION_GROUPS = {
@@ -155,6 +162,10 @@ function ArrangeView({ staff, base, getAuthHeaders, onDone }) {
   const [saving, setSaving] = useState(false);
   const dragSrc = useRef(null); // { group, index }
 
+  useEffect(() => {
+    setGroups(buildGroups(staff));
+  }, [staff]);
+
   const handleDragStart = (group, index) => {
     dragSrc.current = { group, index };
   };
@@ -287,8 +298,8 @@ export default function StaffManagementPage() {
     setFiltered(patch);
   };
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = useCallback(async ({ soft = false } = {}) => {
+    if (!soft) setLoading(true);
     try {
       const h = getAuthHeaders();
       const [r1, r2, r3, r4] = await Promise.all([
@@ -304,11 +315,15 @@ export default function StaffManagementPage() {
     } catch (e) {
       toast.error(e.message || 'Failed to load staff data.');
     } finally {
-      setLoading(false);
+      if (!soft) setLoading(false);
     }
-  };
+  }, [base, getAuthHeaders]);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useRefetchOnVisible(() => fetchData({ soft: true }));
 
   useEffect(() => {
     let list = [...staff];
@@ -407,6 +422,15 @@ export default function StaffManagementPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            type="button"
+            title="Reload directory from server"
+            onClick={() => fetchData({ soft: true })}
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </button>
+          <button
             onClick={() => setArrangeMode(true)}
             className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
@@ -467,11 +491,12 @@ export default function StaffManagementPage() {
       {/* ── Table ──────────────────────────────────────────────────── */}
       <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px] text-sm">
+          <table className="w-full min-w-[880px] text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                 <th className="px-5 py-3">Person</th>
                 <th className="px-5 py-3">Department</th>
+                <th className="px-5 py-3">Office</th>
                 <th className="px-5 py-3">Practice areas</th>
                 <th className="px-5 py-3">Account</th>
                 <th className="px-5 py-3">Site</th>
@@ -481,7 +506,7 @@ export default function StaffManagementPage() {
             <tbody className="divide-y divide-slate-100">
               {slice.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-16 text-center text-sm text-slate-400">
+                  <td colSpan={7} className="px-5 py-16 text-center text-sm text-slate-400">
                     No staff match your filter.
                   </td>
                 </tr>
@@ -519,6 +544,15 @@ export default function StaffManagementPage() {
                             </span>
                           ))}
                         </div>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      {person.officeLocation ? (
+                        <span className="inline-flex rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-800">
+                          {OFFICE_LOCATION_LABELS[person.officeLocation] || person.officeLocation}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-400">—</span>
                       )}
                     </td>
                     <td className="px-5 py-3.5">

@@ -6,9 +6,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
 import { ApiError, diaryApi } from '../../../utils/api';
 import {
+  COURT_DROPDOWN_GROUPS,
   COURT_OTHER_VALUE,
   mergeCourtFromForm,
-  NIGERIAN_COURT_OPTIONS,
   splitCourtForForm,
 } from '../../../data/nigerianCourts';
 import { DiaryConflictModal } from '../DiaryConflictModal.jsx';
@@ -120,12 +120,12 @@ export default function DiaryEntryPage() {
       return;
     }
     if (form.courtSelect === COURT_OTHER_VALUE && !form.courtOther.trim()) {
-      setError('Please enter the court name for “Other”.');
+      setError('Please enter the venue for “Others (Tribunals or Arbitration)”.');
       return;
     }
     const court = mergeCourtFromForm(form.courtSelect, form.courtOther);
     if (!court) {
-      setError('Please select a court or enter one under “Other”.');
+      setError('Please select a court or complete the Others field.');
       return;
     }
     if (!form.status) {
@@ -186,12 +186,12 @@ export default function DiaryEntryPage() {
       return;
     }
     if (form.courtSelect === COURT_OTHER_VALUE && !form.courtOther.trim()) {
-      setError('Please enter the court name for “Other”.');
+      setError('Please enter the venue for “Others (Tribunals or Arbitration)”.');
       return;
     }
     const court = mergeCourtFromForm(form.courtSelect, form.courtOther);
     if (!court) {
-      setError('Please select a court or enter one under “Other”.');
+      setError('Please select a court or complete the Others field.');
       return;
     }
     if (!form.status) {
@@ -350,17 +350,21 @@ export default function DiaryEntryPage() {
             required
           >
             <option value="">Select court and location</option>
-            {NIGERIAN_COURT_OPTIONS.map((label) => (
-              <option key={label} value={label}>
-                {label}
-              </option>
+            {COURT_DROPDOWN_GROUPS.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.options.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </optgroup>
             ))}
-            <option value={COURT_OTHER_VALUE}>Other (type below)</option>
+            <option value={COURT_OTHER_VALUE}>Others (Tribunals or Arbitration) — type below</option>
           </select>
           {form.courtSelect === COURT_OTHER_VALUE && (
             <input
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-              placeholder="Court name and location"
+              placeholder="e.g. NICN Lagos, LMDC, arbitral tribunal, or other venue"
               value={form.courtOther}
               onChange={(e) => setForm((f) => ({ ...f, courtOther: e.target.value }))}
             />
