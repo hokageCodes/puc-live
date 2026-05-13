@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
+
+const ACTIVATION_TOKEN_KEY = 'puc_activation_token';
 
 function ActivateForm() {
   const router = useRouter();
@@ -11,13 +13,10 @@ function ActivateForm() {
   const { backendUrl } = useLeaveAuth();
   useLeaveGuard({ redirectIfFound: true });
 
-  const initialToken = useMemo(() => searchParams?.get('token') || '', [searchParams]);
-
+  const [token, setToken] = useState('');
   const [form, setForm] = useState({
-    email: '',
     password: '',
     confirmPassword: '',
-    token: initialToken,
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -25,10 +24,24 @@ function ActivateForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (initialToken) {
-      setForm((prev) => ({ ...prev, token: initialToken }));
+    const raw = searchParams?.get('token');
+    let fromQuery = '';
+    if (raw) {
+      try {
+        fromQuery = decodeURIComponent(raw);
+      } catch {
+        fromQuery = raw;
+      }
     }
-  }, [initialToken]);
+    if (fromQuery) {
+      sessionStorage.setItem(ACTIVATION_TOKEN_KEY, fromQuery);
+      setToken(fromQuery);
+      window.history.replaceState(null, '', '/leave/activate');
+      return;
+    }
+    const stored = sessionStorage.getItem(ACTIVATION_TOKEN_KEY);
+    if (stored) setToken(stored);
+  }, [searchParams]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -39,6 +52,12 @@ function ActivateForm() {
     event.preventDefault();
     setError('');
     setSuccess('');
+
+    const effectiveToken = (token || sessionStorage.getItem(ACTIVATION_TOKEN_KEY) || '').trim();
+    if (!effectiveToken) {
+      setError('Use the activation link from your invite email to open this page.');
+      return;
+    }
 
     if (form.password !== form.confirmPassword) {
       setError('Passwords do not match');
@@ -52,18 +71,24 @@ function ActivateForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: form.email,
           password: form.password,
-          token: form.token,
+          token: effectiveToken,
         }),
       });
 
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.message || 'Activation failed. Please confirm your token or request a new invite.');
+        const apiMsg =
+          typeof data.message === 'string'
+            ? data.message
+            : typeof data.error?.message === 'string'
+              ? data.error.message
+              : null;
+        throw new Error(apiMsg || 'Activation failed. Please confirm your token or request a new invite.');
       }
 
+      sessionStorage.removeItem(ACTIVATION_TOKEN_KEY);
       setSuccess('Account activated! You can now sign in.');
       setTimeout(() => router.replace('/leave/login'), 1500);
     } catch (err) {
@@ -79,7 +104,7 @@ function ActivateForm() {
         <header className="mb-10 text-center">
           <h1 className="text-3xl font-semibold text-slate-900">Activate your account</h1>
           <p className="mt-3 text-sm text-slate-500">
-            Enter your invite token and choose a secure password to get started.
+            Choose a secure password to finish setup. Your invite link has already identified you—nothing to paste.
           </p>
         </header>
 
@@ -97,44 +122,8 @@ function ActivateForm() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="space-y-1.5">
-              <label htmlFor="token" className="text-sm font-medium text-slate-700">
-                Activation token
-              </label>
-              <input
-                id="token"
-                name="token"
-                type="text"
-                autoComplete="off"
-                value={form.token}
-                onChange={handleChange}
-                required
-                disabled={submitting}
-                placeholder="Paste the token from your invite email"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-50"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="email" className="text-sm font-medium text-slate-700">
-                Firm email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                value={form.email}
-                onChange={handleChange}
-                required
-                disabled={submitting}
-                placeholder="you@paulusoro.com"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-50"
-              />
-            </div>
-
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 md:col-span-2">
                 <label htmlFor="password" className="text-sm font-medium text-slate-700">
                   Password
                 </label>
@@ -152,7 +141,7 @@ function ActivateForm() {
                 />
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 md:col-span-2">
                 <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">
                   Confirm password
                 </label>
@@ -202,16 +191,17 @@ function ActivateForm() {
 
 export default function LeaveActivatePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="mt-4 text-sm text-slate-500">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-emerald-600" />
+            <p className="mt-4 text-sm text-slate-500">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <ActivateForm />
     </Suspense>
   );
 }
-
