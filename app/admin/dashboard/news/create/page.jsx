@@ -136,6 +136,7 @@ export default function CreateBlogPage() {
 
           res = await fetch(`${backendUrl}/api/blogs`, {
             method: 'POST',
+            cache: 'no-store',
             credentials: 'include',
             headers: authHeaders,
             body: data,
@@ -144,6 +145,7 @@ export default function CreateBlogPage() {
         } else {
           res = await fetch(`${backendUrl}/api/blogs`, {
             method: 'POST',
+            cache: 'no-store',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json', ...authHeaders },
             body: JSON.stringify({ ...formData, tags: tagList }),

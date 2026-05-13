@@ -37,8 +37,12 @@ const nextConfig = {
     root: path.resolve(process.cwd()),
   },
   images: {
-    domains: ['images.unsplash.com'],
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
       {
         protocol: 'http',
         hostname: 'localhost',

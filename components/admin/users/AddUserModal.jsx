@@ -59,6 +59,19 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
     [allStaff, reportingStaffId]
   );
 
+  const selectedDepartmentMeta = useMemo(
+    () => departments?.find((d) => String(d._id) === String(selectedDepartment)),
+    [departments, selectedDepartment]
+  );
+
+  /** Litigation (or any dept with courtDiaryScope `team`) must have Staff.team for court diary isolation. */
+  const teamRequiredForCourtDiary = useMemo(() => {
+    if (!selectedDepartmentMeta) return false;
+    if (selectedDepartmentMeta.courtDiaryScope === 'team') return true;
+    if (selectedDepartmentMeta.courtDiaryScope === 'department') return false;
+    return /litigation/i.test(String(selectedDepartmentMeta.name || ''));
+  }, [selectedDepartmentMeta]);
+
   const toggleRole = (role) => {
     if (role === 'staff') return;
     setSelectedRoles((prev) => {
@@ -164,6 +177,12 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (teamRequiredForCourtDiary && !selectedTeam) {
+      toast.error('Select a team for this department. Court diary is scoped per team for Litigation.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -245,6 +264,7 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
 
       const requestOptions = {
         method,
+        cache: 'no-store',
         credentials: 'include',
         headers: getAuthHeaders(),
         body: formData,
@@ -612,7 +632,14 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
           </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Team (optional)</label>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Team{teamRequiredForCourtDiary ? ' (required)' : ' (optional)'}
+                      </label>
+                      {teamRequiredForCourtDiary ? (
+                        <p className="text-xs text-slate-500">
+                          Litigation court diary is visible only within the selected team (e.g. ECT/CARI vs FACT).
+                        </p>
+                      ) : null}
           <select
                         className={`${inputClasses} ${!selectedDepartment ? 'cursor-not-allowed bg-slate-100 text-slate-400' : ''}`}
             value={selectedTeam}

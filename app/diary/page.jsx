@@ -1,14 +1,14 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLeaveAuth, useLeaveGuard } from '../../components/leave/LeaveAuthContext';
 import { diaryApi } from '../../utils/api';
+import DiaryDayEntryCarousel from './DiaryDayEntryCarousel.jsx';
 
 const formatDate = (value) =>
   new Date(value).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
+    day: 'numeric',
+    month: 'long',
     year: 'numeric',
   });
 
@@ -29,10 +29,8 @@ export default function DiaryPage() {
     preserveNext: true,
     loginPath: '/diary/login',
   });
-  const { status, user } = useLeaveAuth();
+  const { status } = useLeaveAuth();
   const [entries, setEntries] = useState([]);
-  const [teamName, setTeamName] = useState('');
-  /** Entries fetch only — calendar/header render without waiting for this. */
   const [entriesLoading, setEntriesLoading] = useState(true);
   const [error, setError] = useState('');
   const [visibleMonth, setVisibleMonth] = useState(() => new Date());
@@ -52,10 +50,8 @@ export default function DiaryPage() {
         if (cancelled) return;
         if (Array.isArray(data)) {
           setEntries(data);
-          setTeamName('');
         } else {
           setEntries(Array.isArray(data?.entries) ? data.entries : []);
-          setTeamName(data?.team?.name || '');
         }
       } catch (err) {
         if (cancelled) return;
@@ -82,7 +78,7 @@ export default function DiaryPage() {
   const calendarCells = useMemo(() => {
     const firstDayOfMonth = startOfMonth(visibleMonth);
     const lastDayOfMonth = endOfMonth(visibleMonth);
-    const startWeekday = firstDayOfMonth.getDay(); // 0=Sun
+    const startWeekday = firstDayOfMonth.getDay();
     const daysInMonth = lastDayOfMonth.getDate();
     const cells = [];
 
@@ -99,136 +95,136 @@ export default function DiaryPage() {
     return cells;
   }, [visibleMonth]);
 
-  const selectedEntries = groupedByDay[selectedDayKey] || [];
+  const selectedEntries = useMemo(
+    () => groupedByDay[selectedDayKey] ?? [],
+    [groupedByDay, selectedDayKey]
+  );
   const monthLabel = visibleMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
+  const handleEntryRemoved = useCallback((removedId) => {
+    setEntries((prev) => prev.filter((e) => String(e._id) !== String(removedId)));
+  }, []);
+
   if (status === 'loading' || status === 'authenticating' || !isAuthenticated) {
-    return <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 text-sm text-slate-600">Loading diary...</div>;
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-8 text-sm text-slate-600 shadow-sm">
+        Loading diary...
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Team Diary</h1>
-          {(user?.team?.name || teamName) ? (
-            <p className="text-sm text-slate-500 mt-1">
-              Team: {user?.team?.name || teamName}
-              {user?.department?.name ? (
-                <span className="text-slate-400"> · {user.department.name}</span>
-              ) : null}
-            </p>
-          ) : null}
-        </div>
-        <Link
-          href="/diary/new"
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700"
-        >
-          New entry
-        </Link>
-      </div>
-
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr]">
-            <div>
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Diary Calendar</h2>
-                  {entriesLoading ? (
-                    <p className="mt-1 text-xs text-slate-400">Loading entry counts…</p>
-                  ) : null}
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setVisibleMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
-                    className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-100"
-                  >
-                    Prev
-                  </button>
-                  <span className="text-sm font-medium text-slate-700">{monthLabel}</span>
-                  <button
-                    type="button"
-                    onClick={() => setVisibleMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-                    className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-100"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div key={day}>{day}</div>
-                ))}
-              </div>
-              <div className="mt-2 grid grid-cols-7 gap-2">
-                {calendarCells.map((cell, idx) => {
-                  if (!cell) {
-                    return <div key={`empty-${idx}`} className="h-16 rounded-md bg-slate-50" />;
-                  }
-
-                  const key = toDayKey(cell);
-                  const count = groupedByDay[key]?.length || 0;
-                  const isSelected = key === selectedDayKey;
-
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setSelectedDayKey(key)}
-                      className={`h-16 rounded-md border text-left px-2 py-1 transition ${
-                        isSelected
-                          ? 'border-emerald-300 bg-emerald-50'
-                          : 'border-slate-200 bg-white hover:bg-slate-50'
-                      }`}
-                    >
-                      <p className="text-xs font-semibold text-slate-700">{cell.getDate()}</p>
-                      {count > 0 && (
-                        <p className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                          {count}
-                        </p>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                {selectedDayKey ? `Entries for ${formatDate(selectedDayKey)}` : 'Daily entries'}
-              </h3>
-              <div className="mt-3 space-y-2">
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.04]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden max-lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[1fr_minmax(300px,400px)] lg:grid-rows-1 xl:grid-cols-[1fr_minmax(320px,420px)]">
+        {/* Calendar — full width of left column */}
+        <div className="flex min-h-0 min-w-0 flex-col border-b border-slate-100 lg:border-b-0 lg:border-r">
+          <div className="shrink-0 p-5 pb-3 sm:p-6 sm:pb-4 lg:p-8 lg:pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Diary calendar</h2>
                 {entriesLoading ? (
-                  <div className="rounded-lg border border-dashed border-slate-200 px-4 py-5 text-sm text-slate-500">
-                    Loading entries…
-                  </div>
-                ) : error ? (
-                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-5 text-sm text-red-600">{error}</div>
-                ) : selectedEntries.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-slate-200 px-4 py-5 text-sm text-slate-500">
-                    {Object.keys(groupedByDay).length === 0
-                        ? 'No diary entries yet.'
-                        : 'No entries on this day.'}
-                  </div>
-                ) : (
-                  selectedEntries.map((entry) => (
-                    <Link
-                      key={entry._id}
-                      href={`/diary/${entry._id}`}
-                      className="block rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm hover:bg-slate-100"
-                    >
-                      <p className="font-medium text-slate-900">{entry.matterTitle}</p>
-                      <p className="text-xs text-slate-600">{entry.court}</p>
-                      <p className="text-xs text-slate-500">Status: {entry.status}</p>
-                    </Link>
-                  ))
-                )}
+                  <p className="mt-1 text-xs text-slate-400">Syncing entry counts…</p>
+                ) : null}
+              </div>
+              <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50/80 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setVisibleMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                  className="rounded-md px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"
+                >
+                  Prev
+                </button>
+                <span className="min-w-[8.5rem] text-center text-sm font-semibold text-slate-800">{monthLabel}</span>
+                <button
+                  type="button"
+                  onClick={() => setVisibleMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                  className="rounded-md px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"
+                >
+                  Next
+                </button>
               </div>
             </div>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-5 pb-5 pt-0 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+            <div className="grid grid-cols-7 gap-0.5 text-center text-[9px] font-bold uppercase tracking-wider text-slate-400 sm:gap-1 sm:text-[10px]">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                <div key={day} className="py-0.5">
+                  {day}
+                </div>
+              ))}
+            </div>
+            <div className="mt-1 grid grid-cols-7 gap-0.5 sm:mt-1.5 sm:gap-1">
+              {calendarCells.map((cell, idx) => {
+                if (!cell) {
+                  return (
+                    <div
+                      key={`empty-${idx}`}
+                      className="aspect-square min-h-[1.75rem] rounded border border-transparent bg-slate-50/80 sm:min-h-[2rem]"
+                    />
+                  );
+                }
+
+                const key = toDayKey(cell);
+                const count = groupedByDay[key]?.length || 0;
+                const isSelected = key === selectedDayKey;
+
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelectedDayKey(key)}
+                    className={`flex aspect-square min-h-[1.75rem] flex-col items-start rounded-md border p-0.5 text-left transition sm:min-h-[2rem] sm:p-1 ${
+                      isSelected
+                        ? 'border-emerald-500 bg-emerald-50 shadow-sm ring-1 ring-emerald-500/25'
+                        : 'border-slate-200/80 bg-slate-50/60 hover:border-slate-300 hover:bg-white'
+                    }`}
+                  >
+                    <span className="text-[10px] font-bold leading-none text-slate-800 sm:text-[11px]">
+                      {cell.getDate()}
+                    </span>
+                    {count > 0 ? (
+                      <span className="mt-auto inline-flex rounded-full bg-emerald-600 px-0.5 py-px text-[8px] font-bold leading-tight text-white sm:px-1 sm:text-[9px]">
+                        {count}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </section>
-    </div>
+
+        {/* Entries — right column (beside calendar on lg+) */}
+        <aside className="flex min-h-0 flex-col overflow-hidden bg-gradient-to-b from-slate-50/90 to-slate-100/80 p-5 sm:p-6 lg:p-6">
+          <div className="mb-4 shrink-0 border-b border-slate-200/80 pb-4">
+            <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+              {selectedDayKey && !entriesLoading && !error ? (
+                <>
+                  <span className="tabular-nums text-emerald-700">{selectedEntries.length}</span>{' '}
+                </>
+              ) : null}
+              ENTRIES FOR
+            </h3>
+            <p className="mt-1 text-lg font-semibold leading-snug text-slate-900 sm:text-xl">
+              {selectedDayKey ? formatDate(selectedDayKey) : 'Select a day'}
+            </p>
+          </div>
+
+          <div className="flex min-h-0 flex-1 flex-col">
+            <DiaryDayEntryCarousel
+              dayKey={selectedDayKey}
+              entries={selectedEntries}
+              entriesLoading={entriesLoading}
+              error={error}
+              emptyStateMessage="No diary entries yet. Use New entry to add one."
+              noEntriesForDayMessage="No entries on this day. Pick another date or add a new entry."
+              hasAnyEntriesInDiary={Object.keys(groupedByDay).length > 0}
+              onEntryRemoved={handleEntryRemoved}
+            />
+          </div>
+        </aside>
+      </div>
+    </section>
   );
 }

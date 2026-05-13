@@ -200,6 +200,9 @@ export default function LeaveShell({ children }) {
           {user?.team?.name ? (
             <p className="text-xs text-slate-400 mt-1">Team: {user.team.name}</p>
           ) : null}
+          {user?.department?.name ? (
+            <p className="text-xs text-slate-400 mt-1">Department: {user.department.name}</p>
+          ) : null}
         </div>
         <Button
           variant="outline"

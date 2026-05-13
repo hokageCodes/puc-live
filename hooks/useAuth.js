@@ -52,6 +52,7 @@ export function useAuth() {
 
       const res = await fetch(`${backendUrl}/api/admin/me`, {
         method: 'GET',
+        cache: 'no-store',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',

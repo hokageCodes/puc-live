@@ -99,6 +99,7 @@ export default function BlogManagementPage() {
       setLoading(true);
       
       const res = await fetch(`${backendUrl}/api/blogs/admin/all`, {
+        cache: 'no-store',
         credentials: 'include',
         headers: getAuthHeaders(),
       });
@@ -135,6 +136,7 @@ export default function BlogManagementPage() {
     try {
       const res = await fetch(`${backendUrl}/api/blogs/${id}`, {
         method: 'DELETE',
+        cache: 'no-store',
         credentials: 'include',
         headers: getAuthHeaders(),
       });

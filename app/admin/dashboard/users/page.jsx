@@ -32,10 +32,10 @@ export default function AdminUsersPage() {
     try {
       const authHeaders = getAuthHeaders();
       const responses = await Promise.all([
-        fetch(`${base}/api/staff`, { credentials: 'include', headers: authHeaders }),
-        fetch(`${base}/api/departments`, { credentials: 'include', headers: authHeaders }),
-        fetch(`${base}/api/teams`, { credentials: 'include', headers: authHeaders }),
-        fetch(`${base}/api/practice-areas`, { credentials: 'include', headers: authHeaders }),
+        fetch(`${base}/api/staff`, { cache: 'no-store', credentials: 'include', headers: authHeaders }),
+        fetch(`${base}/api/departments`, { cache: 'no-store', credentials: 'include', headers: authHeaders }),
+        fetch(`${base}/api/teams`, { cache: 'no-store', credentials: 'include', headers: authHeaders }),
+        fetch(`${base}/api/practice-areas`, { cache: 'no-store', credentials: 'include', headers: authHeaders }),
       ]);
 
       responses.forEach((res) => {
@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`${base}/api/staff/${id}`, { method: 'DELETE', credentials: 'include', headers: getAuthHeaders() });
+      const res = await fetch(`${base}/api/staff/${id}`, { method: 'DELETE', cache: 'no-store', credentials: 'include', headers: getAuthHeaders() });
       if (res.ok) {
         setUsers((prev) => prev.filter((u) => u._id !== id));
         toast.success('Staff member deleted successfully.');

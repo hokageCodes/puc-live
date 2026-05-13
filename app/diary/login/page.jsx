@@ -54,11 +54,11 @@ export default function DiaryLoginPage() {
   const busy = submitting || status === 'authenticating';
 
   return (
-    <div className="min-h-screen bg-white flex flex-col lg:flex-row">
-      <div className="relative hidden w-full max-w-2xl overflow-hidden bg-slate-900 text-white lg:flex lg:flex-col lg:justify-between">
+    <div className="flex min-h-dvh flex-col bg-white lg:flex-row">
+      <div className="relative hidden h-dvh min-h-0 w-full max-w-2xl shrink-0 overflow-hidden bg-slate-900 text-white lg:flex lg:flex-col">
         <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 via-transparent to-slate-900" />
         <div className="relative h-full w-full">
-          <div className="flex h-full flex-col justify-between p-12">
+          <div className="flex h-full flex-col justify-center p-12">
             <header>
               <span className="inline-flex items-center rounded-full border border-white/20 px-4 py-1 text-xs uppercase tracking-[0.2em] text-white/70">
                 Paul Usoro & Co.
@@ -70,21 +70,11 @@ export default function DiaryLoginPage() {
                 Sign in with your staff credentials to view and update your team&apos;s court diary.
               </p>
             </header>
-
-            <footer className="mt-10 space-y-4 text-sm text-white/70">
-              <div>
-                <p className="text-white">Need help?</p>
-                <p className="text-white/60">
-                  Contact HR at <span className="font-medium text-white">hr@paulusoro.com</span>
-                </p>
-              </div>
-              <p className="text-white/40">&copy; {new Date().getFullYear()} Paul Usoro &amp; Co. All rights reserved.</p>
-            </footer>
           </div>
         </div>
       </div>
 
-      <main className="flex flex-1 items-center justify-center px-6 py-16 lg:px-12">
+      <main className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 py-12 lg:min-h-dvh lg:px-12 lg:py-16">
         <div className="w-full max-w-md space-y-8">
           <div className="space-y-2 text-center">
             <h2 className="text-3xl font-semibold text-slate-900">Court Diary sign in</h2>

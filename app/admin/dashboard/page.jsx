@@ -56,10 +56,12 @@ export default function AdminDashboard() {
       const authHeaders = getAuthHeaders();
       const [staffRes, blogsRes] = await Promise.all([
         fetch(`${backendUrl}/api/staff`, {
+          cache: 'no-store',
           credentials: 'include',
           headers: authHeaders,
         }),
         fetch(`${backendUrl}/api/blogs/admin/all`, {
+          cache: 'no-store',
           credentials: 'include',
           headers: authHeaders,
         }),

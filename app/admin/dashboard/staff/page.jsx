@@ -167,6 +167,7 @@ function ArrangeView({ staff, base, getAuthHeaders, onDone }) {
       });
       const r = await fetch(`${base}/api/staff/reorder`, {
         method: 'PATCH',
+        cache: 'no-store',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ updates }),
@@ -276,10 +277,10 @@ export default function StaffManagementPage() {
     try {
       const h = getAuthHeaders();
       const [r1, r2, r3, r4] = await Promise.all([
-        fetch(`${base}/api/staff`, { credentials: 'include', headers: h }),
-        fetch(`${base}/api/departments`, { credentials: 'include', headers: h }),
-        fetch(`${base}/api/teams`, { credentials: 'include', headers: h }),
-        fetch(`${base}/api/practice-areas`, { credentials: 'include', headers: h }),
+        fetch(`${base}/api/staff`, { cache: 'no-store', credentials: 'include', headers: h }),
+        fetch(`${base}/api/departments`, { cache: 'no-store', credentials: 'include', headers: h }),
+        fetch(`${base}/api/teams`, { cache: 'no-store', credentials: 'include', headers: h }),
+        fetch(`${base}/api/practice-areas`, { cache: 'no-store', credentials: 'include', headers: h }),
       ]);
       if (![r1, r2, r3, r4].every((r) => r.ok)) throw new Error('Failed to load staff data.');
       const [s, d, t, p] = await Promise.all([r1, r2, r3, r4].map((r) => r.json()));
@@ -318,7 +319,7 @@ export default function StaffManagementPage() {
   const handleDelete = async (id) => {
     if (!confirm('Permanently delete this staff member?')) return;
     try {
-      const r = await fetch(`${base}/api/staff/${id}`, { method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() } });
+      const r = await fetch(`${base}/api/staff/${id}`, { method: 'DELETE', cache: 'no-store', credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() } });
       if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message || 'Delete failed');
       setStaff((p) => p.filter((s) => s._id !== id));
       setFiltered((p) => p.filter((s) => s._id !== id));
@@ -332,7 +333,7 @@ export default function StaffManagementPage() {
     const fd = new FormData();
     fd.append('isVisible', String(next));
     try {
-      const r = await fetch(`${base}/api/staff/${person._id}`, { method: 'PUT', credentials: 'include', headers: getAuthHeaders(), body: fd });
+      const r = await fetch(`${base}/api/staff/${person._id}`, { method: 'PUT', cache: 'no-store', credentials: 'include', headers: getAuthHeaders(), body: fd });
       if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message || 'Update failed');
       applyUpdate(person._id, { isVisible: next });
       toast.success(`${next ? 'Now visible' : 'Hidden'} on website.`);
@@ -342,7 +343,7 @@ export default function StaffManagementPage() {
   const handleSendInvite = async (person) => {
     setInviteLoadingId(person._id);
     try {
-      const r = await fetch(`${base}/api/auth/invite`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify({ email: person.email }) });
+      const r = await fetch(`${base}/api/auth/invite`, { method: 'POST', cache: 'no-store', credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify({ email: person.email }) });
       if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message || 'Failed to send invite');
       toast.success('Activation email sent.');
       applyUpdate(person._id, { lastInviteSentAt: new Date().toISOString() });

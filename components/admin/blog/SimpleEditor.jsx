@@ -16,6 +16,7 @@ async function uploadImageToBackend(file, getAuthHeaders) {
 
   const res = await fetch(`${backendUrl}/api/blogs/upload-image`, {
     method: 'POST',
+    cache: 'no-store',
     credentials: 'include',
     headers: getAuthHeaders(),
     body: formData,

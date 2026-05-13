@@ -1,10 +1,13 @@
 // utils/api.js
 export class ApiError extends Error {
-  constructor(message, status, statusText) {
+  constructor(message, status, statusText, meta = {}) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.statusText = statusText;
+    this.code = meta.code;
+    this.conflicts = meta.conflicts;
+    this.sameTimeConflict = meta.sameTimeConflict;
   }
 }
 
@@ -57,6 +60,9 @@ export async function apiRequest(endpoint, options = {}) {
     signal: controller.signal,
     ...otherOptions,
   };
+  if (requestOptions.cache === undefined) {
+    requestOptions.cache = 'no-store';
+  }
 
   // Add body if provided
   if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
@@ -82,11 +88,20 @@ export async function apiRequest(endpoint, options = {}) {
         
         // Don't retry client errors (4xx), only server errors (5xx)
         if (response.status < 500 && attempt === retryAttempts) {
-          throw new ApiError(
-            `Request failed: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`,
-            response.status,
-            response.statusText
-          );
+          let parsed = null;
+          try {
+            parsed = JSON.parse(errorText);
+          } catch {
+            /* not JSON */
+          }
+          const userMessage =
+            parsed?.message ||
+            `Request failed: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`;
+          throw new ApiError(userMessage, response.status, response.statusText, {
+            code: parsed?.code,
+            conflicts: parsed?.conflicts,
+            sameTimeConflict: parsed?.sameTimeConflict,
+          });
         }
         
         // For server errors, continue to retry
@@ -267,5 +282,11 @@ export const diaryApi = {
   getAvailability: (date) => {
     const query = new URLSearchParams({ date }).toString();
     return api.get(`/api/court-diary/calendar/availability?${query}`);
+  },
+  previewConflicts: (params = {}) => {
+    const queryString = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''))
+    ).toString();
+    return api.get(`/api/court-diary/entries/conflicts-preview${queryString ? `?${queryString}` : ''}`);
   },
 };

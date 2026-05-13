@@ -64,6 +64,7 @@ export default function EditBlogPage() {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
 
         const res = await fetch(`${backendUrl}/api/blogs/id/${params.id}`, {
+          cache: 'no-store',
           credentials: 'include',
           headers: getAuthHeaders(),
         });
@@ -152,6 +153,7 @@ export default function EditBlogPage() {
       try {
         res = await fetch(`${backendUrl}/api/blogs/${params.id}`, {
           method: 'PUT',
+          cache: 'no-store',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
           body: JSON.stringify({ ...formData, tags: tagList }),
