@@ -1,1 +1,1 @@
-# Paul Usoro & Co - Web Applications
+# Paul Usoro & Co - Web Application

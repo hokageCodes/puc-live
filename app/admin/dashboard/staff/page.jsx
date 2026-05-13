@@ -67,21 +67,36 @@ function ActionsMenu({ person, onEdit, onDelete, onToggleVisibility, onSendInvit
         <MoreHorizontal className="h-4 w-4" />
       </button>
       {open && (
-        <div className="absolute right-0 z-50 mt-1 w-48 origin-top-right rounded-xl border border-slate-100 bg-white py-1 shadow-xl shadow-slate-200/60">
+        <div className="absolute right-0 z-50 mt-1 w-52 origin-top-right rounded-xl border border-slate-100 bg-white py-1 shadow-xl shadow-slate-200/60">
           <button
             onClick={() => { onEdit(); setOpen(false); }}
             className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
           >
             <Edit2 className="h-3.5 w-3.5 text-slate-400" /> Edit profile
           </button>
-          {status.key !== 'active' && (
+          {status.key === 'pending' && (
             <button
               onClick={() => { onSendInvite(); setOpen(false); }}
               disabled={inviteLoading}
               className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
             >
               <Send className="h-3.5 w-3.5 text-slate-400" />
-              {inviteLoading ? 'Sending…' : status.key === 'invited' ? 'Resend invite' : 'Send invite'}
+              {inviteLoading ? 'Sending…' : 'Send invite'}
+            </button>
+          )}
+          {(status.key === 'invited' || status.key === 'active') && (
+            <button
+              onClick={() => {
+                if (status.key === 'active') return;
+                onSendInvite();
+                setOpen(false);
+              }}
+              disabled={inviteLoading || status.key === 'active'}
+              title={status.key === 'active' ? 'This person has already activated their account.' : undefined}
+              className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Send className="h-3.5 w-3.5 text-slate-400" />
+              {inviteLoading ? 'Sending…' : 'Resend invite'}
             </button>
           )}
           <button
