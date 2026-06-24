@@ -63,6 +63,7 @@ export function HubAuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState('loading'); // loading | unauthenticated | authenticated | authenticating
   const tabWasHiddenRef = useRef(false);
+  const refreshInFlightRef = useRef(null); // single-flight guard for concurrent refreshes
 
   const backendUrl = getBackendUrl();
 
@@ -80,30 +81,46 @@ export function HubAuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  // Rotate + extend the session (also validates tokenVersion server-side).
-  const attemptRefresh = useCallback(async () => {
-    const res = await fetch(`${backendUrl}/api/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scope: SCOPE }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.message || 'Unable to refresh session');
-    if (!data?.user) throw new Error('Invalid refresh response');
-    applySession(data.user);
-    setStatus('authenticated');
-    return data.user;
+  // One refresh round-trip. Returns a result instead of throwing so callers can
+  // distinguish a real auth failure (401 -> log out) from a transient/network error
+  // (keep the session). Rotates + extends the session server-side.
+  const doRefresh = useCallback(async () => {
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scope: SCOPE }),
+      });
+      if (res.status === 401) return { ok: false, authError: true };
+      if (!res.ok) return { ok: false, authError: false }; // 429/5xx etc. — transient
+      const data = await res.json().catch(() => ({}));
+      if (!data?.user) return { ok: false, authError: false };
+      applySession(data.user);
+      setStatus('authenticated');
+      return { ok: true, user: data.user };
+    } catch {
+      return { ok: false, authError: false }; // network error — do not log out
+    }
   }, [applySession, backendUrl]);
 
+  // Single-flight: concurrent callers (StrictMode double-invoke, multiple tabs,
+  // periodic + manual) share ONE network refresh, so we never race the rotation.
+  const attemptRefresh = useCallback(() => {
+    if (refreshInFlightRef.current) return refreshInFlightRef.current;
+    const p = doRefresh().finally(() => { refreshInFlightRef.current = null; });
+    refreshInFlightRef.current = p;
+    return p;
+  }, [doRefresh]);
+
+  // Public refresh: only log out on a definitive auth failure; tolerate transient errors.
   const refreshSession = useCallback(async () => {
-    try {
-      return await attemptRefresh();
-    } catch (err) {
+    const result = await attemptRefresh();
+    if (result.authError) {
       clearSession();
       setStatus('unauthenticated');
-      throw err;
     }
+    return result;
   }, [attemptRefresh, clearSession]);
 
   // Lightweight identity re-sync (no token rotation) — used on tab refocus so role
@@ -186,21 +203,26 @@ export function HubAuthProvider({ children }) {
   }, [backendUrl, clearSession]);
 
   // Bootstrap: optimistically restore from storage, then verify with the server.
+  // A transient failure (backend restart, rate limit, offline) keeps the optimistic
+  // session instead of bouncing the user to /login; only a real 401 logs out.
   useEffect(() => {
     let isMounted = true;
     const bootstrap = async () => {
+      let hadStored = false;
       if (typeof window !== 'undefined') {
         const stored = safeParse(window.localStorage.getItem(STORAGE_USER_KEY));
-        if (stored && isMounted) setUser(stored); // optimistic; replaced below
+        if (stored && isMounted) { setUser(stored); hadStored = true; } // optimistic
       }
-      try {
-        await attemptRefresh();
-      } catch {
-        if (isMounted) {
-          clearSession();
-          setStatus('unauthenticated');
-        }
+      const result = await attemptRefresh();
+      if (!isMounted) return;
+      if (result.authError) {
+        clearSession();
+        setStatus('unauthenticated');
+      } else if (!result.ok) {
+        // Transient: keep showing the stored session if we have one, else unauth.
+        setStatus(hadStored ? 'authenticated' : 'unauthenticated');
       }
+      // result.ok -> doRefresh already set authenticated + fresh profile
     };
     bootstrap();
     return () => { isMounted = false; };
