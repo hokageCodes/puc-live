@@ -7,6 +7,7 @@ import {
   ListChecks,
   Users,
   FileText,
+  UserCog,
 } from 'lucide-react';
 
 /**
@@ -40,6 +41,7 @@ export const HUB_NAV = [
   // HR / management
   { name: 'Staff', href: '/hub/staff', icon: Users, roles: ['admin', 'hr', 'cms'] },
   { name: 'News', href: '/hub/news', icon: FileText, roles: ['admin', 'cms'] },
+  { name: 'Users & Roles', href: '/hub/users', icon: UserCog, roles: ['admin'] },
 ];
 
 const normalize = (roles) =>
