@@ -6,6 +6,7 @@ import {
   CalendarClock,
   ListChecks,
   Users,
+  FileText,
 } from 'lucide-react';
 
 /**
@@ -37,7 +38,8 @@ export const HUB_NAV = [
   },
 
   // HR / management
-  { name: 'Staff', href: '/hub/staff', icon: Users, roles: ['admin', 'hr'] },
+  { name: 'Staff', href: '/hub/staff', icon: Users, roles: ['admin', 'hr', 'cms'] },
+  { name: 'News', href: '/hub/news', icon: FileText, roles: ['admin', 'cms'] },
 ];
 
 const normalize = (roles) =>

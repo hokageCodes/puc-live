@@ -44,7 +44,8 @@ const generateSlug = (text) =>
 
 export default function CreateBlogPage() {
   const router = useRouter();
-  const { getAuthHeaders } = useAdminAuth();
+  const { getAuthHeaders, basePath } = useAdminAuth();
+  const newsBase = basePath || '/admin/dashboard/news';
   const [formData, setFormData] = useState(defaultForm);
   const [coverFile, setCoverFile] = useState(null);
   const [slugTouched, setSlugTouched] = useState(false);
@@ -162,7 +163,7 @@ export default function CreateBlogPage() {
       }
 
       toast.success('News post created successfully.');
-      router.push('/admin/dashboard/news');
+      router.push(newsBase);
     } catch (err) {
       console.error('Error creating blog:', err);
       let message = 'Failed to create news post';

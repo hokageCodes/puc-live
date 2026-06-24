@@ -15,7 +15,7 @@ import { useHubAuth } from './HubAuthContext';
  *
  * Auth is enforced by HubShell (useHubGuard) above this.
  */
-export default function HubAdminBridge({ children }) {
+export default function HubAdminBridge({ children, basePath }) {
   const hub = useHubAuth();
 
   const value = useMemo(
@@ -23,6 +23,9 @@ export default function HubAdminBridge({ children }) {
       admin: hub.user,
       loading: hub.isLoading,
       error: '',
+      // Per-module base path for in-app navigation (e.g. '/hub/news'). Pages fall
+      // back to their standalone admin path when this is undefined.
+      basePath,
       getAuthHeaders: () => ({}), // cookie-based in the hub; no bearer header
       logout: hub.signOut,
       checkAuth: hub.refreshIdentity,
@@ -30,7 +33,7 @@ export default function HubAdminBridge({ children }) {
       login: async () => ({ success: false, error: 'Use the unified hub login' }),
       useRequireAuth: () => {},
     }),
-    [hub]
+    [hub, basePath]
   );
 
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
