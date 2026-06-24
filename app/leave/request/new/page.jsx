@@ -60,7 +60,7 @@ const buildReportingChain = (user) => {
 
 export default function LeaveRequestCreatePage() {
   const router = useRouter();
-  const { user, status } = useLeaveAuth();
+  const { user, status, basePath } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
 
   const [leaveType, setLeaveType] = useState('');
@@ -131,7 +131,7 @@ export default function LeaveRequestCreatePage() {
 
         await leaveApi.createRequest(payload);
         setSubmitSuccess(true);
-        setTimeout(() => router.push('/leave/requests'), 800);
+        setTimeout(() => router.push(`${basePath}/requests`), 800);
       } catch (error) {
         console.error('Submit failed:', error);
         setSubmitError(error?.message || 'Unable to save the request right now. Please try again shortly.');
@@ -310,7 +310,7 @@ export default function LeaveRequestCreatePage() {
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Link
-                href="/leave/dashboard"
+                href={`${basePath}/dashboard`}
                 className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-700"
               >
                 Cancel
@@ -378,7 +378,7 @@ export default function LeaveRequestCreatePage() {
           <ul className="mt-4 space-y-3 text-sm">
             <li>
               <Link
-                href="/leave/policy"
+                href={`${basePath}/policy`}
                 className="inline-flex items-center gap-2 text-slate-600 hover:text-emerald-600"
               >
                 Leave policy handbook
@@ -387,7 +387,7 @@ export default function LeaveRequestCreatePage() {
             </li>
             <li>
               <Link
-                href="/leave/history"
+                href={`${basePath}/history`}
                 className="inline-flex items-center gap-2 text-slate-600 hover:text-emerald-600"
               >
                 View past requests

@@ -47,7 +47,7 @@ function getCurrentApprover(status) {
 }
 
 export default function LeaveRequestsClient() {
-  const { status } = useLeaveAuth();
+  const { status, basePath } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -119,7 +119,7 @@ export default function LeaveRequestsClient() {
             Recent activity
           </h2>
           <Link
-            href="/leave/request/new"
+            href={`${basePath}/request/new`}
             className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-500"
           >
             Book new leave
@@ -147,7 +147,7 @@ export default function LeaveRequestsClient() {
           <div className="overflow-x-auto -mx-4 sm:mx-0">
           {requests.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-slate-500">
-              No leave requests yet. <Link href="/leave/request/new" className="font-semibold text-emerald-600 hover:underline">Submit your first request</Link> to get started.
+              No leave requests yet. <Link href={`${basePath}/request/new`} className="font-semibold text-emerald-600 hover:underline">Submit your first request</Link> to get started.
             </div>
           ) : viewMode === 'table' ? (
               <table className="min-w-full divide-y divide-slate-200 text-sm">

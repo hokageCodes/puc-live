@@ -92,7 +92,7 @@ function getTimeAgo(date) {
 }
 
 export default function LeaveDashboardPage() {
-  const { user, status } = useLeaveAuth();
+  const { user, status, basePath } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
   const [balances, setBalances] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
@@ -218,14 +218,14 @@ export default function LeaveDashboardPage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Link
-            href="/leave/request/new"
+            href={`${basePath}/request/new`}
             className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
           >
             <CalendarDays className="h-4 w-4" />
             Request leave
           </Link>
           <Link
-            href="/leave/requests"
+            href={`${basePath}/requests`}
             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
           >
             View history
@@ -263,7 +263,7 @@ export default function LeaveDashboardPage() {
               </p>
             </div>
             <Link
-              href="/leave/calendar"
+              href={`${basePath}/calendar`}
               className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-500"
             >
               Open calendar
@@ -383,7 +383,7 @@ export default function LeaveDashboardPage() {
               </p>
             </div>
             <Link
-              href="/leave/approvals"
+              href={`${basePath}/approvals`}
               className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-500"
             >
               Manage all

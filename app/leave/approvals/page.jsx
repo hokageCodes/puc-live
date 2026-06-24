@@ -46,7 +46,7 @@ function getTimeAgo(date) {
 }
 
 export default function LeaveApprovalsPage() {
-  const { user, status } = useLeaveAuth();
+  const { user, status, basePath } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
   const [approvals, setApprovals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -145,7 +145,7 @@ export default function LeaveApprovalsPage() {
             Awaiting your decision
           </h2>
           <Link
-            href="/leave/calendar"
+            href={`${basePath}/calendar`}
             className="text-xs font-semibold text-emerald-600 hover:text-emerald-500"
           >
             View calendar impact

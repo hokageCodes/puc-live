@@ -1,4 +1,11 @@
-import { LayoutDashboard } from 'lucide-react';
+import {
+  LayoutDashboard,
+  CalendarDays,
+  ClipboardList,
+  CalendarPlus,
+  CalendarClock,
+  ListChecks,
+} from 'lucide-react';
 
 /**
  * Single source of truth for Hub navigation.
@@ -15,6 +22,18 @@ import { LayoutDashboard } from 'lucide-react';
  */
 export const HUB_NAV = [
   { name: 'Dashboard', href: '/hub/dashboard', icon: LayoutDashboard },
+
+  // Leave (self-service for everyone; approvals gated to approver roles)
+  { name: 'Leave', href: '/hub/leave/dashboard', icon: CalendarDays },
+  { name: 'My Requests', href: '/hub/leave/requests', icon: ClipboardList },
+  { name: 'New Request', href: '/hub/leave/request/new', icon: CalendarPlus },
+  { name: 'Leave Calendar', href: '/hub/leave/calendar', icon: CalendarClock },
+  {
+    name: 'Approvals',
+    href: '/hub/leave/approvals',
+    icon: ListChecks,
+    roles: ['teamLead', 'lineManager', 'hr', 'admin'],
+  },
 ];
 
 const normalize = (roles) =>
