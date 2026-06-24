@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { useMemo, useEffect, useState, Fragment } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
+import LeaveRequestModal from '../../../components/leave/LeaveRequestModal';
 import { leaveApi } from '../../../utils/api';
 
 const statusBadge = (status) => {
@@ -47,7 +47,7 @@ function getCurrentApprover(status) {
 }
 
 export default function LeaveRequestsClient() {
-  const { status, basePath } = useLeaveAuth();
+  const { status } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +56,8 @@ export default function LeaveRequestsClient() {
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'list' (mobile)
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0); // bump to refetch after creating a request
 
   const isLoading = status === 'loading' || status === 'authenticating' || loading;
 
@@ -81,7 +83,7 @@ export default function LeaveRequestsClient() {
     };
 
     fetchRequests();
-  }, [isAuthenticated, page]);
+  }, [isAuthenticated, page, reloadKey]);
 
   if (isLoading || !isAuthenticated) {
     return (
@@ -118,13 +120,14 @@ export default function LeaveRequestsClient() {
           <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
             Recent activity
           </h2>
-          <Link
-            href={`${basePath}/request/new`}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-500"
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
           >
-            Book new leave
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+            <Plus className="h-4 w-4" />
+            New request
+          </button>
         </div>
         {/* Controls: allow mobile users to switch to a list/card view */}
         <div className="mt-4 mb-3 sm:hidden flex items-center gap-2">
@@ -147,7 +150,7 @@ export default function LeaveRequestsClient() {
           <div className="overflow-x-auto -mx-4 sm:mx-0">
           {requests.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-slate-500">
-              No leave requests yet. <Link href={`${basePath}/request/new`} className="font-semibold text-emerald-600 hover:underline">Submit your first request</Link> to get started.
+              No leave requests yet. <button type="button" onClick={() => setModalOpen(true)} className="font-semibold text-emerald-600 hover:underline">Submit your first request</button> to get started.
             </div>
           ) : viewMode === 'table' ? (
               <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -292,6 +295,16 @@ export default function LeaveRequestsClient() {
           </div>
         )}
       </section>
+
+      <LeaveRequestModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onCreated={() => {
+          setModalOpen(false);
+          setPage(1);
+          setReloadKey((k) => k + 1);
+        }}
+      />
     </div>
   );
 }
