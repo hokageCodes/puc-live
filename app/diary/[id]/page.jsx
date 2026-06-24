@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
 import { ApiError, diaryApi } from '../../../utils/api';
 import {
@@ -31,6 +31,7 @@ export default function DiaryEntryPage() {
   const { id } = useParams();
   const entryId = id ? String(id) : '';
   const router = useRouter();
+  const diaryBase = usePathname()?.startsWith('/hub') ? '/hub/diary' : '/diary';
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -148,7 +149,7 @@ export default function DiaryEntryPage() {
       if (flags.semantic || acknowledgeDuplicate) payload.acknowledgeDuplicate = true;
       if (flags.team || acknowledgeTeamOverlap) payload.acknowledgeTeamOverlap = true;
       await diaryApi.updateEntry(entryId, payload);
-      router.push('/diary');
+      router.push(diaryBase);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409 && err.code === 'DIARY_DUPLICATE') {
         const rows = Array.isArray(err.conflicts) ? err.conflicts : [];
@@ -240,7 +241,7 @@ export default function DiaryEntryPage() {
     setError('');
     try {
       await diaryApi.deleteEntry(entryId);
-      router.push('/diary');
+      router.push(diaryBase);
     } catch (err) {
       setError(err.message || 'Failed to delete entry.');
       setSaving(false);
@@ -317,7 +318,7 @@ export default function DiaryEntryPage() {
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Edit diary entry</h1>
           <p className="mt-1 text-sm text-slate-500">Update this hearing in the team diary.</p>
         </div>
-        <Link href="/diary" className="shrink-0 text-sm font-medium text-emerald-600 hover:text-emerald-700">
+        <Link href={diaryBase} className="shrink-0 text-sm font-medium text-emerald-600 hover:text-emerald-700">
           ← Back to calendar
         </Link>
       </div>

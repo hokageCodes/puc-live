@@ -1,7 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+
+// Diary lives at /diary standalone and /hub/diary inside the hub. Derive the base
+// from the current path so entry links stay within the right surface.
+const diaryBaseFromPath = (pathname) => (pathname?.startsWith('/hub') ? '/hub/diary' : '/diary');
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Building2,
@@ -58,6 +62,7 @@ const STATUS_STYLES = {
 
 function EntryCard({ entry, onDeleted, disabled }) {
   const router = useRouter();
+  const diaryBase = diaryBaseFromPath(usePathname());
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState('');
 
@@ -102,7 +107,7 @@ function EntryCard({ entry, onDeleted, disabled }) {
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
             <Link
-              href={`/diary/${entry._id}`}
+              href={`${diaryBase}/${entry._id}`}
               title="Edit entry"
               className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800"
             >
@@ -179,7 +184,7 @@ function EntryCard({ entry, onDeleted, disabled }) {
 
       <button
         type="button"
-        onClick={() => router.push(`/diary/${entry._id}`)}
+        onClick={() => router.push(`${diaryBase}/${entry._id}`)}
         className="mt-2 w-full rounded-md border border-slate-100 bg-slate-50/90 py-1.5 text-center text-[11px] font-medium text-emerald-700 transition hover:bg-emerald-50 sm:hidden"
       >
         Open full entry

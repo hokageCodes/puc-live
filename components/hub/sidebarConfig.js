@@ -8,6 +8,7 @@ import {
   Users,
   FileText,
   UserCog,
+  BookOpenText,
 } from 'lucide-react';
 
 /**
@@ -37,6 +38,9 @@ export const HUB_NAV = [
     icon: ListChecks,
     roles: ['teamLead', 'lineManager', 'hr', 'admin'],
   },
+
+  // Court diary (all enrolled staff, per current backend rules)
+  { name: 'Court Diary', href: '/hub/diary', icon: BookOpenText },
 
   // HR / management
   { name: 'Staff', href: '/hub/staff', icon: Users, roles: ['admin', 'hr', 'cms'] },

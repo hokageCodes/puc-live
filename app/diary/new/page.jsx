@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
 import { ApiError, diaryApi } from '../../../utils/api';
 import {
@@ -28,6 +28,7 @@ export default function NewDiaryEntryPage() {
   });
   const { status, user } = useLeaveAuth();
   const router = useRouter();
+  const diaryBase = usePathname()?.startsWith('/hub') ? '/hub/diary' : '/diary';
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [blockingSemantic, setBlockingSemantic] = useState([]);
@@ -103,7 +104,7 @@ export default function NewDiaryEntryPage() {
       if (flags.semantic || acknowledgeDuplicate) payload.acknowledgeDuplicate = true;
       if (flags.team || acknowledgeTeamOverlap) payload.acknowledgeTeamOverlap = true;
       await diaryApi.createEntry(payload);
-      router.push('/diary');
+      router.push(diaryBase);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409 && err.code === 'DIARY_DUPLICATE') {
         const rows = Array.isArray(err.conflicts) ? err.conflicts : [];
@@ -259,7 +260,7 @@ export default function NewDiaryEntryPage() {
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">New diary entry</h1>
           <p className="mt-1 text-sm text-slate-500">Add a court appearance for your team diary.</p>
         </div>
-        <Link href="/diary" className="shrink-0 text-sm font-medium text-emerald-600 hover:text-emerald-700">
+        <Link href={diaryBase} className="shrink-0 text-sm font-medium text-emerald-600 hover:text-emerald-700">
           ← Back to calendar
         </Link>
       </div>
