@@ -1,8 +1,0 @@
-{
-  "compilerOptions": {
-    "baseUrl": "../../",
-    "paths": {
-      "@db": ["packages/db/index"]
-    }
-  }
-}
