@@ -5,30 +5,44 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Building2, ChevronLeft, LogOut, Menu, User, X } from 'lucide-react';
 import { useHubAuth, useHubGuard } from './HubAuthContext';
-import { visibleNav } from './sidebarConfig';
+import { visibleNavGroups } from './sidebarConfig';
 
-function NavLinks({ items, pathname, onNavigate }) {
+function NavItem({ item, pathname, onNavigate }) {
+  const Icon = item.icon;
+  const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
   return (
-    <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-      {items.map((item) => {
-        const Icon = item.icon;
-        const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition ${
-              isActive
-                ? 'bg-emerald-50 text-emerald-700 border-l-4 border-emerald-600'
-                : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50'
-            }`}
-          >
-            <Icon className={`mr-3 h-5 w-5 flex-shrink-0 ${isActive ? 'text-emerald-700' : 'text-slate-500 group-hover:text-emerald-700'}`} />
-            {item.name}
-          </Link>
-        );
-      })}
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition ${
+        isActive
+          ? 'bg-emerald-50 text-emerald-700 border-l-4 border-emerald-600'
+          : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50'
+      }`}
+    >
+      <Icon className={`mr-3 h-5 w-5 flex-shrink-0 ${isActive ? 'text-emerald-700' : 'text-slate-500 group-hover:text-emerald-700'}`} />
+      {item.name}
+    </Link>
+  );
+}
+
+function NavGroups({ groups, pathname, onNavigate }) {
+  return (
+    <nav className="flex-1 px-4 py-6 overflow-y-auto">
+      {groups.map((group, index) => (
+        <div key={group.id} className={index > 0 ? 'mt-4 pt-4 border-t border-slate-200' : ''}>
+          {group.label && (
+            <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              {group.label}
+            </p>
+          )}
+          <div className="space-y-1">
+            {group.items.map((item) => (
+              <NavItem key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
+            ))}
+          </div>
+        </div>
+      ))}
     </nav>
   );
 }
@@ -39,7 +53,7 @@ export default function HubShell({ children }) {
   const { user, roles, signOut } = useHubAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const navItems = useMemo(() => visibleNav(roles), [roles]);
+  const navGroups = useMemo(() => visibleNavGroups(roles), [roles]);
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || 'User';
   const initial = (user?.firstName || user?.email || 'U').charAt(0).toUpperCase();
 
@@ -88,7 +102,7 @@ export default function HubShell({ children }) {
             </button>
           </div>
 
-          <NavLinks items={navItems} pathname={pathname} onNavigate={closeSidebar} />
+          <NavGroups groups={navGroups} pathname={pathname} onNavigate={closeSidebar} />
 
           <div className="p-4 border-t border-slate-200">
             <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-50">
