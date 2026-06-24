@@ -22,7 +22,7 @@ const SCOPE = 'hub';
 
 const getBackendUrl = () => process.env.NEXT_PUBLIC_BACKEND_URL || 'https://puc-backend.vercel.app';
 
-export const DEFAULT_HUB_POST_LOGIN = '/dashboard';
+export const DEFAULT_HUB_POST_LOGIN = '/hub/dashboard';
 
 const safeParse = (value) => {
   try {
