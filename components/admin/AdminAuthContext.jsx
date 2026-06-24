@@ -3,7 +3,8 @@
 import { createContext, useContext } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 
-const AdminAuthContext = createContext(null);
+// Exported so a hub bridge can supply this same context from the unified hub session.
+export const AdminAuthContext = createContext(null);
 
 export function AdminAuthProvider({ children }) {
   const auth = useAuth();
