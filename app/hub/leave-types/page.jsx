@@ -141,7 +141,7 @@ export default function LeaveTypesPage() {
   }
 
   return (
-    <div className="max-w-5xl">
+    <div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Leave types</h1>
@@ -153,13 +153,13 @@ export default function LeaveTypesPage() {
       </div>
 
       {loading ? (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[0, 1, 2].map((i) => (
             <div key={i} className="h-44 animate-pulse rounded-2xl border border-slate-200 bg-slate-50" />
           ))}
         </div>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {types.map((t) => {
             const accent = t.color && /^#([0-9a-f]{6})$/i.test(t.color) ? t.color : '#10b981';
             const tint = `${accent}1a`;
