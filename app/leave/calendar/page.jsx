@@ -41,7 +41,8 @@ export default function LeaveCalendarPage() {
         setLoading(true);
         setError(null);
         const data = await leaveApi.getCalendarData();
-        setEvents(data.events || []);
+        // Dedupe by id (a request can appear in both "my leave" and the team view).
+        setEvents(Array.from(new Map((data.events || []).map((e) => [e.id, e])).values()));
       } catch (err) {
         console.error('Error fetching calendar data:', err);
         setError('Failed to load calendar. Please refresh the page.');
