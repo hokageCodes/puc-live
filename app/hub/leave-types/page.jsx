@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pencil, Plus, Trash2, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { CalendarDays, Check, FileText, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useHubAuth } from '../../../components/hub/HubAuthContext';
 import { apiConfig } from '../../../utils/api';
@@ -136,8 +136,6 @@ export default function LeaveTypesPage() {
     }
   };
 
-  const genderLabel = useMemo(() => ({ all: 'Everyone', male: 'Male only', female: 'Female only' }), []);
-
   if (!allowed) {
     return <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">You don’t have access to leave-type management.</div>;
   }
@@ -154,53 +152,88 @@ export default function LeaveTypesPage() {
         </button>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold">Name</th>
-                <th className="px-4 py-3 text-left font-semibold">Allocation</th>
-                <th className="px-4 py-3 text-left font-semibold">Applies to</th>
-                <th className="px-4 py-3 text-left font-semibold">Status</th>
-                <th className="px-4 py-3 text-right font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {loading ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Loading…</td></tr>
-              ) : types.length === 0 ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">No leave types yet.</td></tr>
-              ) : (
-                types.map((t) => (
-                  <tr key={t._id} className="hover:bg-slate-50/60">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="h-3 w-3 rounded-full" style={{ backgroundColor: t.color || '#cbd5e1' }} />
-                        <span className="font-medium text-slate-800">{t.name}</span>
-                        {t.code && <span className="text-xs text-slate-400">{t.code}</span>}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">{t.defaultDays ?? t.defaultAnnualAllocation ?? 0} days</td>
-                    <td className="px-4 py-3 text-slate-600">{genderLabel[t.applicableGender] || 'Everyone'}</td>
-                    <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${t.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                        {t.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => setModal(t)} className="rounded-lg border border-slate-200 p-1.5 text-slate-600 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700" title="Edit"><Pencil className="h-4 w-4" /></button>
-                        <button onClick={() => remove(t)} className="rounded-lg border border-slate-200 p-1.5 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600" title="Delete"><Trash2 className="h-4 w-4" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {loading ? (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-44 animate-pulse rounded-2xl border border-slate-200 bg-slate-50" />
+          ))}
         </div>
-      </div>
+      ) : (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {types.map((t) => {
+            const accent = t.color && /^#([0-9a-f]{6})$/i.test(t.color) ? t.color : '#10b981';
+            const tint = `${accent}1a`;
+            const allocation = t.defaultDays ?? t.defaultAnnualAllocation ?? 0;
+            const genderChip = t.applicableGender === 'female'
+              ? { label: 'Female only', cls: 'bg-pink-50 text-pink-700 ring-pink-200' }
+              : t.applicableGender === 'male'
+              ? { label: 'Male only', cls: 'bg-blue-50 text-blue-700 ring-blue-200' }
+              : null;
+            return (
+              <div
+                key={t._id}
+                className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-md ${t.isActive ? 'border-slate-200' : 'border-slate-200 opacity-70'}`}
+              >
+                <span className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: accent }} />
+
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: tint, color: accent }}>
+                      <CalendarDays className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="truncate font-semibold text-slate-800">{t.name}</h3>
+                      {t.code && <p className="text-xs uppercase tracking-wide text-slate-400">{t.code}</p>}
+                    </div>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${t.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                    {t.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+
+                <div className="mt-4 flex items-baseline gap-1.5">
+                  <span className="text-3xl font-bold text-slate-900">{allocation}</span>
+                  <span className="text-sm text-slate-400">days / year</span>
+                </div>
+
+                {t.description && <p className="mt-1 line-clamp-2 text-xs text-slate-500">{t.description}</p>}
+
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {genderChip && <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${genderChip.cls}`}>{genderChip.label}</span>}
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${t.isPaid ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-slate-50 text-slate-500 ring-slate-200'}`}>
+                    {t.isPaid ? <><Check className="h-3 w-3" /> Paid</> : 'Unpaid'}
+                  </span>
+                  {t.requiresDocument && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
+                      <FileText className="h-3 w-3" /> Document
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-3">
+                  <button onClick={() => setModal(t)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700">
+                    <Pencil className="h-3.5 w-3.5" /> Edit
+                  </button>
+                  <button onClick={() => remove(t)} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Add card */}
+          <button
+            onClick={() => setModal({})}
+            className="flex min-h-[11rem] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 transition hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-600"
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 transition group-hover:bg-emerald-100">
+              <Plus className="h-5 w-5" />
+            </span>
+            <span className="text-sm font-semibold">New leave type</span>
+          </button>
+        </div>
+      )}
 
       {modal && <LeaveTypeModal initial={modal._id ? modal : null} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
     </div>
