@@ -160,6 +160,20 @@ export function HubAuthProvider({ children }) {
     return result;
   }, [attemptRefresh, clearSession]);
 
+  // Keep the session alive WITHOUT logging the user out on a failed cookie refresh.
+  // The Bearer token is the source of truth: validate it via /me; only if the token
+  // itself is rejected do we try the refresh cookie, and only log out if BOTH fail.
+  // This stops the mid-task auto-logout when cross-site cookies are unavailable.
+  const keepSessionAlive = useCallback(async () => {
+    const me = await validateViaMe();
+    if (me.ok || !me.authError) return; // valid, or transient — stay logged in
+    const r = await attemptRefresh();   // token expired — last resort: cookie refresh
+    if (r.authError) {
+      clearSession();
+      setStatus('unauthenticated');
+    }
+  }, [validateViaMe, attemptRefresh, clearSession]);
+
   // Lightweight identity re-sync (no token rotation) — used on tab refocus so role
   // changes made by an admin are reflected without minting new tokens each focus.
   const refreshIdentity = useCallback(async () => {
@@ -280,14 +294,15 @@ export function HubAuthProvider({ children }) {
     return () => { isMounted = false; };
   }, [attemptRefresh, clearSession, validateViaMe]);
 
-  // Periodic refresh while authenticated.
+  // Periodic session check while authenticated — tolerant (won't log out on a failed
+  // cookie refresh; only if the Bearer token itself is dead).
   useEffect(() => {
     if (status !== 'authenticated') return undefined;
     const interval = setInterval(() => {
-      refreshSession().catch(() => {});
+      keepSessionAlive().catch(() => {});
     }, REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [refreshSession, status]);
+  }, [keepSessionAlive, status]);
 
   // Re-sync identity when returning to the tab (cheap /me call, no rotation).
   useEffect(() => {

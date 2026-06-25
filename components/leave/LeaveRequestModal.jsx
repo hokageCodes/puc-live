@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { GitBranch, X } from 'lucide-react';
 import LeaveRequestForm from './LeaveRequestForm';
 import ApprovalChainCard from './ApprovalChainCard';
@@ -38,9 +39,11 @@ export default function LeaveRequestModal({ open, onClose, onCreated }) {
 
   useEffect(() => { if (!open) setShowChain(false); }, [open]);
 
-  if (!open) return null;
+  if (!open || typeof document === 'undefined') return null;
 
-  return (
+  // Render at document.body so the overlay can never be trapped by an ancestor's
+  // overflow/stacking context (which can make a nested modal invisible).
+  return createPortal(
     <>
       <div
         className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:p-6"
@@ -112,6 +115,7 @@ export default function LeaveRequestModal({ open, onClose, onCreated }) {
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body
   );
 }

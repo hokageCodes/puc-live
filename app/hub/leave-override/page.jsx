@@ -73,15 +73,31 @@ function Stat({ label, value, strong }) {
   );
 }
 
+const fmtDay = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
+const fmtRange = (from, to) => {
+  if (!from) return '';
+  const f = fmtDay(from);
+  const t = to ? fmtDay(to) : '';
+  return t && t !== f ? `${f} – ${t}` : f;
+};
+
 function BalanceCard({ staffId, row, onSaved }) {
   const [editing, setEditing] = useState(false);
   const [allocated, setAllocated] = useState(row.allocated);
   const [carriedOver, setCarriedOver] = useState(row.carriedOver);
   const [used, setUsed] = useState(row.used);
+  const [usedFrom, setUsedFrom] = useState('');
+  const [usedTo, setUsedTo] = useState('');
+  const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const startEdit = () => { setAllocated(row.allocated); setCarriedOver(row.carriedOver); setUsed(row.used); setEditing(true); };
+  const startEdit = () => {
+    setAllocated(row.allocated); setCarriedOver(row.carriedOver); setUsed(row.used);
+    setUsedFrom(''); setUsedTo(''); setNote('');
+    setEditing(true);
+  };
   const liveRemaining = (Number(allocated) || 0) + (Number(carriedOver) || 0) - (Number(used) || 0);
+  const history = (Array.isArray(row.adjustments) ? row.adjustments : []).filter((a) => a.usedFrom || a.reason);
 
   const save = async () => {
     setSaving(true);
@@ -90,7 +106,14 @@ function BalanceCard({ staffId, row, onSaved }) {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getHubAuthHeader() },
-        body: JSON.stringify({ allocated: Number(allocated) || 0, carriedOver: Number(carriedOver) || 0, used: Number(used) || 0 }),
+        body: JSON.stringify({
+          allocated: Number(allocated) || 0,
+          carriedOver: Number(carriedOver) || 0,
+          used: Number(used) || 0,
+          ...(usedFrom ? { usedFrom } : {}),
+          ...(usedTo ? { usedTo } : {}),
+          ...(note ? { reason: note } : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || 'Failed to save.');
@@ -124,6 +147,20 @@ function BalanceCard({ staffId, row, onSaved }) {
           <button onClick={startEdit} className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 py-2 text-sm font-semibold text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700">
             <Pencil className="h-4 w-4" /> Override
           </button>
+          {history.length > 0 && (
+            <div className="mt-3 border-t border-slate-100 pt-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Recent records</p>
+              <ul className="mt-1.5 space-y-1">
+                {history.slice(0, 3).map((a, i) => (
+                  <li key={i} className="text-xs text-slate-500">
+                    {a.usedFrom && <span className="font-medium text-slate-700">{fmtRange(a.usedFrom, a.usedTo)}</span>}
+                    {a.usedFrom && a.reason ? ' · ' : ''}
+                    {a.reason}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </>
       ) : (
         <>
@@ -133,6 +170,16 @@ function BalanceCard({ staffId, row, onSaved }) {
             <label className="text-xs font-medium text-slate-500">Used<input type="number" min="0" className={`mt-1 ${numCls}`} value={used} onChange={(e) => setUsed(e.target.value)} /></label>
           </div>
           <p className="mt-3 text-sm text-slate-500">Remaining will be <span className="font-bold text-emerald-700">{liveRemaining}</span> days</p>
+
+          <div className="mt-3 rounded-lg bg-slate-50 p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Record period used (optional)</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <label className="text-xs font-medium text-slate-500">From<input type="date" className={`mt-1 ${numCls}`} value={usedFrom} onChange={(e) => setUsedFrom(e.target.value)} /></label>
+              <label className="text-xs font-medium text-slate-500">To<input type="date" min={usedFrom || undefined} className={`mt-1 ${numCls}`} value={usedTo} onChange={(e) => setUsedTo(e.target.value)} /></label>
+            </div>
+            <label className="mt-2 block text-xs font-medium text-slate-500">Note<input type="text" maxLength={200} placeholder="e.g. January annual leave" className={`mt-1 ${numCls}`} value={note} onChange={(e) => setNote(e.target.value)} /></label>
+          </div>
+
           <div className="mt-3 flex gap-2">
             <button onClick={save} disabled={saving} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:bg-emerald-300">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Save
