@@ -182,7 +182,11 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
     }
     const filtered = teams.filter((t) => {
       const deptId = t.department?._id || t.department;
-      return String(deptId || '') === String(selectedDepartment);
+      // Teams scoped to this department, plus unassigned teams (no department set),
+      // which are available under any department. Avoids an empty dropdown when the
+      // org's teams aren't linked to departments.
+      if (!deptId) return true;
+      return String(deptId) === String(selectedDepartment);
     });
     setFilteredTeams(filtered);
 
