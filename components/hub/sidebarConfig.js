@@ -9,7 +9,15 @@ import {
   BookOpenText,
   SlidersHorizontal,
   Scale,
+  Target,
+  Gauge,
+  CalendarRange,
 } from 'lucide-react';
+
+// Performance Evaluation module rolls out in phases (see PERFORMANCE-REVIEW-BUILD.md).
+// Keep the nav structure in place but hidden until the screens land — flip to true
+// (or wire to an env flag) when Phase 1+ pages exist so we never expose dead links.
+const PERFORMANCE_ENABLED = false;
 
 /**
  * Hub navigation, grouped into sections.
@@ -34,6 +42,8 @@ export const HUB_NAV_GROUPS = [
       { name: 'Leave Calendar', href: '/hub/leave/calendar', icon: CalendarClock },
       // Litigation-only tool — hidden for everyone else (backend also enforces this).
       { name: 'Court Diary', href: '/hub/diary', icon: BookOpenText, show: (u) => /litigation/i.test(u?.department?.name || '') },
+      // Self-service appraisal (objectives, CDP, self-assessment). Hidden until Phase 2.
+      { name: 'My Performance', href: '/hub/performance', icon: Target, show: () => PERFORMANCE_ENABLED },
     ],
   },
   {
@@ -45,6 +55,10 @@ export const HUB_NAV_GROUPS = [
       { name: 'Leave Types', href: '/hub/leave-types', icon: SlidersHorizontal, roles: ['admin', 'hr'] },
       { name: 'Leave Override', href: '/hub/leave-override', icon: Scale, roles: ['admin', 'hr'] },
       { name: 'News', href: '/hub/news', icon: FileText, roles: ['admin', 'cms'] },
+      // Performance queue for managers + HR/admin. Hidden until Phase 3.
+      { name: 'Performance', href: '/hub/performance/reviews', icon: Gauge, roles: ['teamLead', 'lineManager', 'hr', 'admin'], show: () => PERFORMANCE_ENABLED },
+      // Cycle admin (open/advance/close, moderation). Hidden until Phase 1.
+      { name: 'Performance Cycles', href: '/hub/performance/cycles', icon: CalendarRange, roles: ['hr', 'admin'], show: () => PERFORMANCE_ENABLED },
     ],
   },
 ];

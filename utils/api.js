@@ -290,6 +290,12 @@ export const leaveApi = {
   getMyApprovals: () => api.get('/api/leave/approvals/history'),
 };
 
+export const performanceApi = {
+  // Reference metadata: enums, the 5 fixed behaviours, rating descriptions, limits.
+  // The frontend renders all dropdowns from this so values are never hard-coded.
+  getMeta: () => api.get('/api/performance/meta'),
+};
+
 export const diaryApi = {
   listEntries: (params = {}) => {
     const queryString = Object.keys(params).length
