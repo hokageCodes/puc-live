@@ -18,6 +18,16 @@ export const apiConfig = {
   retryDelay: 1000, // 1 second
 };
 
+// Unified hub session token. The hub authenticates with a Bearer access token
+// (like the admin app) so it doesn't depend on cross-site refresh cookies, which
+// are unreliable across the frontend/backend domains in production.
+export const HUB_TOKEN_KEY = 'hub_token';
+export const getHubAuthHeader = () => {
+  if (typeof window === 'undefined') return {};
+  const t = window.localStorage.getItem(HUB_TOKEN_KEY);
+  return t ? { Authorization: `Bearer ${t}` } : {};
+};
+
 // Helper function to delay execution
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -54,6 +64,7 @@ export async function apiRequest(endpoint, options = {}) {
     method,
     headers: {
       'Content-Type': 'application/json',
+      ...getHubAuthHeader(), // hub Bearer token (no-op if not a hub session); explicit headers win
       ...headers,
     },
     credentials: 'include',

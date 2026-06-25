@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, CheckCircle2, FilePlus2, Loader2, Upload, X } from 'lucide-react';
-import { apiConfig, leaveApi } from '../../utils/api';
+import { apiConfig, getHubAuthHeader, leaveApi } from '../../utils/api';
 
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10MB (matches backend limit)
 const ATTACHMENT_ACCEPT = '.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png';
@@ -121,7 +121,8 @@ export default function LeaveRequestForm({ onSuccess, onCancel, submitLabel = 'S
         const res = await fetch(`${base}/api/leave/requests`, {
           method: 'POST',
           credentials: 'include',
-          body: fd, // do NOT set Content-Type — the browser adds the multipart boundary
+          headers: { ...getHubAuthHeader() }, // no Content-Type — browser sets the multipart boundary
+          body: fd,
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data?.message || data?.error || 'Unable to save the request.');
