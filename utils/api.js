@@ -294,6 +294,12 @@ export const performanceApi = {
   // Reference metadata: enums, the 5 fixed behaviours, rating descriptions, limits.
   // The frontend renders all dropdowns from this so values are never hard-coded.
   getMeta: () => api.get('/api/performance/meta'),
+
+  // Cycle administration (HR/admin).
+  listCycles: () => api.get('/api/performance/cycles'),
+  createCycle: (payload) => api.post('/api/performance/cycles', payload),
+  advanceCycle: (cycleId) => api.post(`/api/performance/cycles/${cycleId}/advance`, {}),
+  closeCycle: (cycleId) => api.post(`/api/performance/cycles/${cycleId}/close`, {}),
 };
 
 export const diaryApi = {

@@ -15,9 +15,10 @@ import {
 } from 'lucide-react';
 
 // Performance Evaluation module rolls out in phases (see PERFORMANCE-REVIEW-BUILD.md).
-// Keep the nav structure in place but hidden until the screens land — flip to true
-// (or wire to an env flag) when Phase 1+ pages exist so we never expose dead links.
-const PERFORMANCE_ENABLED = false;
+// Each surface is gated independently so we only expose links whose pages exist.
+const PERFORMANCE_CYCLES_ENABLED = true;  // Phase 1 — cycle admin page is live
+const PERFORMANCE_REVIEWS_ENABLED = false; // Phase 3 — manager queue
+const PERFORMANCE_SELF_ENABLED = false;    // Phase 2 — My Performance
 
 /**
  * Hub navigation, grouped into sections.
@@ -43,7 +44,7 @@ export const HUB_NAV_GROUPS = [
       // Litigation-only tool — hidden for everyone else (backend also enforces this).
       { name: 'Court Diary', href: '/hub/diary', icon: BookOpenText, show: (u) => /litigation/i.test(u?.department?.name || '') },
       // Self-service appraisal (objectives, CDP, self-assessment). Hidden until Phase 2.
-      { name: 'My Performance', href: '/hub/performance', icon: Target, show: () => PERFORMANCE_ENABLED },
+      { name: 'My Performance', href: '/hub/performance', icon: Target, show: () => PERFORMANCE_SELF_ENABLED },
     ],
   },
   {
@@ -56,9 +57,9 @@ export const HUB_NAV_GROUPS = [
       { name: 'Leave Override', href: '/hub/leave-override', icon: Scale, roles: ['admin', 'hr'] },
       { name: 'News', href: '/hub/news', icon: FileText, roles: ['admin', 'cms'] },
       // Performance queue for managers + HR/admin. Hidden until Phase 3.
-      { name: 'Performance', href: '/hub/performance/reviews', icon: Gauge, roles: ['teamLead', 'lineManager', 'hr', 'admin'], show: () => PERFORMANCE_ENABLED },
-      // Cycle admin (open/advance/close, moderation). Hidden until Phase 1.
-      { name: 'Performance Cycles', href: '/hub/performance/cycles', icon: CalendarRange, roles: ['hr', 'admin'], show: () => PERFORMANCE_ENABLED },
+      { name: 'Performance', href: '/hub/performance/reviews', icon: Gauge, roles: ['teamLead', 'lineManager', 'hr', 'admin'], show: () => PERFORMANCE_REVIEWS_ENABLED },
+      // Cycle admin (open/advance/close, moderation).
+      { name: 'Performance Cycles', href: '/hub/performance/cycles', icon: CalendarRange, roles: ['hr', 'admin'], show: () => PERFORMANCE_CYCLES_ENABLED },
     ],
   },
 ];
