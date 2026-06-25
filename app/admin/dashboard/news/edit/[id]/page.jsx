@@ -31,7 +31,8 @@ const generateSlug = (text) =>
 export default function EditBlogPage() {
   const router = useRouter();
   const params = useParams();
-  const { getAuthHeaders } = useAdminAuth();
+  const { getAuthHeaders, basePath } = useAdminAuth();
+  const newsBase = basePath || '/admin/dashboard/news';
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -169,7 +170,7 @@ export default function EditBlogPage() {
       }
 
       toast.success('News post updated successfully.');
-      router.push('/admin/dashboard/news');
+      router.push(newsBase);
     } catch (err) {
       console.error('Error updating blog:', err);
       let message = 'Failed to update news post';

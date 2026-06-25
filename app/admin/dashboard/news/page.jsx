@@ -49,7 +49,8 @@ const formatDate = (dateString) => {
 
 export default function BlogManagementPage() {
   const router = useRouter();
-  const { getAuthHeaders } = useAdminAuth();
+  const { getAuthHeaders, basePath } = useAdminAuth();
+  const newsBase = basePath || '/admin/dashboard/news';
   const [blogs, setBlogs] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -214,7 +215,7 @@ export default function BlogManagementPage() {
             Refresh
           </button>
           <button
-            onClick={() => router.push('/admin/dashboard/news/create')}
+            onClick={() => router.push(`${newsBase}/create`)}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
           >
             <Plus className="h-4 w-4" />
@@ -358,7 +359,7 @@ export default function BlogManagementPage() {
               Reset Filters
             </button>
             <button
-              onClick={() => router.push('/admin/dashboard/news/create')}
+              onClick={() => router.push(`${newsBase}/create`)}
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition hover:bg-emerald-700"
             >
               <Plus className="h-4 w-4" />
@@ -461,7 +462,7 @@ export default function BlogManagementPage() {
 
                       <div className="flex flex-wrap items-center gap-2">
                         <button
-                          onClick={() => router.push(`/admin/dashboard/news/edit/${blog._id}`)}
+                          onClick={() => router.push(`${newsBase}/edit/${blog._id}`)}
                           className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                       >
                           <Edit className="h-3.5 w-3.5" />

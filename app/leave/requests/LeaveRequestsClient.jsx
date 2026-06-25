@@ -1,10 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { useMemo, useEffect, useState, Fragment } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
-import { leaveApi } from '../../../utils/api';
+import LeaveRequestModal from '../../../components/leave/LeaveRequestModal';
+import { apiConfig } from '../../../utils/api';
 
 const statusBadge = (status) => {
   if (status === 'approved') return 'bg-emerald-100 text-emerald-700';
@@ -56,6 +56,8 @@ export default function LeaveRequestsClient() {
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'list' (mobile)
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0); // bump to refetch after creating a request
 
   const isLoading = status === 'loading' || status === 'authenticating' || loading;
 
@@ -66,10 +68,16 @@ export default function LeaveRequestsClient() {
       try {
         setLoading(true);
         setError(null);
-        // Fetch with pagination
-        const res = await fetch(`/api/leave/requests?page=${page}`);
+        // Fetch from the backend (absolute URL) with the session cookie. A relative
+        // URL would hit the Next frontend, not the API, and omit credentials.
+        const base = apiConfig.baseUrl.replace(/\/$/, '');
+        const res = await fetch(`${base}/api/leave/requests?page=${page}`, {
+          cache: 'no-store',
+          credentials: 'include',
+        });
+        if (!res.ok) throw new Error(`Failed to load requests: ${res.status}`);
         const data = await res.json();
-        setRequests(data || []);
+        setRequests(Array.isArray(data) ? data : []);
         const totalPagesHeader = res.headers.get('X-Total-Pages');
         setTotalPages(totalPagesHeader ? parseInt(totalPagesHeader, 10) : 1);
       } catch (err) {
@@ -81,7 +89,7 @@ export default function LeaveRequestsClient() {
     };
 
     fetchRequests();
-  }, [isAuthenticated, page]);
+  }, [isAuthenticated, page, reloadKey]);
 
   if (isLoading || !isAuthenticated) {
     return (
@@ -118,13 +126,14 @@ export default function LeaveRequestsClient() {
           <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
             Recent activity
           </h2>
-          <Link
-            href="/leave/request/new"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-500"
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
           >
-            Book new leave
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+            <Plus className="h-4 w-4" />
+            New request
+          </button>
         </div>
         {/* Controls: allow mobile users to switch to a list/card view */}
         <div className="mt-4 mb-3 sm:hidden flex items-center gap-2">
@@ -147,7 +156,7 @@ export default function LeaveRequestsClient() {
           <div className="overflow-x-auto -mx-4 sm:mx-0">
           {requests.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-slate-500">
-              No leave requests yet. <Link href="/leave/request/new" className="font-semibold text-emerald-600 hover:underline">Submit your first request</Link> to get started.
+              No leave requests yet. <button type="button" onClick={() => setModalOpen(true)} className="font-semibold text-emerald-600 hover:underline">Submit your first request</button> to get started.
             </div>
           ) : viewMode === 'table' ? (
               <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -292,6 +301,16 @@ export default function LeaveRequestsClient() {
           </div>
         )}
       </section>
+
+      <LeaveRequestModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onCreated={() => {
+          setModalOpen(false);
+          setPage(1);
+          setReloadKey((k) => k + 1);
+        }}
+      />
     </div>
   );
 }

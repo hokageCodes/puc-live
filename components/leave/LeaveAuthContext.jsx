@@ -3,7 +3,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-const LeaveAuthContext = createContext(undefined);
+// Exported so a hub bridge can supply this same context from the unified hub session.
+export const LeaveAuthContext = createContext(undefined);
+
+// Base path for in-app leave navigation. The standalone leave app uses '/leave';
+// a hub bridge overrides this (see HubLeaveBridge) with '/hub/leave' so the same
+// pages render correctly inside the hub shell. Pages read `basePath` from useLeaveAuth().
+export const LEAVE_BASE_PATH = '/leave';
 
 const STORAGE_USER_KEY = 'leave_user';
 const REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
@@ -236,6 +242,7 @@ export function LeaveAuthProvider({ children }) {
       isAuthenticated: status === 'authenticated',
       isLoading: status === 'loading' || status === 'authenticating',
       backendUrl,
+      basePath: LEAVE_BASE_PATH,
       signIn,
       signOut,
       refreshSession,

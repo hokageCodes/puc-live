@@ -4,13 +4,15 @@ import { useMemo, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   CalendarDays,
+  CalendarClock,
   CheckCircle2,
-  Clock,
+  ClipboardList,
   Plane,
-  AlertCircle,
+  Mail,
   ChevronRight,
 } from 'lucide-react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
+import LeaveRequestModal from '../../../components/leave/LeaveRequestModal';
 import { leaveApi } from '../../../utils/api';
 
 const toneStyles = {
@@ -21,37 +23,31 @@ const toneStyles = {
 
 function BalanceCard({ label, total, used, upcoming }) {
   const remaining = Math.max(total - used - upcoming, 0);
-  const usagePercentage = Math.min(Math.round(((used + upcoming) / total) * 100), 100);
+  const usagePercentage = total > 0 ? Math.min(Math.round(((used + upcoming) / total) * 100), 100) : 0;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-          <p className="mt-3 text-3xl font-semibold text-slate-900">
-            {remaining}
-            <span className="text-sm font-normal text-slate-400 ml-1">days left</span>
-          </p>
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+            <Plane className="h-4 w-4" />
+          </span>
+          <p className="truncate text-sm font-medium text-slate-700">{label}</p>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-          <Plane className="h-5 w-5" />
-        </div>
+        <p className="shrink-0 text-2xl font-semibold leading-none text-slate-900">
+          {remaining}
+          <span className="ml-1 text-xs font-normal text-slate-400">left</span>
+        </p>
       </div>
-      <div className="mt-4 space-y-2 text-xs text-slate-500">
-        <div className="flex items-center justify-between">
-          <span>Used</span>
-          <span className="font-medium text-slate-700">{used} days</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span>Scheduled</span>
-          <span className="font-medium text-slate-700">{upcoming} days</span>
-        </div>
+
+      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+        <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${usagePercentage}%` }} />
       </div>
-      <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-        <div
-          className="h-full rounded-full bg-emerald-500 transition-all"
-          style={{ width: `${usagePercentage}%` }}
-        />
+
+      <div className="mt-2 flex items-center gap-3 text-[11px] text-slate-500">
+        <span>Used <b className="font-semibold text-slate-700">{used}</b></span>
+        <span>Scheduled <b className="font-semibold text-slate-700">{upcoming}</b></span>
+        <span className="ml-auto">of <b className="font-semibold text-slate-700">{total}</b></span>
       </div>
     </div>
   );
@@ -91,14 +87,28 @@ function getTimeAgo(date) {
   return `${diffDays}d ago`;
 }
 
+function ActionTile({ icon: Icon, label, onClick, href, external, primary }) {
+  const cls = `flex flex-col items-center justify-center gap-2 rounded-2xl border p-4 text-center text-sm font-semibold transition ${
+    primary
+      ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700'
+      : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700'
+  }`;
+  const inner = (<><Icon className="h-5 w-5" /><span>{label}</span></>);
+  if (onClick) return <button type="button" onClick={onClick} className={cls}>{inner}</button>;
+  if (external) return <a href={href} className={cls}>{inner}</a>;
+  return <Link href={href} className={cls}>{inner}</Link>;
+}
+
 export default function LeaveDashboardPage() {
-  const { user, status } = useLeaveAuth();
+  const { user, status, basePath } = useLeaveAuth();
   const { isAuthenticated } = useLeaveGuard();
   const [balances, setBalances] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
   const [pendingApprovals, setPendingApprovals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const isLoading = status === 'loading' || status === 'authenticating' || loading;
 
@@ -133,7 +143,7 @@ export default function LeaveDashboardPage() {
     };
 
     fetchData();
-  }, [isAuthenticated, isApprover]);
+  }, [isAuthenticated, isApprover, reloadKey]);
 
   // Get upcoming leave (approved or pending, within next 30 days)
   const upcomingLeave = useMemo(() => {
@@ -209,24 +219,23 @@ export default function LeaveDashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Welcome back{user?.firstName ? `, ${user.firstName}` : ''}</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Your balances and upcoming leave at a glance. Jump into a request whenever you're ready.
-          </p>
+          <h2 className="text-xl font-semibold text-slate-900">Welcome back{user?.firstName ? `, ${user.firstName}` : ''}</h2>
+          <p className="text-sm text-slate-500">Your balances and upcoming leave at a glance.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href="/leave/request/new"
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
             className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
           >
             <CalendarDays className="h-4 w-4" />
             Request leave
-          </Link>
+          </button>
           <Link
-            href="/leave/requests"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+            href={`${basePath}/requests`}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
           >
             View history
           </Link>
@@ -252,7 +261,15 @@ export default function LeaveDashboardPage() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[2fr,1fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <ActionTile icon={CalendarDays} label="Request leave" onClick={() => setModalOpen(true)} primary />
+            <ActionTile icon={CalendarClock} label="Calendar" href={`${basePath}/calendar`} />
+            <ActionTile icon={ClipboardList} label="My requests" href={`${basePath}/requests`} />
+            <ActionTile icon={Mail} label="Contact HR" href="mailto:hr@paulusoro.com" external />
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -263,7 +280,7 @@ export default function LeaveDashboardPage() {
               </p>
             </div>
             <Link
-              href="/leave/calendar"
+              href={`${basePath}/calendar`}
               className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-500"
             >
               Open calendar
@@ -295,54 +312,9 @@ export default function LeaveDashboardPage() {
             )}
           </div>
         </div>
+        </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-              Quick actions
-            </h3>
-            <ul className="mt-4 space-y-3 text-sm text-slate-600">
-              <li className="flex items-start gap-3">
-                <span className="mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                  <Plane className="h-4 w-4" />
-                </span>
-                <div>
-                  <p className="font-semibold text-slate-900">Plan time off</p>
-                  <p className="text-xs text-slate-500">
-                    Submit a new request and automatically notify your approvers.
-                  </p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                  <Clock className="h-4 w-4" />
-                </span>
-                <div>
-                  <p className="font-semibold text-slate-900">Check entitlement</p>
-                  <p className="text-xs text-slate-500">
-                    Review your annual allocation and remaining balances before you book.
-                  </p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                  <AlertCircle className="h-4 w-4" />
-                </span>
-                <div>
-                  <p className="font-semibold text-slate-900">Need assistance?</p>
-                  <p className="text-xs text-slate-500">
-                    Email{' '}
-                    <a href="mailto:hr@paulusoro.com" className="font-medium text-emerald-600 hover:underline">
-                      hr@paulusoro.com
-                    </a>{' '}
-                    for urgent support.
-                  </p>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
               Latest activity
             </h3>
@@ -368,7 +340,6 @@ export default function LeaveDashboardPage() {
               )}
             </ul>
           </div>
-        </div>
       </section>
 
       {isApprover && pendingApprovals.length > 0 && (
@@ -383,7 +354,7 @@ export default function LeaveDashboardPage() {
               </p>
             </div>
             <Link
-              href="/leave/approvals"
+              href={`${basePath}/approvals`}
               className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-500"
             >
               Manage all
@@ -430,6 +401,15 @@ export default function LeaveDashboardPage() {
             </div>
           </section>
       )}
+
+      <LeaveRequestModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onCreated={() => {
+          setModalOpen(false);
+          setReloadKey((k) => k + 1);
+        }}
+      />
     </div>
   );
 }

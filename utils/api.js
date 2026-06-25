@@ -197,16 +197,18 @@ export const adminApi = {
   },
 };
 
-// Hook for handling API errors in components
-export function useApiError() {
+// Hook for handling API errors in components.
+// `loginPath` lets hub pages redirect to the unified /login while existing admin
+// pages keep their /admin/login default (backward compatible).
+export function useApiError(loginPath = '/admin/login') {
   const handleError = (error) => {
     console.error('API Error:', error);
-    
+
     // Handle different error types
     if (error instanceof ApiError) {
       if (error.status === 401) {
         // Redirect to login on authentication errors
-        window.location.href = '/admin/login';
+        window.location.href = loginPath;
         return 'Authentication required. Redirecting to login...';
       } else if (error.status === 0) {
         // Network or timeout errors
