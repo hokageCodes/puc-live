@@ -8,6 +8,7 @@ import {
   FileText,
   UserCog,
   BookOpenText,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 /**
@@ -40,6 +41,7 @@ export const HUB_NAV_GROUPS = [
     items: [
       { name: 'Staff', href: '/hub/staff', icon: Users, roles: ['admin', 'hr', 'cms'] },
       { name: 'Approvals', href: '/hub/leave/approvals', icon: ListChecks, roles: ['teamLead', 'lineManager', 'hr', 'admin'] },
+      { name: 'Leave Types', href: '/hub/leave-types', icon: SlidersHorizontal, roles: ['admin', 'hr'] },
       { name: 'News', href: '/hub/news', icon: FileText, roles: ['admin', 'cms'] },
       { name: 'Users & Roles', href: '/hub/users', icon: UserCog, roles: ['admin'] },
     ],
