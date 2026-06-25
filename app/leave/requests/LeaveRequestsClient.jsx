@@ -4,7 +4,13 @@ import { useMemo, useEffect, useState, Fragment } from 'react';
 import { Plus } from 'lucide-react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
 import LeaveRequestModal from '../../../components/leave/LeaveRequestModal';
-import { apiConfig, getHubAuthHeader } from '../../../utils/api';
+import { apiConfig, getHubAuthHeader, leaveApi } from '../../../utils/api';
+
+// Statuses a staffer can withdraw from (before final approval the request is just cancelled).
+const WITHDRAWABLE_PENDING = ['submitted', 'pending_teamlead', 'pending_linemanager', 'pending_hr'];
+const canWithdraw = (r) =>
+  !r.withdrawalRequestedAt &&
+  (r.status === 'approved' || WITHDRAWABLE_PENDING.includes(r.status));
 
 const statusBadge = (status) => {
   if (status === 'approved') return 'bg-emerald-100 text-emerald-700';
@@ -58,8 +64,33 @@ export default function LeaveRequestsClient() {
   const [totalPages, setTotalPages] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0); // bump to refetch after creating a request
+  const [withdrawing, setWithdrawing] = useState(null); // request id currently being withdrawn
 
   const isLoading = status === 'loading' || status === 'authenticating' || loading;
+
+  const handleWithdraw = async (request) => {
+    const approved = request.status === 'approved';
+    const confirmMsg = approved
+      ? 'Request to withdraw this approved leave? Your approver(s) and HR will be notified to confirm the withdrawal.'
+      : 'Withdraw this request? It will be cancelled and the current approver notified.';
+    if (typeof window !== 'undefined' && !window.confirm(confirmMsg)) return;
+
+    let reason = '';
+    if (typeof window !== 'undefined') {
+      reason = window.prompt('Add a short reason (optional):', '') || '';
+    }
+
+    try {
+      setWithdrawing(request._id);
+      setError(null);
+      await leaveApi.withdrawRequest(request._id, reason);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      setError(err?.message || 'Could not process the withdrawal. Please try again.');
+    } finally {
+      setWithdrawing(null);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -198,12 +229,27 @@ export default function LeaveRequestsClient() {
                         })}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <button
-                          className="text-xs font-semibold text-emerald-600 hover:underline"
-                          onClick={() => setExpanded((s) => ({ ...s, [request._id]: !s[request._id] }))}
-                        >
-                          {expanded[request._id] ? 'Hide chain' : 'View chain'}
-                        </button>
+                        <div className="flex items-center justify-end gap-3">
+                          <button
+                            className="text-xs font-semibold text-emerald-600 hover:underline"
+                            onClick={() => setExpanded((s) => ({ ...s, [request._id]: !s[request._id] }))}
+                          >
+                            {expanded[request._id] ? 'Hide chain' : 'View chain'}
+                          </button>
+                          {request.withdrawalRequestedAt ? (
+                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                              Withdrawal pending
+                            </span>
+                          ) : canWithdraw(request) ? (
+                            <button
+                              className="text-xs font-semibold text-red-600 hover:underline disabled:opacity-50"
+                              disabled={withdrawing === request._id}
+                              onClick={() => handleWithdraw(request)}
+                            >
+                              {withdrawing === request._id ? 'Working…' : 'Withdraw'}
+                            </button>
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
 
@@ -260,6 +306,21 @@ export default function LeaveRequestsClient() {
                             {expanded[request._id] ? 'Hide chain' : 'View chain'}
                           </button>
                         </div>
+                        {request.withdrawalRequestedAt ? (
+                          <div className="mt-2 inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                            Withdrawal pending
+                          </div>
+                        ) : canWithdraw(request) ? (
+                          <div className="mt-2">
+                            <button
+                              className="text-xs font-semibold text-red-600 hover:underline disabled:opacity-50"
+                              disabled={withdrawing === request._id}
+                              onClick={() => handleWithdraw(request)}
+                            >
+                              {withdrawing === request._id ? 'Working…' : 'Withdraw'}
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
 

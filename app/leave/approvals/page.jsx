@@ -32,6 +32,13 @@ function formatStatus(status) {
   return status;
 }
 
+function formatMonth(ym) {
+  // ym is 'YYYY-MM'; render as 'July 2026'. Fall back to the raw value if unexpected.
+  if (!ym || !/^\d{4}-\d{2}$/.test(ym)) return ym || '';
+  const [y, m] = ym.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+}
+
 function getTimeAgo(date) {
   const now = new Date();
   const then = new Date(date);
@@ -196,6 +203,16 @@ export default function LeaveApprovalsPage() {
                       ((assigneeId && assigneeId === user?.id) || roleMatchFallback)
                   );
 
+                  // Withdrawal request on an already-approved leave: no pending step exists,
+                  // so it surfaces here separately. HR/admin or anyone on the approver chain can action it.
+                  const isWithdrawal = request.status === 'approved' && Boolean(request.withdrawalRequestedAt);
+                  const onChain = (request.approverChain || []).some((s) => {
+                    const id = s?.assignee?._id ? s.assignee._id.toString() : s?.assignee?.toString();
+                    return id && id === user?.id;
+                  });
+                  const canActWithdrawal = isWithdrawal &&
+                    ((user?.roles || []).some((r) => ['hr', 'admin'].includes(r)) || onChain);
+
                   // Debug per-row: show pending step and computed permission
                   try {
                     console.debug('[Approvals] row:', { requestId: request._id, pendingStep, assigneeId, canAct, userId: user?.id, userRoles: user?.roles });
@@ -217,6 +234,11 @@ export default function LeaveApprovalsPage() {
                         <div className="whitespace-pre-wrap break-words text-sm text-slate-700" title={request.reason || ''}>
                           {request.reason || '—'}
                         </div>
+                        {request.leaveAllowance ? (
+                          <div className="mt-1 inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
+                            Allowance requested{request.allowanceMonth ? ` · pay in ${formatMonth(request.allowanceMonth)}` : ''}
+                          </div>
+                        ) : null}
                         {/* Then show the most recent timeline note if present (approver comment) */}
                         {Array.isArray(request.timeline) && request.timeline.length > 0 ? (
                           (() => {
@@ -233,10 +255,76 @@ export default function LeaveApprovalsPage() {
                         {getTimeAgo(request.createdAt || request.timeline?.[0]?.timestamp)}
                       </td>
                       <td className="px-4 py-3 text-slate-600">
-                        {formatStatus(request.status)}
+                        {isWithdrawal ? (
+                          <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                            Withdrawal requested
+                          </span>
+                        ) : (
+                          formatStatus(request.status)
+                        )}
+                        {isWithdrawal && request.withdrawalReason ? (
+                          <div className="mt-1 whitespace-pre-wrap break-words text-xs text-slate-500">
+                            Reason: {request.withdrawalReason}
+                          </div>
+                        ) : null}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {canAct ? (
+                        {isWithdrawal ? (
+                          canActWithdrawal ? (
+                            <div className="flex gap-2 justify-end">
+                              <button
+                                className="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                                disabled={Boolean(actionLoading[request._id])}
+                                onClick={async () => {
+                                  if (actionLoading[request._id]) return;
+                                  setActionLoading((s) => ({ ...s, [request._id]: 'confirm' }));
+                                  const comment = window.prompt('Optional note (press OK to confirm withdrawal)');
+                                  if (comment === null) {
+                                    setActionLoading((s) => { const c = { ...s }; delete c[request._id]; return c; });
+                                    return;
+                                  }
+                                  try {
+                                    await leaveApi.confirmWithdrawal(request._id, comment || undefined);
+                                    if (typeof toast?.success === 'function') toast.success('Withdrawal confirmed'); else window.alert('Withdrawal confirmed');
+                                    await fetchApprovals();
+                                  } catch (err) {
+                                    if (typeof toast?.error === 'function') toast.error(err?.message || 'Failed to confirm'); else window.alert(err?.message || 'Failed to confirm');
+                                  } finally {
+                                    setActionLoading((s) => { const c = { ...s }; delete c[request._id]; return c; });
+                                  }
+                                }}
+                              >
+                                {actionLoading[request._id] === 'confirm' ? 'Confirming…' : 'Confirm withdrawal'}
+                              </button>
+                              <button
+                                className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                                disabled={Boolean(actionLoading[request._id])}
+                                onClick={async () => {
+                                  if (actionLoading[request._id]) return;
+                                  setActionLoading((s) => ({ ...s, [request._id]: 'decline' }));
+                                  const comment = window.prompt('Reason for keeping the leave (optional)');
+                                  if (comment === null) {
+                                    setActionLoading((s) => { const c = { ...s }; delete c[request._id]; return c; });
+                                    return;
+                                  }
+                                  try {
+                                    await leaveApi.declineWithdrawal(request._id, comment || undefined);
+                                    if (typeof toast?.info === 'function') toast.info('Withdrawal declined; leave kept'); else window.alert('Withdrawal declined');
+                                    await fetchApprovals();
+                                  } catch (err) {
+                                    if (typeof toast?.error === 'function') toast.error(err?.message || 'Failed to decline'); else window.alert(err?.message || 'Failed to decline');
+                                  } finally {
+                                    setActionLoading((s) => { const c = { ...s }; delete c[request._id]; return c; });
+                                  }
+                                }}
+                              >
+                                {actionLoading[request._id] === 'decline' ? 'Working…' : 'Keep leave'}
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="text-xs text-slate-500">No action</div>
+                          )
+                        ) : canAct ? (
                           <div className="flex gap-2 justify-end">
                             <button
                               className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
