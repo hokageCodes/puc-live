@@ -2,16 +2,16 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { HUB_TOKEN_KEY } from '../../utils/api';
 
 /**
  * Unified Hub auth provider — one session for the whole HR Hub, built on the
- * backend `hub` scope. Cookie-based (httpOnly hub_access_token / hub_refresh_token):
- * the browser sends them automatically with `credentials: 'include'`, so there is no
- * bearer token in JS. Roles drive what the user can see; per-feature authorization is
- * still enforced server-side.
- *
- * Generalizes the previous per-silo contexts (admin `useAuth`, `LeaveAuthContext`).
- * Those remain in place until their modules migrate into the (hub) shell.
+ * backend `hub` scope. Primary auth is a Bearer access token (stored in
+ * localStorage, sent as Authorization on every request) — like the admin app —
+ * because cross-site refresh cookies are unreliable across the frontend/backend
+ * domains in production. The refresh cookie is still used opportunistically to
+ * extend the session when available. Roles drive visibility; the server enforces
+ * per-feature authorization.
  */
 
 const HubAuthContext = createContext(undefined);
@@ -77,9 +77,45 @@ export function HubAuthProvider({ children }) {
   const clearSession = useCallback(() => {
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(STORAGE_USER_KEY);
+      window.localStorage.removeItem(HUB_TOKEN_KEY);
     }
     setUser(null);
   }, []);
+
+  const storeToken = useCallback((token) => {
+    if (token && typeof window !== 'undefined') window.localStorage.setItem(HUB_TOKEN_KEY, token);
+  }, []);
+
+  const getAuthHeaders = useCallback(() => {
+    if (typeof window === 'undefined') return {};
+    const t = window.localStorage.getItem(HUB_TOKEN_KEY);
+    return t ? { Authorization: `Bearer ${t}` } : {};
+  }, []);
+
+  // Validate the stored Bearer token via /auth/me. Works cross-site (no cookie),
+  // so it's the primary way the hub keeps you logged in across page loads.
+  const validateViaMe = useCallback(async () => {
+    if (typeof window === 'undefined') return { ok: false, authError: false };
+    const token = window.localStorage.getItem(HUB_TOKEN_KEY);
+    if (!token) return { ok: false, authError: false, noToken: true };
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/me`, {
+        method: 'GET',
+        cache: 'no-store',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401 || res.status === 403) return { ok: false, authError: true };
+      if (!res.ok) return { ok: false, authError: false };
+      const data = await res.json().catch(() => ({}));
+      if (!data?.user) return { ok: false, authError: false };
+      applySession(data.user);
+      setStatus('authenticated');
+      return { ok: true, user: data.user };
+    } catch {
+      return { ok: false, authError: false };
+    }
+  }, [applySession, backendUrl]);
 
   // One refresh round-trip. Returns a result instead of throwing so callers can
   // distinguish a real auth failure (401 -> log out) from a transient/network error
@@ -96,13 +132,14 @@ export function HubAuthProvider({ children }) {
       if (!res.ok) return { ok: false, authError: false }; // 429/5xx etc. — transient
       const data = await res.json().catch(() => ({}));
       if (!data?.user) return { ok: false, authError: false };
+      storeToken(data.accessToken);
       applySession(data.user);
       setStatus('authenticated');
       return { ok: true, user: data.user };
     } catch {
       return { ok: false, authError: false }; // network error — do not log out
     }
-  }, [applySession, backendUrl]);
+  }, [applySession, backendUrl, storeToken]);
 
   // Single-flight: concurrent callers (StrictMode double-invoke, multiple tabs,
   // periodic + manual) share ONE network refresh, so we never race the rotation.
@@ -131,7 +168,7 @@ export function HubAuthProvider({ children }) {
         method: 'GET',
         cache: 'no-store',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       });
       if (res.status === 401 || res.status === 403) {
         clearSession();
@@ -149,7 +186,7 @@ export function HubAuthProvider({ children }) {
     } catch {
       return user; // network error — don't log the user out
     }
-  }, [applySession, backendUrl, clearSession, user]);
+  }, [applySession, backendUrl, clearSession, getAuthHeaders, user]);
 
   const signIn = useCallback(
     async (email, password) => {
@@ -175,11 +212,12 @@ export function HubAuthProvider({ children }) {
         throw new Error('Login response missing session data');
       }
 
+      storeToken(data.accessToken);
       applySession(data.user);
       setStatus('authenticated');
       return data.user;
     },
-    [applySession, backendUrl, clearSession]
+    [applySession, backendUrl, clearSession, storeToken]
   );
 
   const signOut = useCallback(() => {
@@ -202,9 +240,10 @@ export function HubAuthProvider({ children }) {
       .finally(() => clearTimeout(timeoutId));
   }, [backendUrl, clearSession]);
 
-  // Bootstrap: optimistically restore from storage, then verify with the server.
-  // A transient failure (backend restart, rate limit, offline) keeps the optimistic
-  // session instead of bouncing the user to /login; only a real 401 logs out.
+  // Bootstrap: optimistically restore from storage, then verify.
+  // PRIMARY: validate the stored Bearer token via /auth/me (works cross-site, so a
+  // page load / navigation from /login keeps you logged in without a cookie).
+  // FALLBACK: the refresh cookie, to extend or to recover an expired token.
   useEffect(() => {
     let isMounted = true;
     const bootstrap = async () => {
@@ -213,20 +252,33 @@ export function HubAuthProvider({ children }) {
         const stored = safeParse(window.localStorage.getItem(STORAGE_USER_KEY));
         if (stored && isMounted) { setUser(stored); hadStored = true; } // optimistic
       }
-      const result = await attemptRefresh();
+
+      const me = await validateViaMe();
       if (!isMounted) return;
-      if (result.authError) {
+      if (me.ok) return; // authenticated via Bearer token
+
+      if (me.authError) {
+        // Token present but rejected (expired/revoked) — try the refresh cookie.
+        const r = await attemptRefresh();
+        if (!isMounted) return;
+        if (!r.ok) { clearSession(); setStatus('unauthenticated'); }
+        return;
+      }
+
+      // No token (or transient /me error): try the refresh cookie (covers a legacy
+      // cookie-only session), tolerating transient failures.
+      const r = await attemptRefresh();
+      if (!isMounted) return;
+      if (r.authError) {
         clearSession();
         setStatus('unauthenticated');
-      } else if (!result.ok) {
-        // Transient: keep showing the stored session if we have one, else unauth.
+      } else if (!r.ok) {
         setStatus(hadStored ? 'authenticated' : 'unauthenticated');
       }
-      // result.ok -> doRefresh already set authenticated + fresh profile
     };
     bootstrap();
     return () => { isMounted = false; };
-  }, [attemptRefresh, clearSession]);
+  }, [attemptRefresh, clearSession, validateViaMe]);
 
   // Periodic refresh while authenticated.
   useEffect(() => {
@@ -274,10 +326,11 @@ export function HubAuthProvider({ children }) {
       refreshSession,
       refreshIdentity,
       clearSession,
+      getAuthHeaders,
       hasRole,
       hasAnyRole,
     }),
-    [backendUrl, clearSession, hasAnyRole, hasRole, refreshIdentity, refreshSession, roles, signIn, signOut, status, user]
+    [backendUrl, clearSession, getAuthHeaders, hasAnyRole, hasRole, refreshIdentity, refreshSession, roles, signIn, signOut, status, user]
   );
 
   return <HubAuthContext.Provider value={value}>{children}</HubAuthContext.Provider>;

@@ -4,7 +4,7 @@ import { useMemo, useEffect, useState, Fragment } from 'react';
 import { Plus } from 'lucide-react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
 import LeaveRequestModal from '../../../components/leave/LeaveRequestModal';
-import { apiConfig } from '../../../utils/api';
+import { apiConfig, getHubAuthHeader } from '../../../utils/api';
 
 const statusBadge = (status) => {
   if (status === 'approved') return 'bg-emerald-100 text-emerald-700';
@@ -74,6 +74,7 @@ export default function LeaveRequestsClient() {
         const res = await fetch(`${base}/api/leave/requests?page=${page}`, {
           cache: 'no-store',
           credentials: 'include',
+          headers: { ...getHubAuthHeader() },
         });
         if (!res.ok) throw new Error(`Failed to load requests: ${res.status}`);
         const data = await res.json();

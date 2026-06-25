@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { CalendarDays, Check, FileText, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useHubAuth } from '../../../components/hub/HubAuthContext';
-import { apiConfig } from '../../../utils/api';
+import { apiConfig, getHubAuthHeader } from '../../../utils/api';
 
 const BASE = apiConfig.baseUrl.replace(/\/$/, '');
 const EMPTY = {
@@ -39,7 +39,7 @@ function LeaveTypeModal({ initial, onClose, onSaved }) {
       const res = await fetch(`${BASE}/api/leave-types${editing ? `/${initial._id}` : ''}`, {
         method: editing ? 'PUT' : 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getHubAuthHeader() },
         body: JSON.stringify({
           name: form.name, code: form.code, description: form.description, color: form.color,
           defaultDays: Number(form.defaultDays) || 0, applicableGender: form.applicableGender,
@@ -111,7 +111,7 @@ export default function LeaveTypesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BASE}/api/leave-types`, { cache: 'no-store', credentials: 'include' });
+      const res = await fetch(`${BASE}/api/leave-types`, { cache: 'no-store', credentials: 'include', headers: { ...getHubAuthHeader() } });
       if (!res.ok) throw new Error('Failed to load leave types.');
       setTypes(await res.json());
     } catch (err) {
@@ -126,7 +126,7 @@ export default function LeaveTypesPage() {
   const remove = async (type) => {
     if (!window.confirm(`Delete "${type.name}"? This cannot be undone.`)) return;
     try {
-      const res = await fetch(`${BASE}/api/leave-types/${type._id}`, { method: 'DELETE', credentials: 'include' });
+      const res = await fetch(`${BASE}/api/leave-types/${type._id}`, { method: 'DELETE', credentials: 'include', headers: { ...getHubAuthHeader() } });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || 'Failed to delete.');
       toast.success('Leave type deleted.');

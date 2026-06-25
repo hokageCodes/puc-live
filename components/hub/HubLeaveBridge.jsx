@@ -30,7 +30,7 @@ export default function HubLeaveBridge({ children }) {
       signIn: hub.signIn,
       signOut: hub.signOut,
       refreshSession: hub.refreshSession,
-      buildAuthHeaders: (headers = {}) => headers, // cookie-based; no bearer header
+      buildAuthHeaders: (headers = {}) => ({ ...headers, ...hub.getAuthHeaders() }), // hub Bearer token
       clearSession: hub.clearSession,
     }),
     [hub]

@@ -5,7 +5,7 @@ import { ArrowLeft, Check, Loader2, Pencil, Scale, Search, UserRound, X } from '
 import { toast } from 'react-toastify';
 import { useHubAuth } from '../../../components/hub/HubAuthContext';
 import { getImageUrl } from '../../../lib/getImageUrl';
-import { apiConfig } from '../../../utils/api';
+import { apiConfig, getHubAuthHeader } from '../../../utils/api';
 
 const BASE = apiConfig.baseUrl.replace(/\/$/, '');
 const initials = (s) => `${(s.firstName || '')[0] || ''}${(s.lastName || '')[0] || ''}`.toUpperCase() || '?';
@@ -89,7 +89,7 @@ function BalanceCard({ staffId, row, onSaved }) {
       const res = await fetch(`${BASE}/api/leave-admin/staff/${staffId}/balances/${row.type.id}`, {
         method: 'PUT',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getHubAuthHeader() },
         body: JSON.stringify({ allocated: Number(allocated) || 0, carriedOver: Number(carriedOver) || 0, used: Number(used) || 0 }),
       });
       const data = await res.json().catch(() => ({}));
@@ -159,7 +159,7 @@ export default function LeaveOverridePage() {
     if (!allowed) return;
     (async () => {
       try {
-        const res = await fetch(`${BASE}/api/staff`, { cache: 'no-store', credentials: 'include' });
+        const res = await fetch(`${BASE}/api/staff`, { cache: 'no-store', credentials: 'include', headers: { ...getHubAuthHeader() } });
         if (!res.ok) throw new Error('Failed to load staff.');
         const data = await res.json();
         setStaff(Array.isArray(data) ? data : []);
@@ -172,7 +172,7 @@ export default function LeaveOverridePage() {
   const loadDetail = useCallback(async (id) => {
     setLoadingDetail(true);
     try {
-      const res = await fetch(`${BASE}/api/leave-admin/staff/${id}/balances`, { cache: 'no-store', credentials: 'include' });
+      const res = await fetch(`${BASE}/api/leave-admin/staff/${id}/balances`, { cache: 'no-store', credentials: 'include', headers: { ...getHubAuthHeader() } });
       if (!res.ok) throw new Error('Failed to load balances.');
       setDetail(await res.json());
     } catch (err) {

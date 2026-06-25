@@ -26,7 +26,7 @@ export default function HubAdminBridge({ children, basePath }) {
       // Per-module base path for in-app navigation (e.g. '/hub/news'). Pages fall
       // back to their standalone admin path when this is undefined.
       basePath,
-      getAuthHeaders: () => ({}), // cookie-based in the hub; no bearer header
+      getAuthHeaders: hub.getAuthHeaders, // hub Bearer token (works cross-site)
       logout: hub.signOut,
       checkAuth: hub.refreshIdentity,
       refresh: hub.refreshSession,
