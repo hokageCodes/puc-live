@@ -32,7 +32,8 @@ export const HUB_NAV_GROUPS = [
       { name: 'My Leave', href: '/hub/leave/dashboard', icon: CalendarDays },
       { name: 'My Requests', href: '/hub/leave/requests', icon: ClipboardList },
       { name: 'Leave Calendar', href: '/hub/leave/calendar', icon: CalendarClock },
-      { name: 'Court Diary', href: '/hub/diary', icon: BookOpenText },
+      // Litigation-only tool — hidden for everyone else (backend also enforces this).
+      { name: 'Court Diary', href: '/hub/diary', icon: BookOpenText, show: (u) => /litigation/i.test(u?.department?.name || '') },
     ],
   },
   {
@@ -51,15 +52,17 @@ export const HUB_NAV_GROUPS = [
 const normalize = (roles) =>
   (Array.isArray(roles) ? roles : []).map((r) => String(r).trim().toLowerCase()).filter(Boolean);
 
-const canSee = (item, have) => {
+const canSee = (item, have, user) => {
+  // Optional custom predicate (e.g. department-based visibility).
+  if (item.show && !item.show(user)) return false;
   if (!item.roles || item.roles.length === 0) return true;
   return normalize(item.roles).some((r) => have.has(r));
 };
 
-/** Return groups with items filtered to the user's roles; empty groups are dropped. */
-export function visibleNavGroups(userRoles) {
-  const have = new Set(normalize(userRoles));
+/** Return groups with items the user may see; empty groups are dropped. */
+export function visibleNavGroups(user) {
+  const have = new Set(normalize(user?.roles));
   return HUB_NAV_GROUPS
-    .map((group) => ({ ...group, items: group.items.filter((item) => canSee(item, have)) }))
+    .map((group) => ({ ...group, items: group.items.filter((item) => canSee(item, have, user)) }))
     .filter((group) => group.items.length > 0);
 }

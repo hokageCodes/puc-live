@@ -53,7 +53,7 @@ export default function HubShell({ children }) {
   const { user, roles, signOut } = useHubAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const navGroups = useMemo(() => visibleNavGroups(roles), [roles]);
+  const navGroups = useMemo(() => visibleNavGroups(user), [user]);
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || 'User';
   const initial = (user?.firstName || user?.email || 'U').charAt(0).toUpperCase();
 
