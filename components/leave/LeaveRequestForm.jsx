@@ -1,8 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarDays, CheckCircle2, FilePlus2, Loader2 } from 'lucide-react';
-import { leaveApi } from '../../utils/api';
+import { CalendarDays, CheckCircle2, FilePlus2, Loader2, Upload, X } from 'lucide-react';
+import { apiConfig, leaveApi } from '../../utils/api';
+
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10MB (matches backend limit)
+const ATTACHMENT_ACCEPT = '.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png';
 
 const LEAVE_TYPES = [
   { key: 'annual', label: 'Annual Leave', notice: 'Min. 14 days notice recommended.' },
@@ -37,6 +40,19 @@ export default function LeaveRequestForm({ onSuccess, onCancel, submitLabel = 'S
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [serverLeaveTypes, setServerLeaveTypes] = useState([]);
+  const [file, setFile] = useState(null);
+
+  const handleFileChange = useCallback((e) => {
+    const f = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file after removal
+    if (!f) return;
+    if (f.size > MAX_ATTACHMENT_BYTES) {
+      setSubmitError('File is too large. Maximum size is 10MB.');
+      return;
+    }
+    setSubmitError('');
+    setFile(f);
+  }, []);
 
   const isValid = useMemo(() => {
     if (!leaveType) return false;
@@ -69,18 +85,30 @@ export default function LeaveRequestForm({ onSuccess, onCancel, submitLabel = 'S
       setIsSubmitting(true);
       try {
         if (serverLeaveTypes.length && !leaveType) throw new Error('Please select a leave type');
-        const payload = {
-          leaveTypeId: serverLeaveTypes.length ? leaveType : undefined,
-          leaveType: serverLeaveTypes.length ? undefined : leaveType,
-          startDate,
-          endDate,
-          coveragePlan: coverage,
-          handoverNotes,
-          reason,
-        };
-        const created = await leaveApi.createRequest(payload);
+
+        // Send multipart/form-data so an optional document can ride along. The backend
+        // accepts the `attachment` field and also reads the text fields from the form.
+        const fd = new FormData();
+        if (serverLeaveTypes.length) fd.append('leaveTypeId', leaveType);
+        else fd.append('leaveType', leaveType);
+        fd.append('startDate', startDate);
+        fd.append('endDate', endDate);
+        if (coverage) fd.append('coveragePlan', coverage);
+        if (handoverNotes) fd.append('handoverNotes', handoverNotes);
+        fd.append('reason', reason);
+        if (file) fd.append('attachment', file);
+
+        const base = apiConfig.baseUrl.replace(/\/$/, '');
+        const res = await fetch(`${base}/api/leave/requests`, {
+          method: 'POST',
+          credentials: 'include',
+          body: fd, // do NOT set Content-Type — the browser adds the multipart boundary
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.message || data?.error || 'Unable to save the request.');
+
         setSubmitSuccess(true);
-        onSuccess?.(created);
+        onSuccess?.(data);
       } catch (error) {
         console.error('Submit failed:', error);
         setSubmitError(error?.message || 'Unable to save the request right now. Please try again shortly.');
@@ -88,7 +116,7 @@ export default function LeaveRequestForm({ onSuccess, onCancel, submitLabel = 'S
         setIsSubmitting(false);
       }
     },
-    [coverage, endDate, handoverNotes, isSubmitting, isValid, leaveType, onSuccess, reason, serverLeaveTypes, startDate]
+    [coverage, endDate, file, handoverNotes, isSubmitting, isValid, leaveType, onSuccess, reason, serverLeaveTypes, startDate]
   );
 
   return (
@@ -186,15 +214,32 @@ export default function LeaveRequestForm({ onSuccess, onCancel, submitLabel = 'S
         />
       </label>
 
-      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-4 text-sm text-slate-500">
+      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-4">
         <div className="flex items-center gap-3">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-700">
             <FilePlus2 className="h-4 w-4" />
           </span>
-          <div>
-            <p className="font-medium text-slate-700">Supporting documents (optional)</p>
-            <p className="text-xs text-slate-500">Attach medical certificates or supporting files after submitting—upload coming soon.</p>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-slate-700">Supporting document (optional)</p>
+            <p className="text-xs text-slate-500">PDF, DOC, DOCX, TXT, JPG or PNG · max 10MB</p>
           </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
+            <Upload className="h-4 w-4" />
+            {file ? 'Replace file' : 'Choose file'}
+            <input type="file" className="hidden" accept={ATTACHMENT_ACCEPT} onChange={handleFileChange} />
+          </label>
+          {file && (
+            <span className="inline-flex items-center gap-2 rounded-lg bg-white px-2.5 py-1.5 text-xs text-slate-600 ring-1 ring-slate-200">
+              <span className="max-w-[200px] truncate">{file.name}</span>
+              <span className="text-slate-400">({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
+              <button type="button" onClick={() => setFile(null)} aria-label="Remove file" className="text-slate-400 hover:text-red-600">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </span>
+          )}
         </div>
       </div>
 
