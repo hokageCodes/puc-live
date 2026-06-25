@@ -6,7 +6,6 @@ import {
   ListChecks,
   Users,
   FileText,
-  UserCog,
   BookOpenText,
   SlidersHorizontal,
   Scale,
@@ -45,7 +44,6 @@ export const HUB_NAV_GROUPS = [
       { name: 'Leave Types', href: '/hub/leave-types', icon: SlidersHorizontal, roles: ['admin', 'hr'] },
       { name: 'Leave Override', href: '/hub/leave-override', icon: Scale, roles: ['admin', 'hr'] },
       { name: 'News', href: '/hub/news', icon: FileText, roles: ['admin', 'cms'] },
-      { name: 'Users & Roles', href: '/hub/users', icon: UserCog, roles: ['admin'] },
     ],
   },
 ];
