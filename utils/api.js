@@ -264,8 +264,17 @@ export const leaveApi = {
     api.post(`/api/leave/requests/${requestId}/approve`, { comment }),
   
   // Reject leave request
-  rejectRequest: (requestId, comment) => 
+  rejectRequest: (requestId, comment) =>
     api.post(`/api/leave/requests/${requestId}/reject`, { comment }),
+
+  // Withdraw own request (pending -> cancelled; approved -> requests withdrawal)
+  withdrawRequest: (requestId, reason) =>
+    api.post(`/api/leave/requests/${requestId}/withdraw`, { reason }),
+  // Manager/HR action an approved withdrawal
+  confirmWithdrawal: (requestId, comment) =>
+    api.post(`/api/leave/requests/${requestId}/withdraw/confirm`, { comment }),
+  declineWithdrawal: (requestId, comment) =>
+    api.post(`/api/leave/requests/${requestId}/withdraw/decline`, { comment }),
   
   // Get leave types
   getLeaveTypes: () => api.get('/api/leave/types'),

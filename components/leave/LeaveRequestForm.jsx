@@ -36,6 +36,8 @@ export default function LeaveRequestForm({ onSuccess, onCancel, submitLabel = 'S
   const [coverage, setCoverage] = useState('');
   const [handoverNotes, setHandoverNotes] = useState('');
   const [reason, setReason] = useState('');
+  const [leaveAllowance, setLeaveAllowance] = useState(false);
+  const [allowanceMonth, setAllowanceMonth] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -72,14 +74,28 @@ export default function LeaveRequestForm({ onSuccess, onCancel, submitLabel = 'S
     return n;
   }, [startDate, endDate]);
 
+  // Next 12 months as { value: 'YYYY-MM', label: 'July 2026' } for the allowance payment month.
+  const monthOptions = useMemo(() => {
+    const out = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i += 1) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+      out.push({ value, label });
+    }
+    return out;
+  }, []);
+
   const isValid = useMemo(() => {
     if (!leaveType) return false;
     if (!startDate || !endDate) return false;
     if (new Date(startDate) > new Date(endDate)) return false;
     if (workingDays <= 0) return false;
     if (!reason.trim()) return false;
+    if (leaveAllowance && !allowanceMonth) return false; // month required when requesting allowance
     return true;
-  }, [leaveType, startDate, endDate, reason, workingDays]);
+  }, [leaveType, startDate, endDate, reason, workingDays, leaveAllowance, allowanceMonth]);
 
   useEffect(() => {
     let mounted = true;
@@ -115,6 +131,8 @@ export default function LeaveRequestForm({ onSuccess, onCancel, submitLabel = 'S
         if (coverage) fd.append('coveragePlan', coverage);
         if (handoverNotes) fd.append('handoverNotes', handoverNotes);
         fd.append('reason', reason);
+        fd.append('leaveAllowance', leaveAllowance ? 'true' : 'false');
+        if (leaveAllowance && allowanceMonth) fd.append('allowanceMonth', allowanceMonth);
         if (file) fd.append('attachment', file);
 
         const base = apiConfig.baseUrl.replace(/\/$/, '');
@@ -136,7 +154,7 @@ export default function LeaveRequestForm({ onSuccess, onCancel, submitLabel = 'S
         setIsSubmitting(false);
       }
     },
-    [coverage, endDate, file, handoverNotes, isSubmitting, isValid, leaveType, onSuccess, reason, serverLeaveTypes, startDate]
+    [allowanceMonth, coverage, endDate, file, handoverNotes, isSubmitting, isValid, leaveAllowance, leaveType, onSuccess, reason, serverLeaveTypes, startDate]
   );
 
   return (
@@ -246,6 +264,40 @@ export default function LeaveRequestForm({ onSuccess, onCancel, submitLabel = 'S
           className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
         />
       </label>
+
+      <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={leaveAllowance}
+            onChange={(e) => {
+              setLeaveAllowance(e.target.checked);
+              if (!e.target.checked) setAllowanceMonth('');
+            }}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+          />
+          <span>
+            <span className="text-sm font-medium text-slate-700">Request leave allowance</span>
+            <span className="block text-xs text-slate-500">Tick this if you'd like your leave allowance paid out for this leave.</span>
+          </span>
+        </label>
+
+        {leaveAllowance && (
+          <label className="mt-3 flex flex-col gap-2 sm:max-w-xs">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Pay in month *</span>
+            <select
+              value={allowanceMonth}
+              onChange={(e) => setAllowanceMonth(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+            >
+              <option value="">Select a month</option>
+              {monthOptions.map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
 
       <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-4">
         <div className="flex items-center gap-3">
