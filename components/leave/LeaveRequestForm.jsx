@@ -54,13 +54,32 @@ export default function LeaveRequestForm({ onSuccess, onCancel, submitLabel = 'S
     setFile(f);
   }, []);
 
+  // Working days only (Mon–Fri); mirrors the backend so the user sees the real cost.
+  const workingDays = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+    const s = new Date(startDate);
+    const e = new Date(endDate);
+    if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || s > e) return 0;
+    s.setUTCHours(0, 0, 0, 0);
+    e.setUTCHours(0, 0, 0, 0);
+    let n = 0;
+    const cursor = new Date(s);
+    while (cursor <= e) {
+      const day = cursor.getUTCDay();
+      if (day !== 0 && day !== 6) n += 1;
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+    return n;
+  }, [startDate, endDate]);
+
   const isValid = useMemo(() => {
     if (!leaveType) return false;
     if (!startDate || !endDate) return false;
     if (new Date(startDate) > new Date(endDate)) return false;
+    if (workingDays <= 0) return false;
     if (!reason.trim()) return false;
     return true;
-  }, [leaveType, startDate, endDate, reason]);
+  }, [leaveType, startDate, endDate, reason, workingDays]);
 
   useEffect(() => {
     let mounted = true;
@@ -190,6 +209,19 @@ export default function LeaveRequestForm({ onSuccess, onCancel, submitLabel = 'S
           />
         </label>
       </div>
+
+      {startDate && endDate && (
+        <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${
+          workingDays > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+        }`}>
+          <CalendarDays className="h-3.5 w-3.5" />
+          {workingDays > 0 ? (
+            <span><b className="font-semibold">{workingDays}</b> working day{workingDays === 1 ? '' : 's'} · weekends are not counted</span>
+          ) : (
+            <span>No working days in this range (weekends are not counted).</span>
+          )}
+        </div>
+      )}
 
       <label className="flex flex-col gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Reason / notes for approvers *</span>
