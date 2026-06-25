@@ -53,6 +53,7 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
   const [removeExistingImage, setRemoveExistingImage] = useState(false);
 
   const [division, setDivision] = useState('legal');
+  const [gender, setGender] = useState('');
   const [officeLocation, setOfficeLocation] = useState('');
   const [selectedRoles, setSelectedRoles] = useState(['staff']);
   const [leaveEnabled, setLeaveEnabled] = useState(true);
@@ -122,6 +123,7 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
       setEmployeeId(editingStaff.employeeId || '');
       setIsVisible(editingStaff.isVisible !== false);
       setDivision(editingStaff.division || 'legal');
+      setGender(editingStaff.gender || '');
       setOfficeLocation(editingStaff.officeLocation || '');
       const incomingRoles = Array.isArray(editingStaff.roles) && editingStaff.roles.length
         ? Array.from(new Set(['staff', ...editingStaff.roles]))
@@ -151,6 +153,7 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
       setEmployeeId('');
       setIsVisible(true);
       setDivision('legal');
+      setGender('');
       setOfficeLocation('');
       setSelectedRoles(['staff']);
       setLeaveEnabled(true);
@@ -248,6 +251,8 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
       formData.append('roles', selectedRoles.join(','));
 
       formData.append('division', division);
+      // Only send a valid value — the schema enum rejects '' (use unset instead of empty).
+      if (gender) formData.append('gender', gender);
       formData.append('leaveEnabled', leaveEnabled ? 'true' : 'false');
 
       if (officeLocation) {
@@ -514,6 +519,19 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
             required
                         placeholder="(+234) 801 234 5678"
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Gender</label>
+                      <select
+                        className={inputClasses}
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                      >
+                        <option value="">Not specified</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                      </select>
+                      <p className="text-xs text-slate-500">Used for entitlements like maternity/paternity leave.</p>
                     </div>
                     <div className="space-y-2 md:col-span-2">
                       <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Primary office / branch</label>
