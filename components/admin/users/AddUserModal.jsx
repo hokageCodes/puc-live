@@ -185,8 +185,19 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
       return String(deptId || '') === String(selectedDepartment);
     });
     setFilteredTeams(filtered);
+
+    // The team a staffer was saved with must survive editing even when the teams
+    // data doesn't link team→department (or loads after prefill). Preserve it as long
+    // as we're still on the department they were saved under; selectedTeamOptionFallback
+    // renders it as an option. It only clears when the user changes the department.
+    const editStaffTeamId = String(editingStaff?.team?._id || editingStaff?.team || '');
+    const editStaffDeptId = String(editingStaff?.department?._id || editingStaff?.department || '');
+
     setSelectedTeam((prev) => {
       if (!prev) return prev;
+      if (editStaffTeamId && String(prev) === editStaffTeamId && String(selectedDepartment) === editStaffDeptId) {
+        return prev;
+      }
       if (filtered.length > 0) {
         const stillValid = filtered.some((t) => String(t._id) === String(prev));
         return stillValid ? prev : '';
@@ -198,7 +209,7 @@ export default function AddUserModal({ onClose, onSaved, departments, teams, pra
       const belongsHere = String(tid || '') === String(selectedDepartment);
       return belongsHere ? prev : '';
     });
-  }, [selectedDepartment, teams]);
+  }, [selectedDepartment, teams, editingStaff]);
 
   useEffect(() => {
     if (selectedFile) {
