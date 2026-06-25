@@ -4,10 +4,31 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Check, Loader2, Pencil, Scale, Search, UserRound, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useHubAuth } from '../../../components/hub/HubAuthContext';
+import { getImageUrl } from '../../../lib/getImageUrl';
 import { apiConfig } from '../../../utils/api';
 
 const BASE = apiConfig.baseUrl.replace(/\/$/, '');
 const initials = (s) => `${(s.firstName || '')[0] || ''}${(s.lastName || '')[0] || ''}`.toUpperCase() || '?';
+
+function Avatar({ staff, size = 'h-11 w-11', text = 'text-sm' }) {
+  const [err, setErr] = useState(false);
+  const photo = staff?.profilePhoto;
+  if (photo && !err) {
+    return (
+      <img
+        src={getImageUrl(photo)}
+        alt={`${staff.firstName || ''} ${staff.lastName || ''}`.trim()}
+        onError={() => setErr(true)}
+        className={`${size} shrink-0 rounded-full object-cover ring-2 ring-emerald-50`}
+      />
+    );
+  }
+  return (
+    <span className={`${size} ${text} flex shrink-0 items-center justify-center rounded-full bg-emerald-50 font-bold text-emerald-700`}>
+      {initials(staff || {})}
+    </span>
+  );
+}
 
 function Stepper({ step, staffName }) {
   const steps = [
@@ -202,7 +223,7 @@ export default function LeaveOverridePage() {
             {filtered.map((s) => (
               <button key={s._id} onClick={() => pick(s)}
                 className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-emerald-300 hover:shadow-md">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-sm font-bold text-emerald-700">{initials(s)}</span>
+                <Avatar staff={s} size="h-11 w-11" text="text-sm" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold text-slate-800">{s.firstName} {s.lastName}</span>
                   <span className="block truncate text-xs text-slate-400">{s.staffCode || s.email}</span>
@@ -223,7 +244,7 @@ export default function LeaveOverridePage() {
           </button>
 
           <div className="mt-4 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-base font-bold text-emerald-700">{initials(selected)}</span>
+            <Avatar staff={selected} size="h-12 w-12" text="text-base" />
             <div className="min-w-0">
               <p className="font-semibold text-slate-800">{selected.firstName} {selected.lastName}</p>
               <p className="flex items-center gap-2 text-xs text-slate-400">
