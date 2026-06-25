@@ -4,7 +4,7 @@ import { useMemo, useEffect, useState, Fragment } from 'react';
 import { Plus } from 'lucide-react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
 import LeaveRequestModal from '../../../components/leave/LeaveRequestModal';
-import { leaveApi } from '../../../utils/api';
+import { apiConfig } from '../../../utils/api';
 
 const statusBadge = (status) => {
   if (status === 'approved') return 'bg-emerald-100 text-emerald-700';
@@ -68,10 +68,16 @@ export default function LeaveRequestsClient() {
       try {
         setLoading(true);
         setError(null);
-        // Fetch with pagination
-        const res = await fetch(`/api/leave/requests?page=${page}`);
+        // Fetch from the backend (absolute URL) with the session cookie. A relative
+        // URL would hit the Next frontend, not the API, and omit credentials.
+        const base = apiConfig.baseUrl.replace(/\/$/, '');
+        const res = await fetch(`${base}/api/leave/requests?page=${page}`, {
+          cache: 'no-store',
+          credentials: 'include',
+        });
+        if (!res.ok) throw new Error(`Failed to load requests: ${res.status}`);
         const data = await res.json();
-        setRequests(data || []);
+        setRequests(Array.isArray(data) ? data : []);
         const totalPagesHeader = res.headers.get('X-Total-Pages');
         setTotalPages(totalPagesHeader ? parseInt(totalPagesHeader, 10) : 1);
       } catch (err) {
