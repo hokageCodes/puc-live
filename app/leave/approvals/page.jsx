@@ -212,9 +212,11 @@ export default function LeaveApprovalsPage() {
                       <td className="px-4 py-3 text-slate-500">
                         {request.coveragePlan || 'Pending handover'}
                       </td>
-                      <td className="px-4 py-3 text-slate-500 max-w-xs truncate">
-                        {/* Show the staff-provided reason first (required at submission) */}
-                        <div className="text-sm text-slate-700 truncate">{request.reason || '—'}</div>
+                      <td className="px-4 py-3 align-top text-slate-500 max-w-sm">
+                        {/* Full staff-provided reason (required at submission) — readable for the decision. */}
+                        <div className="whitespace-pre-wrap break-words text-sm text-slate-700" title={request.reason || ''}>
+                          {request.reason || '—'}
+                        </div>
                         {/* Then show the most recent timeline note if present (approver comment) */}
                         {Array.isArray(request.timeline) && request.timeline.length > 0 ? (
                           (() => {
@@ -222,7 +224,7 @@ export default function LeaveApprovalsPage() {
                             if (notes.length === 0) return null;
                             const latest = notes[notes.length - 1];
                             return (
-                              <div className="mt-1 text-xs text-slate-500 truncate">Approver note: {latest.note}</div>
+                              <div className="mt-1 whitespace-pre-wrap break-words text-xs text-slate-500">Approver note: {latest.note}</div>
                             );
                           })()
                         ) : null}
