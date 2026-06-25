@@ -4,10 +4,11 @@ import { useMemo, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   CalendarDays,
+  CalendarClock,
   CheckCircle2,
-  Clock,
+  ClipboardList,
   Plane,
-  AlertCircle,
+  Mail,
   ChevronRight,
 } from 'lucide-react';
 import { useLeaveAuth, useLeaveGuard } from '../../../components/leave/LeaveAuthContext';
@@ -84,6 +85,18 @@ function getTimeAgo(date) {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   return `${diffDays}d ago`;
+}
+
+function ActionTile({ icon: Icon, label, onClick, href, external, primary }) {
+  const cls = `flex flex-col items-center justify-center gap-2 rounded-2xl border p-4 text-center text-sm font-semibold transition ${
+    primary
+      ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700'
+      : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700'
+  }`;
+  const inner = (<><Icon className="h-5 w-5" /><span>{label}</span></>);
+  if (onClick) return <button type="button" onClick={onClick} className={cls}>{inner}</button>;
+  if (external) return <a href={href} className={cls}>{inner}</a>;
+  return <Link href={href} className={cls}>{inner}</Link>;
 }
 
 export default function LeaveDashboardPage() {
@@ -248,7 +261,15 @@ export default function LeaveDashboardPage() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[2fr,1fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <ActionTile icon={CalendarDays} label="Request leave" onClick={() => setModalOpen(true)} primary />
+            <ActionTile icon={CalendarClock} label="Calendar" href={`${basePath}/calendar`} />
+            <ActionTile icon={ClipboardList} label="My requests" href={`${basePath}/requests`} />
+            <ActionTile icon={Mail} label="Contact HR" href="mailto:hr@paulusoro.com" external />
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -291,54 +312,9 @@ export default function LeaveDashboardPage() {
             )}
           </div>
         </div>
+        </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-              Quick actions
-            </h3>
-            <ul className="mt-4 space-y-3 text-sm text-slate-600">
-              <li className="flex items-start gap-3">
-                <span className="mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                  <Plane className="h-4 w-4" />
-                </span>
-                <div>
-                  <p className="font-semibold text-slate-900">Plan time off</p>
-                  <p className="text-xs text-slate-500">
-                    Submit a new request and automatically notify your approvers.
-                  </p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                  <Clock className="h-4 w-4" />
-                </span>
-                <div>
-                  <p className="font-semibold text-slate-900">Check entitlement</p>
-                  <p className="text-xs text-slate-500">
-                    Review your annual allocation and remaining balances before you book.
-                  </p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                  <AlertCircle className="h-4 w-4" />
-                </span>
-                <div>
-                  <p className="font-semibold text-slate-900">Need assistance?</p>
-                  <p className="text-xs text-slate-500">
-                    Email{' '}
-                    <a href="mailto:hr@paulusoro.com" className="font-medium text-emerald-600 hover:underline">
-                      hr@paulusoro.com
-                    </a>{' '}
-                    for urgent support.
-                  </p>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
               Latest activity
             </h3>
@@ -364,7 +340,6 @@ export default function LeaveDashboardPage() {
               )}
             </ul>
           </div>
-        </div>
       </section>
 
       {isApprover && pendingApprovals.length > 0 && (
