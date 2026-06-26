@@ -300,6 +300,12 @@ export const performanceApi = {
   createCycle: (payload) => api.post('/api/performance/cycles', payload),
   advanceCycle: (cycleId) => api.post(`/api/performance/cycles/${cycleId}/advance`, {}),
   closeCycle: (cycleId) => api.post(`/api/performance/cycles/${cycleId}/close`, {}),
+
+  // Employee planning (self-service). getMyReview auto-creates a draft on first visit.
+  getMyReview: () => api.get('/api/performance/me'),
+  saveObjectives: (objectives) => api.put('/api/performance/me/objectives', { objectives }),
+  saveGoals: (developmentGoals) => api.put('/api/performance/me/goals', { developmentGoals }),
+  submitPlan: () => api.post('/api/performance/me/submit-plan', {}),
 };
 
 export const diaryApi = {
