@@ -1,10 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { CalendarRange, ChevronRight, Lock, Plus, X } from 'lucide-react';
+import { CalendarRange, ChevronRight, Download, Lock, Plus, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useHubAuth } from '../../../../components/hub/HubAuthContext';
-import { performanceApi } from '../../../../utils/api';
+import { performanceApi, getHubAuthHeader } from '../../../../utils/api';
 
 const STAGE_META = {
   planning: { label: 'Planning', cls: 'bg-sky-50 text-sky-700 ring-sky-200' },
@@ -141,6 +141,24 @@ export default function PerformanceCyclesPage() {
     }
   };
 
+  const exportCsv = async (cycle) => {
+    try {
+      const res = await fetch(performanceApi.exportCycleUrl(cycle._id), { headers: { ...getHubAuthHeader() }, credentials: 'include' });
+      if (!res.ok) throw new Error('Export failed.');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `performance-${(cycle.label || 'cycle').replace(/\s+/g, '_')}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(err?.message || 'Failed to export.');
+    }
+  };
+
   const close = async (cycle) => {
     if (!window.confirm(`Close "${cycle.label}"? This freezes all further edits on its reviews.`)) return;
     try {
@@ -207,6 +225,14 @@ export default function PerformanceCyclesPage() {
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    onClick={() => exportCsv(c)}
+                    disabled={isBusy}
+                    title="Export CSV"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+                  >
+                    <Download className="h-3.5 w-3.5" /> Export
+                  </button>
                   {next ? (
                     <button
                       onClick={() => advance(c)}

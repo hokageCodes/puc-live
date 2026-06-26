@@ -3,9 +3,58 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Check, ClipboardList, Loader2, Target, Undo2 } from 'lucide-react';
+import { ArrowLeft, Check, ClipboardList, Gauge, Loader2, Target, Undo2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { performanceApi } from '../../../../../utils/api';
+import StageAssessment from '../../../../../components/performance/StageAssessment';
+import FinalRatingPanel from '../../../../../components/performance/FinalRatingPanel';
+import { useHubAuth } from '../../../../../components/hub/HubAuthContext';
+
+const stageParamFor = (cycleStage) => (cycleStage === 'mid_term' ? 'mid' : cycleStage === 'half_year' ? 'half' : null);
+
+const selCls = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100';
+
+function ModerationPanel({ meta, review, onUpdated }) {
+  const [rating, setRating] = useState(review.moderatedFinalRating || '');
+  const [note, setNote] = useState(review.moderationNote || '');
+  const [busy, setBusy] = useState(false);
+  const finals = meta?.finalRatings || [];
+
+  const moderate = async () => {
+    if (!rating) { toast.error('Choose a moderated rating.'); return; }
+    setBusy(true);
+    try { onUpdated(await performanceApi.moderateReview(review._id, rating, note)); toast.success('Rating moderated.'); }
+    catch (err) { toast.error(err?.message || 'Failed to moderate.'); }
+    finally { setBusy(false); }
+  };
+  const reopen = async () => {
+    const n = window.prompt('Reason for reopening (optional):') || '';
+    setBusy(true);
+    try { onUpdated(await performanceApi.reopenReview(review._id, n)); toast.success('Review reopened.'); }
+    catch (err) { toast.error(err?.message || 'Failed to reopen.'); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <section className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-6 shadow-sm">
+      <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">HR moderation</h2>
+      <p className="mt-1 text-xs text-slate-500">
+        Employee: <b>{review.employeeFinalRating || '—'}</b> · Manager: <b>{review.managerFinalRating || '—'}</b>
+      </p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-[240px_1fr]">
+        <select className={selCls} value={rating} onChange={(e) => setRating(e.target.value)}>
+          <option value="">Rating of record…</option>
+          {finals.map((r) => <option key={r} value={r}>{r}</option>)}
+        </select>
+        <input className={selCls} placeholder="Moderation note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
+      </div>
+      <div className="mt-3 flex justify-end gap-2">
+        <button onClick={reopen} disabled={busy} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-60">Reopen</button>
+        <button onClick={moderate} disabled={busy} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">Set moderated rating</button>
+      </div>
+    </section>
+  );
+}
 
 const fullName = (s) => (s ? `${s.firstName || ''} ${s.lastName || ''}`.trim() : '');
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
@@ -13,14 +62,18 @@ const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'nume
 export default function PerformanceReviewDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { hasAnyRole } = useHubAuth();
   const [review, setReview] = useState(null);
+  const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setReview(await performanceApi.getReview(id));
+      const [r, m] = await Promise.all([performanceApi.getReview(id), performanceApi.getMeta()]);
+      setReview(r);
+      setMeta(m);
     } catch (err) {
       toast.error(err?.message || 'Failed to load the review.');
     } finally {
@@ -115,6 +168,35 @@ export default function PerformanceReviewDetailPage() {
         </div>
       </section>
 
+      {/* Manager mid/half assessment (appears while the stage is open) */}
+      {(() => {
+        const stageParam = stageParamFor(review.cycle?.stage);
+        if (!stageParam || !meta) return null;
+        const returned = Boolean(review.sharedFlags?.[`${stageParam}Returned`]);
+        return (
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <Gauge className="h-4 w-4 text-emerald-600" />
+              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                {stageParam === 'mid' ? 'Mid-term assessment' : 'Half-year assessment'}
+              </h2>
+              {returned && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">Returned</span>}
+            </div>
+            <StageAssessment
+              meta={meta}
+              review={review}
+              stageParam={stageParam}
+              author="manager"
+              editable={!returned}
+              saveFn={(p) => performanceApi.saveManagerAssessment(id, stageParam, p)}
+              handoffFn={() => performanceApi.returnStage(id, stageParam)}
+              handoffLabel="Return to employee"
+              onUpdated={setReview}
+            />
+          </section>
+        );
+      })()}
+
       {/* Development plan */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center gap-2">
@@ -138,6 +220,26 @@ export default function PerformanceReviewDetailPage() {
           {(review.developmentGoals || []).length === 0 && <p className="text-sm text-slate-400">No development goals.</p>}
         </div>
       </section>
+
+      {/* Manager final rating (half-year) */}
+      {review.cycle?.stage === 'half_year' && meta && (
+        <FinalRatingPanel
+          meta={meta}
+          suggestion={review.suggestion}
+          title="Manager final rating"
+          initialRating={review.managerFinalRating}
+          initialRationale={review.managerFinalRationale}
+          editable
+          onSave={(rating, rationale) => performanceApi.setManagerFinalRating(id, rating, rationale)}
+          other={review.employeeFinalRating ? { label: 'Employee (proposed)', rating: review.employeeFinalRating, rationale: review.employeeFinalRationale } : null}
+          onUpdated={setReview}
+        />
+      )}
+
+      {/* HR moderation */}
+      {hasAnyRole(['hr', 'admin']) && meta && (review.cycle?.stage === 'moderation' || review.managerFinalRating || review.moderatedFinalRating) && (
+        <ModerationPanel meta={meta} review={review} onUpdated={setReview} />
+      )}
 
       {/* Timeline */}
       {Array.isArray(review.timeline) && review.timeline.length > 0 && (

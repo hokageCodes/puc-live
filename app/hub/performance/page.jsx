@@ -1,9 +1,15 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, ClipboardList, Loader2, Plus, Send, Target, Trash2 } from 'lucide-react';
+import { CheckCircle2, ClipboardList, Gauge, Loader2, Plus, Send, Target, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { performanceApi } from '../../../utils/api';
+import StageAssessment from '../../../components/performance/StageAssessment';
+import FinalRatingPanel from '../../../components/performance/FinalRatingPanel';
+
+// Statuses at which the plan is agreed and stage reviews can begin.
+const POST_AGREEMENT = ['plan_agreed', 'mid_employee', 'mid_manager_returned', 'half_employee', 'half_manager_returned', 'moderation', 'closed'];
+const stageParamFor = (cycleStage) => (cycleStage === 'mid_term' ? 'mid' : cycleStage === 'half_year' ? 'half' : null);
 
 const input =
   'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100';
@@ -25,6 +31,26 @@ const STATUS_LABEL = {
 
 const toDateInput = (d) => (d ? new Date(d).toISOString().slice(0, 10) : '');
 
+function HistoryList({ items, currentCycleId }) {
+  const past = (items || []).filter((it) => String(it.cycle?._id) !== String(currentCycleId));
+  if (past.length === 0) return null;
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Past reviews</h2>
+      <ul className="mt-3 divide-y divide-slate-100">
+        {past.map((it) => (
+          <li key={it._id} className="flex items-center justify-between py-2.5 text-sm">
+            <span className="font-medium text-slate-700">{it.cycle?.label || 'Cycle'}</span>
+            <span className="text-slate-500">
+              {it.moderatedFinalRating || it.managerFinalRating || it.employeeFinalRating || it.status.replace(/_/g, ' ')}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function Labeled({ label, hint, children }) {
   return (
     <label className="flex flex-col gap-1.5">
@@ -42,6 +68,7 @@ export default function MyPerformancePage() {
   const [loading, setLoading] = useState(true);
   const [objectives, setObjectives] = useState([]);
   const [goals, setGoals] = useState([]);
+  const [history, setHistory] = useState([]);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -53,10 +80,15 @@ export default function MyPerformancePage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [m, mine] = await Promise.all([performanceApi.getMeta(), performanceApi.getMyReview()]);
+      const [m, mine, hist] = await Promise.all([
+        performanceApi.getMeta(),
+        performanceApi.getMyReview(),
+        performanceApi.getMyHistory().catch(() => []),
+      ]);
       setMeta(m);
       setCycle(mine.cycle);
       setReview(mine.review);
+      setHistory(Array.isArray(hist) ? hist : []);
       setObjectives(
         (mine.review?.objectives || []).map((o) => ({
           performanceArea: o.performanceArea || '',
@@ -152,10 +184,13 @@ export default function MyPerformancePage() {
 
   if (!cycle) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-12 text-center">
-        <Target className="mx-auto h-8 w-8 text-slate-300" />
-        <p className="mt-3 text-sm font-medium text-slate-600">No active performance cycle.</p>
-        <p className="text-xs text-slate-400">Your appraisal will appear here once HR opens a cycle.</p>
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-12 text-center">
+          <Target className="mx-auto h-8 w-8 text-slate-300" />
+          <p className="mt-3 text-sm font-medium text-slate-600">No active performance cycle.</p>
+          <p className="text-xs text-slate-400">Your appraisal will appear here once HR opens a cycle.</p>
+        </div>
+        <HistoryList items={history} currentCycleId={null} />
       </div>
     );
   }
@@ -274,6 +309,50 @@ export default function MyPerformancePage() {
         )}
       </section>
 
+      {/* Mid-term / half-year self-assessment (appears once the plan is agreed and the stage is open) */}
+      {(() => {
+        const stageParam = stageParamFor(cycle.stage);
+        if (!stageParam || !POST_AGREEMENT.includes(review.status)) return null;
+        const shared = Boolean(review.sharedFlags?.[`${stageParam}Shared`]);
+        return (
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <Gauge className="h-4 w-4 text-emerald-600" />
+              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                {stageParam === 'mid' ? 'Mid-term self-assessment' : 'Half-year self-assessment'}
+              </h2>
+              {shared && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">Shared</span>}
+            </div>
+            <StageAssessment
+              meta={meta}
+              review={review}
+              stageParam={stageParam}
+              author="employee"
+              editable={!shared}
+              saveFn={(p) => performanceApi.saveMyAssessment(stageParam, p)}
+              handoffFn={() => performanceApi.shareMyStage(stageParam)}
+              handoffLabel="Share with manager"
+              onUpdated={setReview}
+            />
+          </section>
+        );
+      })()}
+
+      {/* Final rating (half-year only) */}
+      {cycle.stage === 'half_year' && POST_AGREEMENT.includes(review.status) && (
+        <FinalRatingPanel
+          meta={meta}
+          suggestion={review.suggestion}
+          title="Your final rating"
+          initialRating={review.employeeFinalRating}
+          initialRationale={review.employeeFinalRationale}
+          editable
+          onSave={(rating, rationale) => performanceApi.setMyFinalRating(rating, rationale)}
+          other={review.managerFinalRating ? { label: 'Manager', rating: review.managerFinalRating, rationale: review.managerFinalRationale } : null}
+          onUpdated={setReview}
+        />
+      )}
+
       {editable && (
         <div className="sticky bottom-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs text-slate-500">
@@ -291,6 +370,8 @@ export default function MyPerformancePage() {
           </div>
         </div>
       )}
+
+      <HistoryList items={history} currentCycleId={cycle._id} />
     </div>
   );
 }
