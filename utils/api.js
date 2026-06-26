@@ -290,6 +290,48 @@ export const leaveApi = {
   getMyApprovals: () => api.get('/api/leave/approvals/history'),
 };
 
+export const performanceApi = {
+  // Reference metadata: enums, the 5 fixed behaviours, rating descriptions, limits.
+  // The frontend renders all dropdowns from this so values are never hard-coded.
+  getMeta: () => api.get('/api/performance/meta'),
+
+  // Cycle administration (HR/admin).
+  listCycles: () => api.get('/api/performance/cycles'),
+  createCycle: (payload) => api.post('/api/performance/cycles', payload),
+  advanceCycle: (cycleId) => api.post(`/api/performance/cycles/${cycleId}/advance`, {}),
+  closeCycle: (cycleId) => api.post(`/api/performance/cycles/${cycleId}/close`, {}),
+
+  // Employee planning (self-service). getMyReview auto-creates a draft on first visit.
+  getMyReview: () => api.get('/api/performance/me'),
+  saveObjectives: (objectives) => api.put('/api/performance/me/objectives', { objectives }),
+  saveGoals: (developmentGoals) => api.put('/api/performance/me/goals', { developmentGoals }),
+  submitPlan: () => api.post('/api/performance/me/submit-plan', {}),
+
+  // Manager / HR review queue + plan agreement.
+  getTeamReviews: () => api.get('/api/performance/reviews'),
+  getReview: (reviewId) => api.get(`/api/performance/reviews/${reviewId}`),
+  agreePlan: (reviewId, action, comment) =>
+    api.post(`/api/performance/reviews/${reviewId}/agree-plan`, { action, comment }),
+
+  // Stage assessments (mid|half). Employee self-assessment + share; manager assessment + return.
+  saveMyAssessment: (stage, payload) => api.put(`/api/performance/me/assessment/${stage}`, payload),
+  shareMyStage: (stage) => api.post(`/api/performance/me/share/${stage}`, {}),
+  saveManagerAssessment: (reviewId, stage, payload) => api.put(`/api/performance/reviews/${reviewId}/assessment/${stage}`, payload),
+  returnStage: (reviewId, stage) => api.post(`/api/performance/reviews/${reviewId}/return/${stage}`, {}),
+
+  // Final rating (half-year) — manual pick with the suggested score as guidance.
+  setMyFinalRating: (rating, rationale) => api.post('/api/performance/me/final-rating', { rating, rationale }),
+  setManagerFinalRating: (reviewId, rating, rationale) => api.post(`/api/performance/reviews/${reviewId}/manager-final`, { rating, rationale }),
+
+  // HR moderation.
+  moderateReview: (reviewId, rating, note) => api.post(`/api/performance/reviews/${reviewId}/moderate`, { rating, note }),
+  reopenReview: (reviewId, note) => api.post(`/api/performance/reviews/${reviewId}/reopen`, { note }),
+
+  // Reporting.
+  getMyHistory: () => api.get('/api/performance/me/history'),
+  exportCycleUrl: (cycleId) => `${apiConfig.baseUrl.replace(/\/$/, '')}/api/performance/cycles/${cycleId}/export`,
+};
+
 export const diaryApi = {
   listEntries: (params = {}) => {
     const queryString = Object.keys(params).length
