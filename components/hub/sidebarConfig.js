@@ -17,7 +17,7 @@ import {
 // Performance Evaluation module rolls out in phases (see PERFORMANCE-REVIEW-BUILD.md).
 // Each surface is gated independently so we only expose links whose pages exist.
 const PERFORMANCE_CYCLES_ENABLED = true;  // Phase 1 — cycle admin page is live
-const PERFORMANCE_REVIEWS_ENABLED = false; // Phase 3 — manager queue
+const PERFORMANCE_REVIEWS_ENABLED = true;  // Phase 3 — manager queue is live
 const PERFORMANCE_SELF_ENABLED = true;     // Phase 2 — My Performance page is live
 
 /**

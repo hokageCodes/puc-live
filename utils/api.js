@@ -306,6 +306,12 @@ export const performanceApi = {
   saveObjectives: (objectives) => api.put('/api/performance/me/objectives', { objectives }),
   saveGoals: (developmentGoals) => api.put('/api/performance/me/goals', { developmentGoals }),
   submitPlan: () => api.post('/api/performance/me/submit-plan', {}),
+
+  // Manager / HR review queue + plan agreement.
+  getTeamReviews: () => api.get('/api/performance/reviews'),
+  getReview: (reviewId) => api.get(`/api/performance/reviews/${reviewId}`),
+  agreePlan: (reviewId, action, comment) =>
+    api.post(`/api/performance/reviews/${reviewId}/agree-plan`, { action, comment }),
 };
 
 export const diaryApi = {
