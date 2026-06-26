@@ -208,7 +208,41 @@ export default function MyPerformancePage() {
         </p>
       </header>
 
-      {!editable && (
+      {/* Final outcome — HR's moderated rating of record (and the manager's rating once returned) */}
+      {(review.moderatedFinalRating || review.managerFinalRating) && (
+        <section className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 shadow-sm">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">Final outcome</h2>
+          {review.moderatedFinalRating ? (
+            <div className="mt-3">
+              <div className="flex items-baseline gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">HR final rating</span>
+                <span className="text-2xl font-bold text-emerald-700">{review.moderatedFinalRating}</span>
+              </div>
+              {review.moderationNote && <p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{review.moderationNote}</p>}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-slate-500">Your manager has submitted a rating. HR will confirm the final rating of record after moderation.</p>
+          )}
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {review.managerFinalRating && (
+              <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-emerald-100">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Manager rating</div>
+                <div className="font-semibold text-slate-700">{review.managerFinalRating}</div>
+                {review.managerFinalRationale && <p className="mt-0.5 whitespace-pre-wrap text-xs text-slate-500">{review.managerFinalRationale}</p>}
+              </div>
+            )}
+            {review.employeeFinalRating && (
+              <div className="rounded-lg bg-white px-3 py-2 ring-1 ring-emerald-100">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Your rating</div>
+                <div className="font-semibold text-slate-700">{review.employeeFinalRating}</div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {!editable && !review.moderatedFinalRating && review.status !== 'plan_agreed' && (
         <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
           <CheckCircle2 className="h-4 w-4" />
           Your plan has been submitted. It’s now with your line manager — you’ll be notified when it’s agreed or sent back.
