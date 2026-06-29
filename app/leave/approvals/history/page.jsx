@@ -6,6 +6,12 @@ import { leaveApi } from '../../../../utils/api';
 
 export default function MyApprovalsPage() {
   const { user } = useLeaveAuth();
+  // HR/admin get a firm-wide view (every approval & rejection), so the copy and
+  // labels shift from "yours" to "the firm's". The backend decides what data to return.
+  const firmWide = useMemo(
+    () => (user?.roles || []).map((r) => String(r).toLowerCase()).some((r) => r === 'hr' || r === 'admin'),
+    [user]
+  );
   const [actions, setActions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,7 +48,8 @@ export default function MyApprovalsPage() {
       const q = search.toLowerCase();
       return (
         (a.staffName || '').toLowerCase().includes(q) ||
-        (a.leaveType || '').toLowerCase().includes(q)
+        (a.leaveType || '').toLowerCase().includes(q) ||
+        (a.actorName || '').toLowerCase().includes(q)
       );
     });
   }, [actions, search, filterEvent]);
@@ -86,7 +93,11 @@ export default function MyApprovalsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900">Approvals & Requests History</h1>
-          <p className="mt-2 text-slate-600">Track all approvals and rejections you've performed, plus your own leave requests.</p>
+          <p className="mt-2 text-slate-600">
+            {firmWide
+              ? 'Every leave approval and rejection across the firm, plus your own leave requests.'
+              : "Track all approvals and rejections you've performed, plus your own leave requests."}
+          </p>
         </div>
 
         {/* Tabs and Search */}
@@ -100,7 +111,7 @@ export default function MyApprovalsPage() {
                     ? 'bg-[#014634] text-white shadow-md' 
                     : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
                 }`}>
-                My Actions
+                {firmWide ? 'All Actions' : 'My Actions'}
               </button>
               <button
                 onClick={() => setTab('requests')}
@@ -145,7 +156,7 @@ export default function MyApprovalsPage() {
             {filteredActions.length === 0 ? (
               <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl p-12 text-center">
                 <div className="text-slate-400 text-lg mb-2">No approval history found</div>
-                <p className="text-slate-500 text-sm">Your approval actions will appear here</p>
+                <p className="text-slate-500 text-sm">{firmWide ? 'Firm-wide approvals and rejections will appear here' : 'Your approval actions will appear here'}</p>
               </div>
             ) : (
               <div className="grid gap-4">
@@ -165,7 +176,12 @@ export default function MyApprovalsPage() {
                           <div className="text-sm text-slate-500">{a.leaveType || 'Leave'}</div>
                         </div>
                       </div>
-                      <div className="text-xs text-slate-400">{new Date(a.timestamp).toLocaleString()}</div>
+                      <div className="text-right">
+                        <div className="text-xs text-slate-400">{new Date(a.timestamp).toLocaleString()}</div>
+                        {firmWide && a.actorName && (
+                          <div className="text-xs text-slate-500 mt-0.5">by {a.actorName}</div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100">

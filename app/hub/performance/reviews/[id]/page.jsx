@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Check, ClipboardList, Gauge, Loader2, Target, Undo2 } from 'lucide-react';
+import { ArrowLeft, Check, ClipboardList, Gauge, Loader2, ShieldAlert, Target, Undo2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { performanceApi } from '../../../../../utils/api';
 import StageAssessment from '../../../../../components/performance/StageAssessment';
 import FinalRatingPanel from '../../../../../components/performance/FinalRatingPanel';
 import { useHubAuth } from '../../../../../components/hub/HubAuthContext';
+import { PERFORMANCE_ROLES } from '../../../../../components/hub/sidebarConfig';
 
 const stageParamFor = (cycleStage) => (cycleStage === 'mid_term' ? 'mid' : cycleStage === 'half_year' ? 'half' : null);
 
@@ -63,6 +64,8 @@ export default function PerformanceReviewDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { hasAnyRole } = useHubAuth();
+  // Restricted to PERFORMANCE_ROLES while the module is still being rolled out.
+  const allowed = hasAnyRole(PERFORMANCE_ROLES);
   const [review, setReview] = useState(null);
   const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -81,7 +84,7 @@ export default function PerformanceReviewDetailPage() {
     }
   }, [id]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (allowed) load(); }, [allowed, load]);
 
   const act = async (action) => {
     let comment = '';
@@ -104,6 +107,17 @@ export default function PerformanceReviewDetailPage() {
     }
   };
 
+  if (!allowed) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+          <ShieldAlert className="h-6 w-6" />
+        </div>
+        <h1 className="mt-4 text-xl font-semibold text-slate-900">No review access</h1>
+        <p className="mt-2 text-sm text-slate-600">This module is still being rolled out. It’s currently limited to HR and admin.</p>
+      </div>
+    );
+  }
   if (loading) {
     return <div className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-slate-50" />;
   }

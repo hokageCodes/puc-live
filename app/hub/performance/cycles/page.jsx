@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { CalendarRange, ChevronRight, Download, Lock, Plus, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useHubAuth } from '../../../../components/hub/HubAuthContext';
+import { PERFORMANCE_ROLES } from '../../../../components/hub/sidebarConfig';
 import { performanceApi, getHubAuthHeader } from '../../../../utils/api';
 
 const STAGE_META = {
@@ -106,7 +107,7 @@ function NewCycleModal({ onClose, onSaved }) {
 
 export default function PerformanceCyclesPage() {
   const { hasAnyRole } = useHubAuth();
-  const allowed = hasAnyRole(['admin', 'hr']);
+  const allowed = hasAnyRole(PERFORMANCE_ROLES);
   const [cycles, setCycles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronRight, Gauge, ShieldAlert } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useHubAuth } from '../../../../components/hub/HubAuthContext';
+import { PERFORMANCE_ROLES } from '../../../../components/hub/sidebarConfig';
 import { performanceApi } from '../../../../utils/api';
 
 const STATUS_META = {
@@ -22,7 +23,8 @@ const fullName = (s) => (s ? `${s.firstName || ''} ${s.lastName || ''}`.trim() :
 
 export default function PerformanceReviewQueuePage() {
   const { user, hasAnyRole } = useHubAuth();
-  const allowed = hasAnyRole(['teamLead', 'lineManager', 'hr', 'admin']);
+  // Restricted to PERFORMANCE_ROLES while the module is still being rolled out.
+  const allowed = hasAnyRole(PERFORMANCE_ROLES);
   const [cycle, setCycle] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,7 @@ export default function PerformanceReviewQueuePage() {
           <ShieldAlert className="h-6 w-6" />
         </div>
         <h1 className="mt-4 text-xl font-semibold text-slate-900">No review access</h1>
-        <p className="mt-2 text-sm text-slate-600">This area is for team leads, line managers, and HR.</p>
+        <p className="mt-2 text-sm text-slate-600">This module is still being rolled out. It’s currently limited to HR and admin.</p>
       </div>
     );
   }

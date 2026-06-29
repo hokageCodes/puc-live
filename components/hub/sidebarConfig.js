@@ -20,6 +20,12 @@ const PERFORMANCE_CYCLES_ENABLED = true;  // Phase 1 — cycle admin page is liv
 const PERFORMANCE_REVIEWS_ENABLED = true;  // Phase 3 — manager queue is live
 const PERFORMANCE_SELF_ENABLED = true;     // Phase 2 — My Performance page is live
 
+// Not yet rolled out to all staff — we keep building/testing behind these roles.
+// Until general release, every performance surface (including "My Performance")
+// is limited to HR, admin, and CMS. Page guards import this same list so a
+// staffer can't reach the pages by deep-linking. Widen to open it up later.
+export const PERFORMANCE_ROLES = ['hr', 'admin', 'cms'];
+
 /**
  * Hub navigation, grouped into sections.
  *
@@ -43,8 +49,9 @@ export const HUB_NAV_GROUPS = [
       { name: 'Leave Calendar', href: '/hub/leave/calendar', icon: CalendarClock },
       // Litigation-only tool — hidden for everyone else (backend also enforces this).
       { name: 'Court Diary', href: '/hub/diary', icon: BookOpenText, show: (u) => /litigation/i.test(u?.department?.name || '') },
-      // Self-service appraisal (objectives, CDP, self-assessment). Hidden until Phase 2.
-      { name: 'My Performance', href: '/hub/performance', icon: Target, show: () => PERFORMANCE_SELF_ENABLED },
+      // Self-service appraisal (objectives, CDP, self-assessment).
+      // Restricted to PERFORMANCE_ROLES until general rollout (still building/testing).
+      { name: 'My Performance', href: '/hub/performance', icon: Target, roles: PERFORMANCE_ROLES, show: () => PERFORMANCE_SELF_ENABLED },
     ],
   },
   {
@@ -56,10 +63,10 @@ export const HUB_NAV_GROUPS = [
       { name: 'Leave Types', href: '/hub/leave-types', icon: SlidersHorizontal, roles: ['admin', 'hr'] },
       { name: 'Leave Override', href: '/hub/leave-override', icon: Scale, roles: ['admin', 'hr'] },
       { name: 'News', href: '/hub/news', icon: FileText, roles: ['admin', 'cms'] },
-      // Performance queue for managers + HR/admin. Hidden until Phase 3.
-      { name: 'Performance', href: '/hub/performance/reviews', icon: Gauge, roles: ['teamLead', 'lineManager', 'hr', 'admin'], show: () => PERFORMANCE_REVIEWS_ENABLED },
+      // Performance queue. Restricted to PERFORMANCE_ROLES until general rollout.
+      { name: 'Performance', href: '/hub/performance/reviews', icon: Gauge, roles: PERFORMANCE_ROLES, show: () => PERFORMANCE_REVIEWS_ENABLED },
       // Cycle admin (open/advance/close, moderation).
-      { name: 'Performance Cycles', href: '/hub/performance/cycles', icon: CalendarRange, roles: ['hr', 'admin'], show: () => PERFORMANCE_CYCLES_ENABLED },
+      { name: 'Performance Cycles', href: '/hub/performance/cycles', icon: CalendarRange, roles: PERFORMANCE_ROLES, show: () => PERFORMANCE_CYCLES_ENABLED },
     ],
   },
 ];
