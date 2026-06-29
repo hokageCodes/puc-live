@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, ClipboardList, Gauge, Loader2, Plus, Send, Target, Trash2 } from 'lucide-react';
+import { CheckCircle2, ClipboardList, Gauge, Loader2, Plus, Send, ShieldAlert, Target, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { performanceApi } from '../../../utils/api';
+import { useHubAuth } from '../../../components/hub/HubAuthContext';
+import { PERFORMANCE_ROLES } from '../../../components/hub/sidebarConfig';
 import StageAssessment from '../../../components/performance/StageAssessment';
 import FinalRatingPanel from '../../../components/performance/FinalRatingPanel';
 
@@ -62,6 +64,9 @@ function Labeled({ label, hint, children }) {
 }
 
 export default function MyPerformancePage() {
+  const { hasAnyRole } = useHubAuth();
+  // Performance is still being built/tested — limited to HR/admin/CMS for now.
+  const allowed = hasAnyRole(PERFORMANCE_ROLES);
   const [meta, setMeta] = useState(null);
   const [cycle, setCycle] = useState(null);
   const [review, setReview] = useState(null);
@@ -111,7 +116,7 @@ export default function MyPerformancePage() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (allowed) load(); }, [allowed, load]);
 
   const totalWeight = useMemo(
     () => objectives.reduce((s, o) => s + (Number(o.weighting) || 0), 0),
@@ -172,6 +177,18 @@ export default function MyPerformancePage() {
       setSubmitting(false);
     }
   };
+
+  if (!allowed) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+          <ShieldAlert className="h-6 w-6" />
+        </div>
+        <h1 className="mt-4 text-xl font-semibold text-slate-900">Performance isn’t available yet</h1>
+        <p className="mt-2 text-sm text-slate-600">This module is still being rolled out. It’ll be enabled for everyone soon.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
