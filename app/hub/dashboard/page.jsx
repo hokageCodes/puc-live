@@ -6,7 +6,7 @@ import {
   ArrowRight, CalendarDays, ClipboardList, ListChecks, Plane, ShieldCheck, SlidersHorizontal, Users,
 } from 'lucide-react';
 import { useHubAuth } from '../../../components/hub/HubAuthContext';
-import { apiConfig, getHubAuthHeader, leaveApi } from '../../../utils/api';
+import { ApiError, apiConfig, getHubAuthHeader, leaveApi } from '../../../utils/api';
 
 const BASE = apiConfig.baseUrl.replace(/\/$/, '');
 
@@ -55,7 +55,7 @@ function QuickLink({ icon: Icon, label, href }) {
 }
 
 export default function HubDashboardPage() {
-  const { user, roles, hasAnyRole } = useHubAuth();
+  const { user, roles, hasAnyRole, signOut } = useHubAuth();
   const isManager = hasAnyRole(['admin', 'hr']);
   const isApprover = hasAnyRole(['teamLead', 'lineManager', 'hr', 'admin']);
   const firstName = user?.firstName || (user?.email ? user.email.split('@')[0] : 'there');
@@ -66,23 +66,31 @@ export default function HubDashboardPage() {
   const [staffCount, setStaffCount] = useState(null);
   const [typesCount, setTypesCount] = useState(null);
 
+  // Tiles are best-effort, but a 401 means the session is dead (missing/expired
+  // token) — end it so the guard sends the user to /login instead of leaving them
+  // on a logged-in-looking dashboard where everything silently fails.
+  const onLoadError = useCallback((err) => {
+    if (err instanceof ApiError && err.status === 401) signOut();
+  }, [signOut]);
+
   const loadCount = useCallback(async (path, setter) => {
     try {
       const res = await fetch(`${BASE}${path}`, { cache: 'no-store', credentials: 'include', headers: { ...getHubAuthHeader() } });
+      if (res.status === 401) { signOut(); return; }
       if (!res.ok) return;
       const data = await res.json();
       setter(Array.isArray(data) ? data.length : null);
     } catch { /* ignore — dashboard tiles are best-effort */ }
-  }, []);
+  }, [signOut]);
 
   useEffect(() => {
-    leaveApi.getMyBalances().then((d) => setBalances(Array.isArray(d) ? d : [])).catch(() => {});
-    if (isApprover) leaveApi.getPendingApprovals().then((d) => setPending(Array.isArray(d) ? d : [])).catch(() => {});
+    leaveApi.getMyBalances().then((d) => setBalances(Array.isArray(d) ? d : [])).catch(onLoadError);
+    if (isApprover) leaveApi.getPendingApprovals().then((d) => setPending(Array.isArray(d) ? d : [])).catch(onLoadError);
     if (isManager) {
       loadCount('/api/staff', setStaffCount);
       loadCount('/api/leave-types', setTypesCount);
     }
-  }, [isManager, isApprover, loadCount]);
+  }, [isManager, isApprover, loadCount, onLoadError]);
 
   const leaveLeft = useMemo(
     () => balances.reduce((sum, b) => sum + Math.max((b.allocated || 0) + (b.carriedOver || 0) - (b.used || 0), 0), 0),

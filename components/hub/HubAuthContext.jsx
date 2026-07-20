@@ -220,7 +220,9 @@ export function HubAuthProvider({ children }) {
         setStatus('unauthenticated');
         throw new Error(data.message || 'Invalid email or password');
       }
-      if (!data?.user) {
+      // Both halves are required: the Bearer token is the only session that works
+      // cross-site, so a user without one would land on a shell that 401s everywhere.
+      if (!data?.user || !data?.accessToken) {
         clearSession();
         setStatus('unauthenticated');
         throw new Error('Login response missing session data');
@@ -287,7 +289,13 @@ export function HubAuthProvider({ children }) {
         clearSession();
         setStatus('unauthenticated');
       } else if (!r.ok) {
-        setStatus(hadStored ? 'authenticated' : 'unauthenticated');
+        // A stored profile is NOT a session. Without a Bearer token every request
+        // 401s ("no token provided"), so an optimistic "authenticated" here renders
+        // a logged-in shell that can't load anything. Only stay optimistic if we
+        // actually hold a token whose validation failed transiently.
+        const hasToken = !me.noToken;
+        setStatus(hadStored && hasToken ? 'authenticated' : 'unauthenticated');
+        if (!hasToken) clearSession();
       }
     };
     bootstrap();
