@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { HUB_TOKEN_KEY } from '../../utils/api';
 
 // Exported so a hub bridge can supply this same context from the unified hub session.
 export const LeaveAuthContext = createContext(undefined);
@@ -92,8 +93,18 @@ export function LeaveAuthProvider({ children }) {
   const clearSession = useCallback(() => {
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(STORAGE_USER_KEY);
+      window.localStorage.removeItem(HUB_TOKEN_KEY);
     }
     setUser(null);
+  }, []);
+
+  // Persist the access token under the key utils/api reads, so every leaveApi call
+  // carries `Authorization: Bearer …`. Without this the leave session is cookie-only,
+  // and the frontend/backend being different sites means Safari (ITP) and Chrome's
+  // third-party cookie rules drop the cookie — every request then 401s with
+  // "no token provided" while the UI still believes it is logged in.
+  const storeToken = useCallback((token) => {
+    if (token && typeof window !== 'undefined') window.localStorage.setItem(HUB_TOKEN_KEY, token);
   }, []);
 
   const attemptRefresh = useCallback(async () => {
@@ -114,9 +125,35 @@ export function LeaveAuthProvider({ children }) {
       throw new Error('Invalid refresh response');
     }
 
+    storeToken(data.accessToken);
     applySession(data.user);
     setStatus('authenticated');
     return data.user;
+  }, [applySession, backendUrl, storeToken]);
+
+  // Validate the stored Bearer token via /auth/me. Unlike the refresh cookie this
+  // works cross-site, so it's what actually keeps a leave session alive across page
+  // loads on browsers that block third-party cookies.
+  const validateViaMe = useCallback(async () => {
+    if (typeof window === 'undefined') return false;
+    const token = window.localStorage.getItem(HUB_TOKEN_KEY);
+    if (!token) return false;
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/me`, {
+        method: 'GET',
+        cache: 'no-store',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return false;
+      const data = await res.json().catch(() => ({}));
+      if (!data?.user) return false;
+      applySession(data.user);
+      setStatus('authenticated');
+      return true;
+    } catch {
+      return false;
+    }
   }, [applySession, backendUrl]);
 
   const refreshSession = useCallback(async () => {
@@ -152,17 +189,18 @@ export function LeaveAuthProvider({ children }) {
         throw new Error(data.message || 'Invalid email or password');
       }
 
-      if (!data?.user) {
+      if (!data?.user || !data?.accessToken) {
         clearSession();
         setStatus('unauthenticated');
         throw new Error('Login response missing session data');
       }
 
+      storeToken(data.accessToken);
       applySession(data.user);
       setStatus('authenticated');
       return data.user;
     },
-    [applySession, backendUrl, clearSession]
+    [applySession, backendUrl, clearSession, storeToken]
   );
 
   const signOut = useCallback(() => {
@@ -206,6 +244,11 @@ export function LeaveAuthProvider({ children }) {
         }
       }
 
+      // Bearer token first (works cross-site), refresh cookie only as a fallback for
+      // legacy cookie-only sessions.
+      const ok = await validateViaMe();
+      if (!isMounted || ok) return;
+
       try {
         await attemptRefresh();
       } catch {
@@ -219,20 +262,24 @@ export function LeaveAuthProvider({ children }) {
     bootstrap();
 
     return () => { isMounted = false; };
-  }, [attemptRefresh, clearSession]);
+  }, [attemptRefresh, clearSession, validateViaMe]);
 
   useEffect(() => {
     if (status !== 'authenticated') return undefined;
 
+    // Keep-alive: the Bearer token is the source of truth, so validate it first and
+    // only fall back to the (often blocked) refresh cookie if it's actually dead.
+    // Refreshing unconditionally would log the user out mid-task on Safari.
     const interval = setInterval(() => {
-      refreshSession().catch(() => {
-        // handled in refreshSession (will update status)
-      });
+      validateViaMe()
+        .then((ok) => (ok ? null : refreshSession().catch(() => {})))
+        .catch(() => {});
     }, REFRESH_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [refreshSession, status]);
+  }, [refreshSession, status, validateViaMe]);
 
+  // Leave requests go through utils/api, which attaches the Bearer token itself.
   const buildAuthHeaders = useCallback((headers = {}) => headers, []);
 
   const value = useMemo(
