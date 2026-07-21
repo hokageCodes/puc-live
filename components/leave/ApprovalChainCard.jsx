@@ -2,16 +2,58 @@
 
 import { Users } from 'lucide-react';
 
+/**
+ * Mirrors the server's chain (see buildApproverChain in leaveController): roles with
+ * no one assigned aren't steps at all, and when one person holds several roles they
+ * approve ONCE — the roles merge into a single step rather than repeating.
+ * The HR step with nobody named goes to whichever HR picks it up.
+ */
 export function buildReportingChain(user) {
-  const teamLeadName = user?.teamLead ? `${user.teamLead.firstName} ${user.teamLead.lastName}`.trim() : 'Not assigned';
-  const lineManagerName = user?.lineManager ? `${user.lineManager.firstName} ${user.lineManager.lastName}`.trim() : 'Not assigned';
-  const hrName = user?.hr ? `${user.hr.firstName} ${user.hr.lastName}`.trim() : 'HR Operations';
+  const fullName = (person) => `${person.firstName || ''} ${person.lastName || ''}`.trim();
 
-  return [
-    { id: user?.teamLead?.id ? `tl-${user.teamLead.id}` : 'tl-unassigned', label: 'Team Lead', name: teamLeadName, status: user?.teamLead ? 'Pending' : 'Locked', meta: 'Team Lead approval required first.' },
-    { id: user?.lineManager?.id ? `lm-${user.lineManager.id}` : 'lm-unassigned', label: 'Line Manager', name: lineManagerName, status: 'Locked', meta: 'Opens after Team Lead approval.' },
-    { id: user?.hr?.id ? `hr-${user.hr.id}` : 'hr-unassigned', label: 'HR', name: hrName, status: 'Locked', meta: 'Final endorsement from HR.' },
-  ].map((step, index) => ({ ...step, order: index + 1 }));
+  const candidates = [
+    { role: 'teamLead', label: 'Team Lead', person: user?.teamLead },
+    { role: 'lineManager', label: 'Line Manager', person: user?.lineManager },
+    { role: 'hr', label: 'HR', person: user?.hr, alwaysPresent: true },
+  ];
+
+  const steps = [];
+  const byPerson = new Map(); // person id -> the step already covering them
+
+  candidates.forEach(({ role, label, person, alwaysPresent }) => {
+    if (!person && !alwaysPresent) return; // nobody in that role — not a step
+
+    const key = person?.id ? String(person.id) : null;
+    const existing = key ? byPerson.get(key) : null;
+
+    if (existing) {
+      existing.labels.push(label); // same person — merge, don't repeat
+      return;
+    }
+
+    const step = {
+      id: key ? `${role}-${key}` : `${role}-unassigned`,
+      labels: [label],
+      name: person ? fullName(person) : 'HR Operations',
+    };
+    steps.push(step);
+    if (key) byPerson.set(key, step);
+  });
+
+  return steps.map((step, index) => {
+    const merged = step.labels.length > 1;
+    return {
+      ...step,
+      label: step.labels.join(' · '),
+      order: index + 1,
+      status: index === 0 ? 'Pending' : 'Locked',
+      meta: merged
+        ? 'Holds these roles, so approves once for all of them.'
+        : index === 0
+        ? 'Approves first.'
+        : 'Opens once the previous step is approved.',
+    };
+  });
 }
 
 /**
@@ -47,7 +89,9 @@ export default function ApprovalChainCard({ user, compact = false }) {
 
       {!compact && (
         <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-3 text-xs text-emerald-700">
-          HR is notified after your team lead and line manager approve.
+          {chain.length > 1
+            ? 'Each step is notified once the one before it is approved.'
+            : 'One approval completes your request.'}
         </div>
       )}
     </div>
